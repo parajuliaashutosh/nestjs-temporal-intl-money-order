@@ -9,6 +9,7 @@ import { UserModule } from './modules/user/user.module';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: envValidationSchema,
+      envFilePath: `.env`,
     }),
     AuthModule,
     UserModule,
