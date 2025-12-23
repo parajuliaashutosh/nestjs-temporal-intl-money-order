@@ -2,7 +2,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
-import { TokenService } from './service/token.service';
+import { TokenService } from './service/token/token.service';
 
 @Module({
   imports: [
