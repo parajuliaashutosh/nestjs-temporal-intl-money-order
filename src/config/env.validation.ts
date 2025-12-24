@@ -14,6 +14,9 @@ export interface EnvConfig {
   JWT_REFRESH_TOKEN_SECRET: string;
   JWT_ACCESS_TOKEN_EXPIRATION: string;
   JWT_REFRESH_TOKEN_EXPIRATION: string;
+
+  API_KEY: string;
+  ALLOWED_ORIGINS: string;
 }
 
 export const envValidationSchema = Joi.object<EnvConfig>({
@@ -30,4 +33,7 @@ export const envValidationSchema = Joi.object<EnvConfig>({
   JWT_REFRESH_TOKEN_SECRET: Joi.string().required(),
   JWT_ACCESS_TOKEN_EXPIRATION: Joi.number().default(900),
   JWT_REFRESH_TOKEN_EXPIRATION: Joi.number().default(604800),
+
+  API_KEY: Joi.string().required(),
+  ALLOWED_ORIGINS: Joi.string().required(),
 }).required();
