@@ -9,11 +9,12 @@ import { CreateAuthDTO } from '../../auth/dto/create-auth.dto';
 import type { UserContract } from '../../user/contract/user.contract';
 import { CreateUserDTO } from '../../user/dto/create-user.dto';
 import { USER_SERVICE } from '../../user/user.constant';
+import { RegistrationContract } from '../contract/registration.contract';
 import { RegisterAdminDTO } from '../dto/register-admin.dto';
 import { RegisterUserDTO } from '../dto/register-user.dto';
 
 @Injectable()
-export class RegistrationService {
+export class RegistrationService implements RegistrationContract {
   constructor(
     @Inject(AUTH_SERVICE)
     private readonly authService: AuthContract,
