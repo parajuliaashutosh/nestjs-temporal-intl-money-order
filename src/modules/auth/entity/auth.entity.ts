@@ -14,7 +14,7 @@ export class Auth extends Base {
   email: string;
 
   @Column({ name: 'phone_number', nullable: true })
-  phone: string;
+  phone?: string;
 
   @Column({
     type: 'enum',

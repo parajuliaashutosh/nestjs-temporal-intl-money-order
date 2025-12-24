@@ -2,7 +2,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
-import { TokenService } from './service/token/token.service';
+import { AUTH_SERVICE } from './auth.constant';
 import { AuthService } from './service/auth.service';
 
 @Module({
@@ -22,7 +22,12 @@ import { AuthService } from './service/auth.service';
       inject: [ConfigService],
     }),
   ],
-  providers: [TokenService, AuthService],
-  exports: [TokenService],
+  providers: [
+    {
+      provide: AUTH_SERVICE,
+      useClass: AuthService,
+    },
+  ],
+  exports: [AUTH_SERVICE],
 })
 export class AuthModule {}
