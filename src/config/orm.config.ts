@@ -1,9 +1,12 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
-    TypeOrmModuleAsyncOptions,
-    TypeOrmModuleOptions,
+  TypeOrmModuleAsyncOptions,
+  TypeOrmModuleOptions,
 } from '@nestjs/typeorm';
 import path from 'path';
+import { DataSource } from 'typeorm';
+import { DataSourceOptions } from 'typeorm/browser';
+import { AppDataSource } from '../common/provider/datasource.provider';
 
 export default class TypeOrmConfig {
   static getOrmConfig(configService: ConfigService): TypeOrmModuleOptions {
@@ -23,7 +26,11 @@ export default class TypeOrmConfig {
 export const typeOrmConfigAsync: TypeOrmModuleAsyncOptions = {
   imports: [ConfigModule],
   useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
-    return TypeOrmConfig.getOrmConfig(configService);
+    // return TypeOrmConfig.getOrmConfig(configService);
+    const options: TypeOrmModuleOptions = TypeOrmConfig.getOrmConfig(configService);
+    const ds = new DataSource(options as DataSourceOptions);
+    AppDataSource.dataSource = ds;
+    return options;
   },
   inject: [ConfigService],
 };
