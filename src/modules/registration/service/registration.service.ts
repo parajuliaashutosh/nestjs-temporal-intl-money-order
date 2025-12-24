@@ -1,6 +1,8 @@
 import { Transactional } from '@/src/common/decorator/orm/transactional.decorator';
 import { Role } from '@/src/common/enum/role.enum';
 import { Inject, Injectable } from '@nestjs/common';
+import { ADMIN_SERVICE } from '../../admin/admin.constant';
+import type { AdminContract } from '../../admin/contract/admin.contract';
 import { AUTH_SERVICE } from '../../auth/auth.constant';
 import type { AuthContract } from '../../auth/contract/auth.contract';
 import { CreateAuthDTO } from '../../auth/dto/create-auth.dto';
@@ -18,6 +20,9 @@ export class RegistrationService {
 
     @Inject(USER_SERVICE)
     private readonly userService: UserContract,
+
+    @Inject(ADMIN_SERVICE)
+    private readonly adminService: AdminContract,
   ) {}
 
   @Transactional()
@@ -46,7 +51,7 @@ export class RegistrationService {
       email: data.email,
       password: data.password,
       phone: data.phone,
-      role: data.role
+      role: data.role,
     };
     const auth = await this.authService.create(authPayload);
 
