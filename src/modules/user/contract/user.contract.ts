@@ -1,0 +1,7 @@
+import { Auth } from "../../auth/entity/auth.entity";
+import { CreateUserDTO } from "../dto/create-user.dto";
+import { User } from "../entity/user.entity";
+
+export interface UserContract {
+    create(data: CreateUserDTO, auth: Auth): Promise<User>;
+}
