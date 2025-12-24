@@ -7,6 +7,7 @@ import { CreateAuthDTO } from '../../auth/dto/create-auth.dto';
 import type { UserContract } from '../../user/contract/user.contract';
 import { CreateUserDTO } from '../../user/dto/create-user.dto';
 import { USER_SERVICE } from '../../user/user.constant';
+import { RegisterAdminDTO } from '../dto/register-admin.dto';
 import { RegisterUserDTO } from '../dto/register-user.dto';
 
 @Injectable()
@@ -21,20 +22,39 @@ export class RegistrationService {
 
   @Transactional()
   public async registerUser(data: RegisterUserDTO) {
-    
     const authPayload: CreateAuthDTO = {
       email: data.email,
       password: data.password,
       phone: data.phone,
-      role: Role.USER
-    }
+      role: Role.USER,
+    };
     const auth = await this.authService.create(authPayload);
 
     const userPayload: CreateUserDTO = {
       firstName: data.firstName,
       middleName: data.middleName,
-      lastName: data.lastName
-    }
+      lastName: data.lastName,
+    };
+    const user = await this.userService.create(userPayload, auth);
+
+    return user;
+  }
+
+  @Transactional()
+  public async registerAdmin(data: RegisterAdminDTO) {
+    const authPayload: CreateAuthDTO = {
+      email: data.email,
+      password: data.password,
+      phone: data.phone,
+      role: data.role
+    };
+    const auth = await this.authService.create(authPayload);
+
+    const userPayload: CreateUserDTO = {
+      firstName: data.firstName,
+      middleName: data.middleName,
+      lastName: data.lastName,
+    };
     const user = await this.userService.create(userPayload, auth);
 
     return user;
