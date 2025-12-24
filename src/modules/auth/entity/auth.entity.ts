@@ -6,7 +6,7 @@ import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
 import { User } from '../../user/entity/user.entity';
 
 @Entity('auth')
-@Index(['phone_number'])
+@Index(['phone'])
 export class Auth extends Base {
   @Column({
     unique: true,
