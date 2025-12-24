@@ -3,6 +3,7 @@ import { PhoneVerificationStatus } from '@/src/common/enum/phone-verification-st
 import { Role } from '@/src/common/enum/role.enum';
 import Base from 'src/common/entity/base.entity';
 import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
+import { Admin } from '../../admin/entity/admin.entity';
 import { User } from '../../user/entity/user.entity';
 
 @Entity('auth')
@@ -47,4 +48,10 @@ export class Auth extends Base {
   })
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @OneToOne(() => Admin, (admin) => admin.auth, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'admin_id' })
+  admin: Admin;
 }
