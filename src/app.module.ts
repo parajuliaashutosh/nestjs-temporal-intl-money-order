@@ -22,6 +22,9 @@ import { RegistrationModule } from './modules/registration/registration.module';
     RegistrationModule,
   ],
   controllers: [],
-  providers: [],
+  // providers: [{
+  //   provide: APP_GUARD,
+  //   useClass: UserAgentGuard,
+  // }],
 })
 export class AppModule {}
