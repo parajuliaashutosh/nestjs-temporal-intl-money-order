@@ -4,6 +4,7 @@ import type { RegistrationContract } from '../../contract/registration.contract'
 import { RegisterAdminDTO } from '../../dto/register-admin.dto';
 import { RegisterUserDTO } from '../../dto/register-user.dto';
 import { REGISTRATION_SERVICE } from '../../registration.constant';
+import { RegisterUserReqDTO } from './request/register-user-req.dto';
 
 @Controller()
 export class RegistrationController {
@@ -13,8 +14,18 @@ export class RegistrationController {
   ) {}
 
   @Post('/register')
-  async register(@Body() data: RegisterUserDTO) {
-    const resp = await this.registrationService.registerUser(data);
+  async register(@Body() data: RegisterUserReqDTO) {
+    const payload: RegisterUserDTO = {
+      email: data.email,
+      password: data.password,
+      phone: data.phone,
+      firstName: data.firstName,
+      middleName: data.middleName,
+      lastName: data.lastName,
+    }
+    
+    const resp = await this.registrationService.registerUser(payload);
+    
     return RestResponse.builder()
       .setSuccess(true)
       .setMessage('User registered successfully')

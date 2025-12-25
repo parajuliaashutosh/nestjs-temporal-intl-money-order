@@ -28,7 +28,8 @@ export class AuthService implements AuthContract {
     return await this.authRepo.save(auth);
   }
 
-  public async login(data: LoginDTO): Promise<{ accessToken: string }> {
+  public async login(data: LoginDTO): Promise<{ accessToken: string, refreshToken: string }> {
+    
     const auth = await this.authRepo.createQueryBuilder('auth')
       .where('auth.email = :username OR auth.phone = :username', { username: data.username })
       .addSelect('auth.password')

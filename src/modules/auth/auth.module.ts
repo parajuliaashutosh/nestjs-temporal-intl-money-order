@@ -5,6 +5,7 @@ import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AUTH_SERVICE } from './auth.constant';
 import { Auth } from './entity/auth.entity';
+import { AuthController } from './gateway/rest/auth.controller';
 import { AuthService } from './service/auth.service';
 import { HashingService } from './service/password-hash/password-hash.service';
 import { TokenService } from './service/token/token.service';
@@ -36,7 +37,7 @@ import { TokenService } from './service/token/token.service';
     TokenService,
     HashingService
   ],
-
+  controllers: [AuthController],
   exports: [AUTH_SERVICE, TokenService],
 })
 export class AuthModule {}
