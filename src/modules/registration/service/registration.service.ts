@@ -3,6 +3,7 @@ import { Role } from '@/src/common/enum/role.enum';
 import { Inject, Injectable } from '@nestjs/common';
 import { ADMIN_SERVICE } from '../../admin/admin.constant';
 import type { AdminContract } from '../../admin/contract/admin.contract';
+import { CreateAdminDTO } from '../../admin/dto/create-admin.dto';
 import { AUTH_SERVICE } from '../../auth/auth.constant';
 import type { AuthContract } from '../../auth/contract/auth.contract';
 import { CreateAuthDTO } from '../../auth/dto/create-auth.dto';
@@ -56,13 +57,13 @@ export class RegistrationService implements RegistrationContract {
     };
     const auth = await this.authService.create(authPayload);
 
-    const userPayload: CreateUserDTO = {
+    const adminPayload: CreateAdminDTO = {
       firstName: data.firstName,
       middleName: data.middleName,
       lastName: data.lastName,
     };
-    const user = await this.userService.create(userPayload, auth);
+    const admin = await this.adminService.create(adminPayload, auth);
 
-    return user;
+    return admin;
   }
 }

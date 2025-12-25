@@ -7,6 +7,7 @@ import path from 'path';
 import { DataSource } from 'typeorm';
 import { DataSourceOptions } from 'typeorm/browser';
 import { AppDataSource } from '../common/provider/datasource.provider';
+import { initializeTransactionalContext } from '../common/transaction/patch-typeorm';
 
 export default class TypeOrmConfig {
   static getOrmConfig(configService: ConfigService): TypeOrmModuleOptions {
@@ -23,14 +24,33 @@ export default class TypeOrmConfig {
   }
 }
 
+// export const typeOrmConfigAsync: TypeOrmModuleAsyncOptions = {
+//   imports: [ConfigModule],
+//   useFactory: async (configService: ConfigService): Promise<TypeOrmModuleOptions> => {
+//     // return TypeOrmConfig.getOrmConfig(configService);
+//     const options: TypeOrmModuleOptions = TypeOrmConfig.getOrmConfig(configService);
+//     const ds = new DataSource(options as DataSourceOptions);
+//     await ds.initialize()
+//     AppDataSource.dataSource = ds;
+//     return options;
+//   },
+//   inject: [ConfigService],
+// };
+
 export const typeOrmConfigAsync: TypeOrmModuleAsyncOptions = {
   imports: [ConfigModule],
   useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
     // return TypeOrmConfig.getOrmConfig(configService);
     const options: TypeOrmModuleOptions = TypeOrmConfig.getOrmConfig(configService);
-    const ds = new DataSource(options as DataSourceOptions);
-    AppDataSource.dataSource = ds;
+
+    initializeTransactionalContext();
     return options;
   },
   inject: [ConfigService],
+  dataSourceFactory: async (options) => {
+    const dataSource = new DataSource(options as DataSourceOptions);
+    await dataSource.initialize();
+    AppDataSource.dataSource = dataSource; // Store NestJS's DataSource
+    return dataSource;
+  },
 };

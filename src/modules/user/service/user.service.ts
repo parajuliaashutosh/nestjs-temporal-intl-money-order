@@ -13,6 +13,7 @@ export class UserService implements UserContract {
     ) {}
 
     public async create(data: CreateUserDTO, auth: Auth): Promise<User> {
+        throw new Error('Method not implemented.');
         const user = new User();
         user.firstName = data.firstName;
         user.middleName = data.middleName;
