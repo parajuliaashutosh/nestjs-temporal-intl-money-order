@@ -24,19 +24,6 @@ export default class TypeOrmConfig {
   }
 }
 
-// export const typeOrmConfigAsync: TypeOrmModuleAsyncOptions = {
-//   imports: [ConfigModule],
-//   useFactory: async (configService: ConfigService): Promise<TypeOrmModuleOptions> => {
-//     // return TypeOrmConfig.getOrmConfig(configService);
-//     const options: TypeOrmModuleOptions = TypeOrmConfig.getOrmConfig(configService);
-//     const ds = new DataSource(options as DataSourceOptions);
-//     await ds.initialize()
-//     AppDataSource.dataSource = ds;
-//     return options;
-//   },
-//   inject: [ConfigService],
-// };
-
 export const typeOrmConfigAsync: TypeOrmModuleAsyncOptions = {
   imports: [ConfigModule],
   useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
