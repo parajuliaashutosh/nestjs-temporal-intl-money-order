@@ -36,6 +36,7 @@ import { TokenService } from './service/token/token.service';
     TokenService,
     HashingService
   ],
+
   exports: [AUTH_SERVICE, TokenService],
 })
 export class AuthModule {}
