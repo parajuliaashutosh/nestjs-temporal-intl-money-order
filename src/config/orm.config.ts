@@ -37,7 +37,7 @@ export const typeOrmConfigAsync: TypeOrmModuleAsyncOptions = {
   dataSourceFactory: async (options) => {
     const dataSource = new DataSource(options as DataSourceOptions);
     await dataSource.initialize();
-    AppDataSource.dataSource = dataSource; // Store NestJS's DataSource
+    AppDataSource.dataSource = dataSource;
     return dataSource;
   },
 };
