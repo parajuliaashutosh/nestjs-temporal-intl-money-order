@@ -10,7 +10,7 @@ export class AuthController {
 
   @Post('/login')
   async login() {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    this.authService.
     throw new Error('Not implemented');
   }
 }

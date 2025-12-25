@@ -14,7 +14,7 @@ export class Auth extends Base {
   })
   email: string;
 
-  @Column({ name: 'phone_number', nullable: true })
+  @Column({ name: 'phone_number', nullable: true, unique: true })
   phone?: string;
 
   @Column({

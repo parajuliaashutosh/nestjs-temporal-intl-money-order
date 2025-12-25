@@ -7,6 +7,8 @@ export interface TokenPayload {
   key: string;
   id: string;
   userId: string;
+  adminId: string;
+  role: string;
 }
 
 @Injectable()
