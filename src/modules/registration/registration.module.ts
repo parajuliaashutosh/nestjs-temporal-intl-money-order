@@ -16,5 +16,6 @@ import { RegistrationService } from './service/registration.service';
       useClass: RegistrationService,
     },
   ],
+  exports: [REGISTRATION_SERVICE],
 })
 export class RegistrationModule {}

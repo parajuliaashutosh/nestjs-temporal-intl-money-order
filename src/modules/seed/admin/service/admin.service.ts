@@ -1,41 +1,29 @@
-// import { Role } from '@/src/common/enum/role.enum';
-// import { AuthContract } from '@/src/modules/auth/contract/auth.contract';
-// import { Injectable } from '@nestjs/common';
+import { Role } from '@/src/common/enum/role.enum';
+import type { RegistrationContract } from '@/src/modules/registration/contract/registration.contract';
+import { RegisterAdminDTO } from '@/src/modules/registration/dto/register-admin.dto';
+import { REGISTRATION_SERVICE } from '@/src/modules/registration/registration.constant';
+import { Inject, Injectable } from '@nestjs/common';
 
-// @Injectable()
-// export class AdminSeederService {
-//   constructor(private readonly authService: AuthContract) {}
+@Injectable()
+export class AdminSeederService {
+  constructor(
+    @Inject(REGISTRATION_SERVICE)
+    private readonly registrationService: RegistrationContract,
+  ) {}
 
-//   async seed() {
-//     const adminData = {
-//       email: 'sudo@admin.com',
-//       password: 'Admin@123',
-//       phone: '9843818516',
-//       role: Role.SUDO_ADMIN,
-//       admin: {
-//         firstName: 'Sudo',
-//         middleName: '',
-//         lastName: 'Admin',
-//       },
-//     };
+  async seed() {
+    const adminData: RegisterAdminDTO = {
+      email: 'sudo@admin.com',
+      password: 'Admin@123',
+      phone: '9843818516',
+      role: Role.SUDO_ADMIN,
 
-//     // Check if admin already exists to avoid duplicates
-//     const existingAdmin = await this.authService.checkEmail(adminData.email);
+      firstName: 'Sudo',
+      lastName: 'Admin',
+    };
 
-//     if (existingAdmin) {
-//       console.log('Admin user already exists, skipping seed');
-//       return existingAdmin;
-//     }
-
-//     const existingPhone = await this.authService.checkPhone(adminData.phone);
-//     if (existingPhone) {
-//       console.log('Admin user already exists, skipping seed');
-//       return existingPhone;
-//     }
-
-//     // Create admin user
-//     const admin = await this.authService.create({ data: adminData });
-//     console.log('Admin user seeded successfully:', adminData.email);
-//     return admin;
-//   }
-// }
+    // Create admin user
+    await this.registrationService.registerAdmin(adminData);
+    console.log('Admin user seeded successfully:', adminData.email);
+  }
+}
