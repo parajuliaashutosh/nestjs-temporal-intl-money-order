@@ -66,4 +66,12 @@ export class RegistrationService implements RegistrationContract {
 
     return admin;
   }
+
+  public async verifyUserKYC(id: string): Promise<void> {
+    await this.userService.verifyUserKYC(id);
+  }
+
+  public async rejectUserKYC(id: string): Promise<void> {
+    await this.userService.rejectUserKYC(id);
+  }
 }

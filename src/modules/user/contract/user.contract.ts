@@ -4,4 +4,6 @@ import { User } from "../entity/user.entity";
 
 export interface UserContract {
     create(data: CreateUserDTO, auth: Auth): Promise<User>;
+    verifyUserKYC(id: string): Promise<void>;
+    rejectUserKYC(id: string): Promise<void>;
 }

@@ -5,7 +5,7 @@ import { applyDecorators, SetMetadata, UseGuards } from '@nestjs/common';
 
 export const ROLES_KEY = 'roles';
 
-export function Authorization(roles: Role[]) {
+export function Authorize(roles: Role[]) {
   return applyDecorators(
     SetMetadata(ROLES_KEY, roles),
     UseGuards(AuthenticationGuard, AuthorizationGuard),

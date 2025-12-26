@@ -6,4 +6,7 @@ import { RegisterUserDTO } from "../dto/register-user.dto";
 export interface RegistrationContract {
     registerUser(data: RegisterUserDTO): Promise<User>;
     registerAdmin(data: RegisterAdminDTO): Promise<Admin>;
+
+    verifyUserKYC(id: string): Promise<void>;
+    rejectUserKYC(id: string): Promise<void>;
 }
