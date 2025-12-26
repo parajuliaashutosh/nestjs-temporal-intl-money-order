@@ -20,6 +20,7 @@ export default class TypeOrmConfig {
       database: configService.get<string>('DATABASE_NAME'),
       entities: [path.join(__dirname, '..', '**', '*.entity.{js,ts}')],
       synchronize: configService.get<string>('NODE_ENV') !== 'PRODUCTION',
+      useUTC: true,
     };
   }
 }

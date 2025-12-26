@@ -1,3 +1,4 @@
+import { AppException } from '@/src/common/exception/app.exception';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -35,7 +36,7 @@ export class AuthService implements AuthContract {
       .addSelect('auth.password')
       .getOne();
     if (!auth) {
-      throw new Error('Invalid credentials');
+      throw AppException.badRequest('INVALID_CREDENTIALS');
     }
 
     const isPasswordValid = await this.hashService.compare(
@@ -43,7 +44,7 @@ export class AuthService implements AuthContract {
       auth.password,
     );
     if (!isPasswordValid) {
-      throw new Error('Invalid credentials');
+      throw AppException.badRequest('INVALID_CREDENTIALS');
     }
 
     const tokenPayload: TokenPayload = {

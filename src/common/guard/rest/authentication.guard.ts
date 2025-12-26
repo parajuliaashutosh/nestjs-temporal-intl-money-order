@@ -1,11 +1,12 @@
 import { TokenService } from '@/src/modules/auth/service/token/token.service';
 import {
-    CanActivate,
-    ExecutionContext,
-    Injectable,
-    UnauthorizedException,
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import type { Request } from 'express';
+import { AppException } from '../../exception/app.exception';
 
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
@@ -24,7 +25,7 @@ export class AuthenticationGuard implements CanActivate {
 
       request.user = payload;
     } catch {
-      throw new UnauthorizedException("ACCESS_TOKEN_EXPIRED");
+      throw AppException.unauthorized("INVALID_TOKEN");
     }
     return true;
   }
@@ -42,7 +43,7 @@ export class AuthenticationGuard implements CanActivate {
     }
 
     if (!accessToken && refreshToken)
-      throw new UnauthorizedException('TOKEN_EXPIRED');
+      throw AppException.unauthorized('TOKEN_EXPIRED');
     return accessToken;
   }
 }
