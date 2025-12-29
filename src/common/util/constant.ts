@@ -1,0 +1,1 @@
+export const HEADER_COUNTRY_CODE_KEY = 'x-country-code';

@@ -2,7 +2,7 @@ import { IsNotBlank } from "@/src/common/decorator/validator/is-not-blank.decora
 import { SupportedCurrency } from "@/src/common/enum/supported-currency.enum";
 import { IsEnum, IsNotEmpty, IsNumber, IsPositive } from "class-validator";
 
-export class CreateSystemConfigDTO {
+export class CreateSystemConfigReqDTO {
 
     @IsNotEmpty()
     @IsEnum(SupportedCurrency)
