@@ -7,6 +7,7 @@ import { envValidationSchema } from './config/env.validation';
 import { typeOrmConfigAsync } from './config/orm.config';
 import { AdminModule } from './modules/admin/admin.module';
 import { RegistrationModule } from './modules/registration/registration.module';
+import { SystemConfigModule } from './modules/system-config/system-config.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RegistrationModule } from './modules/registration/registration.module';
     UserModule,
     AdminModule,
     RegistrationModule,
+    SystemConfigModule,
   ],
   controllers: [],
   // providers: [{

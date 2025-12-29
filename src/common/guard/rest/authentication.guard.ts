@@ -6,26 +6,38 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request } from 'express';
+import { UserContext, UserContextStorage } from '../../context/user.context';
+import { Role } from '../../enum/role.enum';
 import { AppException } from '../../exception/app.exception';
 
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
-  constructor(
-    private jwtService: TokenService,
-  ) {}
+  constructor(private jwtService: TokenService) {}
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractTokenFromHeader(request);
     if (!token) {
-      throw new UnauthorizedException("NOT_AUTHORIZED");
+      throw new UnauthorizedException('NOT_AUTHORIZED');
     }
     try {
       const payload = this.jwtService.verifyAccessToken(token);
 
       request.user = payload;
+
+      const userContext = new UserContext(
+      {
+        key: payload.key,
+        id: payload.id,
+        role: payload.role as Role,
+        userId: payload.userId,
+        adminId: payload.adminId,
+        tokenPayload: payload,
+      }
+      );
+      UserContextStorage.run(userContext, () => true);
     } catch {
-      throw AppException.unauthorized("INVALID_TOKEN");
+      throw AppException.unauthorized('INVALID_TOKEN');
     }
     return true;
   }

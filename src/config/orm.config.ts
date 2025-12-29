@@ -6,8 +6,8 @@ import {
 import path from 'path';
 import { DataSource } from 'typeorm';
 import { DataSourceOptions } from 'typeorm/browser';
+import { initializeTransactionalContext } from '../common/context/transaction/patch-typeorm';
 import { AppDataSource } from '../common/provider/datasource.provider';
-import { initializeTransactionalContext } from '../common/transaction/patch-typeorm';
 
 export default class TypeOrmConfig {
   static getOrmConfig(configService: ConfigService): TypeOrmModuleOptions {

@@ -1,13 +1,13 @@
 import {
   CanActivate,
   ExecutionContext,
-  ForbiddenException,
-  Injectable,
+  Injectable
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { ROLES_KEY } from '../../decorator/authenticate/rest/authorize.decorator';
 import { Role } from '../../enum/role.enum';
+import { AppException } from '../../exception/app.exception';
 
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
@@ -21,10 +21,10 @@ export class AuthorizationGuard implements CanActivate {
     if (!requiredRoles || requiredRoles.length === 0) return true; //if no roles are specified then pass through the guard
     const { user } = context.switchToHttp().getRequest<Request>();
 
-    if (!user) throw new ForbiddenException("NOT_AUTHORIZED");
+    if (!user) throw AppException.unauthorized("NOT_AUTHORIZED");
 
     if (!requiredRoles.some((role) => user.role?.includes(role)))
-      throw new ForbiddenException("NOT_PERMITTED");
+      throw AppException.unauthorized("NOT_PERMITTED");
     return true;
   }
 }

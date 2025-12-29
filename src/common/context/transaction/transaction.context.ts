@@ -1,4 +1,3 @@
-// src/common/transaction/transaction.context.ts
 import { AsyncLocalStorage } from 'async_hooks';
 import { EntityManager } from 'typeorm';
 
