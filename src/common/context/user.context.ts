@@ -12,7 +12,7 @@ export interface UserContextPayload {
 }
 
 export class UserContext {
-  constructor(public readonly props: UserContextPayload) {}
+  constructor(public readonly payload: UserContextPayload) {}
 }
 
 export class UserContextStorage {

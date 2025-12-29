@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { envValidationSchema } from './config/env.validation';
 import { typeOrmConfigAsync } from './config/orm.config';
+import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { RegistrationModule } from './modules/registration/registration.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
@@ -22,8 +23,10 @@ import { SystemConfigModule } from './modules/system-config/system-config.module
     AdminModule,
     RegistrationModule,
     SystemConfigModule,
+    ActivityLogModule,
   ],
   controllers: [],
+  providers: [],
   // providers: [{
   //   provide: APP_GUARD,
   //   useClass: UserAgentGuard,
