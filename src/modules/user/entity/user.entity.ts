@@ -1,9 +1,10 @@
 import { KYCStatus } from '@/src/common/enum/kyc-status.enum';
 import Base from 'src/common/entity/base.entity';
-import { Column, Entity, OneToOne } from 'typeorm';
+import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { Auth } from '../../auth/entity/auth.entity';
 
 @Entity('user')
+@Index(['auth', 'countryCode'], { unique: true })
 export class User extends Base {
   @Column()
   firstName: string;
@@ -22,8 +23,12 @@ export class User extends Base {
   })
   kycStatus: KYCStatus;
 
-  @OneToOne(() => Auth, (auth) => auth.user, {
-    cascade: true,
+  @Column({ name: 'country_code' })
+  countryCode: string;
+
+  @ManyToOne(() => Auth, (auth) => auth.users, {
+    onDelete: 'CASCADE',
   })
   auth: Auth;
 }
+

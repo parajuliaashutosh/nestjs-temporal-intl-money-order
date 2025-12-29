@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SystemConfig } from './entity/system-config.entity';
+import { SystemConfigController } from './gateway/rest/system-config.controller';
 import { SystemConfigService } from './service/system-config.service';
 import { SYSTEM_CONFIG_SERVICE } from './system-config.constant';
 
@@ -13,5 +14,6 @@ import { SYSTEM_CONFIG_SERVICE } from './system-config.constant';
     useClass: SystemConfigService,
   }],
   exports: [SYSTEM_CONFIG_SERVICE],
+  controllers: [SystemConfigController],
 })
 export class SystemConfigModule {}

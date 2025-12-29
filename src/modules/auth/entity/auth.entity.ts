@@ -2,7 +2,7 @@ import { EmailVerificationStatus } from '@/src/common/enum/email-verification-st
 import { PhoneVerificationStatus } from '@/src/common/enum/phone-verification-status';
 import { Role } from '@/src/common/enum/role.enum';
 import Base from 'src/common/entity/base.entity';
-import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { Admin } from '../../admin/entity/admin.entity';
 import { User } from '../../user/entity/user.entity';
 
@@ -43,11 +43,11 @@ export class Auth extends Base {
   @Column({ select: false })
   password: string;
 
-  @OneToOne(() => User, (user) => user.auth, {
+  @OneToMany(() => User, (user) => user.auth, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  users: User[];
 
   @OneToOne(() => Admin, (admin) => admin.auth, {
     onDelete: 'CASCADE',
