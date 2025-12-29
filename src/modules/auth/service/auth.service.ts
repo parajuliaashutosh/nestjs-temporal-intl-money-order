@@ -26,7 +26,10 @@ export class AuthService implements AuthContract {
     auth.phone = data.phone;
     auth.role = data.role;
     
-    return await this.authRepo.save(auth);
+    const resp =  await this.authRepo.save(auth);
+    const { password, ...result } = resp;
+    void password;
+    return result as Auth;
   }
 
   public async login(data: LoginDTO): Promise<{ accessToken: string, refreshToken: string }> {
