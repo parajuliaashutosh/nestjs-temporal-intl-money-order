@@ -1,4 +1,8 @@
 import { Transactional } from '@/src/common/decorator/orm/transactional.decorator';
+import {
+  WalletHistoryType,
+  WalletTxnDirection,
+} from '@/src/common/enum/wallet.enum';
 import { AppException } from '@/src/common/exception/app.exception';
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,6 +12,7 @@ import { USER_SERVICE } from '../../user/user.constant';
 import type { WalletTransactionContract } from '../contract/wallet-transaction.contract';
 import { WalletContract } from '../contract/wallet.contract';
 import { WalletTopUpDTO } from '../dto/wallet-topup.dto';
+import { CreateWalletTransactionDTO } from '../dto/wallet-transaction/create-wallet-transaction.dto';
 import { Wallet } from '../entity/wallet.entity';
 import { WALLET_TRANSACTION_SERVICE } from '../wallet.constant';
 
@@ -46,14 +51,23 @@ export class WalletService implements WalletContract {
     if (!wallet) {
       wallet = new Wallet();
       wallet.user = user;
-      wallet.balance = BigInt(Math.round(data.amount * 100)).toString();
-
-      return await this.walletRepository.save(wallet);
+      wallet.balance = BigInt(Math.round(data.amount)).toString();
+      wallet = await this.walletRepository.save(wallet);
     } else {
       const current = BigInt(wallet.balance);
       wallet.balance = (current + BigInt(data?.amount)).toString();
-      await this.walletRepository.save(wallet);
-      return await this.walletRepository.save(wallet);
+      wallet = await this.walletRepository.save(wallet);
     }
+
+    const payload: CreateWalletTransactionDTO = {
+      direction: WalletTxnDirection.CREDIT,
+      historyType: WalletHistoryType.TOP_UP,
+      amount: BigInt(data.amount).toString(),
+      balanceAfter: wallet.balance,
+      idemPotent: data.id,
+    };
+
+    await this.walletTransactionService.createTransaction(payload, wallet);
+    return wallet;
   }
 }
