@@ -1,0 +1,15 @@
+export enum WalletTxnDirection {
+  CREDIT = 'CREDIT',
+  DEBIT = 'DEBIT',
+}
+
+export enum WalletHistoryType {
+  TOP_UP = 'TOP_UP',
+  WITHDRAWAL = 'WITHDRAWAL',
+  ORDER_PAYMENT = 'ORDER_PAYMENT',
+  ORDER_REFUND = 'ORDER_REFUND',
+  ADMIN_ADJUSTMENT = 'ADMIN_ADJUSTMENT',
+  BONUS = 'BONUS',
+  CASHBACK = 'CASHBACK',
+  PENALTY = 'PENALTY',
+}

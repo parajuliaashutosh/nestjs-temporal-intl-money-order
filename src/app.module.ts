@@ -9,6 +9,7 @@ import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { RegistrationModule } from './modules/registration/registration.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
+import { WalletModule } from './modules/wallet/wallet.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { SystemConfigModule } from './modules/system-config/system-config.module
     RegistrationModule,
     SystemConfigModule,
     ActivityLogModule,
+    WalletModule,
   ],
   controllers: [],
   providers: [],
