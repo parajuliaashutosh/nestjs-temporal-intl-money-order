@@ -46,4 +46,11 @@ export class UserService implements UserContract {
 
     await this.userRepo.save(user);
   }
+
+  public async getUserById(id: string): Promise<User | null> {
+    return await this.userRepo
+      .createQueryBuilder('user')
+      .where('user.id = :id', { id })
+      .getOne();
+  }
 }

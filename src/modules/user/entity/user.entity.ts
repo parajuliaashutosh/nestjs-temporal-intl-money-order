@@ -1,4 +1,6 @@
+import { CountryCode } from '@/src/common/decorator/header/country-code.decorator';
 import { KYCStatus } from '@/src/common/enum/kyc-status.enum';
+import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import Base from 'src/common/entity/base.entity';
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { Auth } from '../../auth/entity/auth.entity';
@@ -23,12 +25,15 @@ export class User extends Base {
   })
   kycStatus: KYCStatus;
 
-  @Column({ name: 'country_code' })
-  countryCode: string;
+  @Column({
+    type: 'enum',
+    enum: CountryCode,
+    name: 'country_code'
+  })
+  countryCode: SupportedCountry;
 
   @ManyToOne(() => Auth, (auth) => auth.users, {
     onDelete: 'CASCADE',
   })
   auth: Auth;
 }
-
