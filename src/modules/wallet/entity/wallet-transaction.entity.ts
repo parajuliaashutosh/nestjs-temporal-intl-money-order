@@ -27,7 +27,7 @@ export class WalletTransaction extends Base {
   balanceAfter: string; // snapshot after txn ✅
 
   // to maintain idempotency for different txn sources
-  @Column({ nullable: true })
+  @Column({ nullable: true, unique: true})
   idemPotent?: string; // orderId, payoutId, adminId, or webhook id
 
   @ManyToOne(() => Wallet, { onDelete: 'CASCADE' })

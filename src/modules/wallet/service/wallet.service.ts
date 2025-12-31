@@ -45,6 +45,7 @@ export class WalletService implements WalletContract {
     let wallet = await this.walletRepository
       .createQueryBuilder('wallet')
       .leftJoinAndSelect('wallet.user', 'user')
+        .setLock('pessimistic_write') // Lock the selected wallet row for update
       .where('wallet.user = :userId', { userId: data.userId })
       .getOne();
 
