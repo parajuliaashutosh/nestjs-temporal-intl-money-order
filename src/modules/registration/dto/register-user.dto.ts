@@ -1,10 +1,12 @@
 import { IsNotBlank } from '@/src/common/decorator/validator/is-not-blank.decorator';
+import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import {
-    IsEmail,
-    IsNotEmpty,
-    IsOptional,
-    IsString,
-    MinLength,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
 } from 'class-validator';
 
 export class RegisterUserDTO {
@@ -31,4 +33,8 @@ export class RegisterUserDTO {
   @IsNotBlank()
   @IsString()
   lastName: string;
+
+  @IsNotBlank()
+  @IsEnum(SupportedCountry)
+  country: SupportedCountry;
 }

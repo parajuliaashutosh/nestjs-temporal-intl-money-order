@@ -51,9 +51,9 @@ export class AuthService implements AuthContract {
     }
 
     const tokenPayload: TokenPayload = {
-      key: "11132", // Replace with actual key
+      key: crypto.randomUUID(),
       id: auth.id,
-      userId: auth.user?.id,
+      userId: auth.users?.[0]?.id,
       adminId: auth.admin?.id,
       role: auth.role,
     }

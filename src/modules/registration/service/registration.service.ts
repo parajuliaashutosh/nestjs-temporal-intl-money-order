@@ -41,6 +41,7 @@ export class RegistrationService implements RegistrationContract {
       firstName: data.firstName,
       middleName: data.middleName,
       lastName: data.lastName,
+      country: data.country,
     };
     const user = await this.userService.create(userPayload, auth);
 

@@ -1,10 +1,10 @@
 import { IsNotBlank } from '@/src/common/decorator/validator/is-not-blank.decorator';
 import {
-    IsEmail,
-    IsNotEmpty,
-    IsOptional,
-    IsString,
-    MinLength,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength
 } from 'class-validator';
 
 export class RegisterUserReqDTO {

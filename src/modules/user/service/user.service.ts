@@ -17,6 +17,7 @@ export class UserService implements UserContract {
     user.firstName = data.firstName;
     user.middleName = data.middleName;
     user.lastName = data.lastName;
+    user.country = data.country;
     user.auth = auth;
     return await this.userRepo.save(user);
   }

@@ -1,6 +1,9 @@
 import { Authenticate } from '@/src/common/decorator/authenticate/rest/authenticate.decorator';
 import { Authorize } from '@/src/common/decorator/authenticate/rest/authorize.decorator';
+import { CountryCode } from '@/src/common/decorator/header/country-code.decorator';
+import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-code.pipe';
 import { Role } from '@/src/common/enum/role.enum';
+import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
 import { Body, Controller, Inject, Param, Patch, Post } from '@nestjs/common';
 import type { RegistrationContract } from '../../contract/registration.contract';
@@ -17,7 +20,7 @@ export class RegistrationController {
   ) {}
 
   @Post('/register')
-  async register(@Body() data: RegisterUserReqDTO) {
+  async register(@Body() data: RegisterUserReqDTO, @CountryCode(CountryCodePipe) countryCode: SupportedCountry) {
     const payload: RegisterUserDTO = {
       email: data.email,
       password: data.password,
@@ -25,6 +28,7 @@ export class RegistrationController {
       firstName: data.firstName,
       middleName: data.middleName,
       lastName: data.lastName,
+      country: countryCode,
     };
 
     const resp = await this.registrationService.registerUser(payload);

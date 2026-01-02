@@ -1,4 +1,3 @@
-import { CountryCode } from '@/src/common/decorator/header/country-code.decorator';
 import { KYCStatus } from '@/src/common/enum/kyc-status.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import Base from 'src/common/entity/base.entity';
@@ -6,7 +5,7 @@ import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { Auth } from '../../auth/entity/auth.entity';
 
 @Entity('user')
-@Index(['auth', 'countryCode'], { unique: true })
+@Index(['auth', 'country'], { unique: true })
 export class User extends Base {
   @Column()
   firstName: string;
@@ -27,10 +26,11 @@ export class User extends Base {
 
   @Column({
     type: 'enum',
-    enum: CountryCode,
-    name: 'country_code'
+    enum: SupportedCountry,
+    name: 'country_code',
+    nullable: true,
   })
-  countryCode: SupportedCountry;
+  country: SupportedCountry;
 
   @ManyToOne(() => Auth, (auth) => auth.users, {
     onDelete: 'CASCADE',
