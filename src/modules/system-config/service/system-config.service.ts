@@ -1,5 +1,4 @@
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SystemConfigContract } from '../contract/system-config.contract';
@@ -11,7 +10,6 @@ export class SystemConfigService implements SystemConfigContract {
   constructor(
     @InjectRepository(SystemConfig)
     private readonly systemConfigRepo: Repository<SystemConfig>,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   public createOrUpdateSystemConfig(

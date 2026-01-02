@@ -1,9 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { createClient, RedisClientType } from 'redis';
-
-// Define the injection token
-export const REDIS_CLIENT = 'REDIS_CLIENT';
+import { createClient } from 'redis';
+import { REDIS_CLIENT } from './redis.constant';
 
 @Global()
 @Module({
@@ -11,16 +9,14 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
   providers: [
     {
       provide: REDIS_CLIENT,
-      useFactory: async (
-        configService: ConfigService,
-      ): Promise<RedisClientType> => {
+      useFactory: async (configService: ConfigService) => {
         const client = createClient({
           url: configService.getOrThrow<string>('REDIS_URL'),
         });
 
-        // client.on('error', (err) => {
-        //   console.error('Redis Client Error', err);
-        // });
+        client.on('error', (err) => {
+          console.error('Redis Client Error', err);
+        });
 
         await client.connect();
         return client;
