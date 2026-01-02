@@ -1,5 +1,6 @@
 import { AuthModule } from '@/src/modules/auth/auth.module';
 import { UserModule } from '@/src/modules/user/user.module';
+import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -18,6 +19,10 @@ import { WalletModule } from './modules/wallet/wallet.module';
       validationSchema: envValidationSchema,
       envFilePath: `.env`,
     }),
+    CacheModule.register({
+      isGlobal: true,
+    }),
+    
     TypeOrmModule.forRootAsync(typeOrmConfigAsync),
     AuthModule,
     UserModule,
