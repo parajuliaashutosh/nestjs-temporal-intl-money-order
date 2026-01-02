@@ -11,6 +11,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { RegistrationModule } from './modules/registration/registration.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
 import { WalletModule } from './modules/wallet/wallet.module';
+import { RedisModule } from './modules/infrastructure/redis/redis.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
     SystemConfigModule,
     ActivityLogModule,
     WalletModule,
+    RedisModule,
   ],
   controllers: [],
   providers: [],
