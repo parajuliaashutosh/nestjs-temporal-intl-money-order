@@ -19,7 +19,6 @@ export interface EnvConfig {
   ALLOWED_ORIGINS: string;
 
   REDIS_URL: string;
-  REDIS_PASSWORD: string;
 }
 
 export const envValidationSchema = Joi.object<EnvConfig>({
@@ -40,6 +39,5 @@ export const envValidationSchema = Joi.object<EnvConfig>({
   API_KEY: Joi.string().required(),
   ALLOWED_ORIGINS: Joi.string().required(),
   
-  REDIS_URL: Joi.string().required(),
-  REDIS_PASSWORD: Joi.string().required(),
+  REDIS_URL: Joi.string().required()
 }).required();
