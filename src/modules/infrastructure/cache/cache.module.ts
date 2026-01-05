@@ -1,14 +1,14 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Inject, Module, OnModuleDestroy } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { createClient } from 'redis';
-import { REDIS_CLIENT } from './redis.constant';
+import { CACHE_CLIENT } from './cache.constant';
 
 @Global()
 @Module({
   imports: [ConfigModule],
   providers: [
     {
-      provide: REDIS_CLIENT,
+      provide: CACHE_CLIENT,
       useFactory: async (configService: ConfigService) => {
         const client = createClient({
           url: configService.getOrThrow<string>('REDIS_URL'),
@@ -24,6 +24,14 @@ import { REDIS_CLIENT } from './redis.constant';
       inject: [ConfigService],
     },
   ],
-  exports: [REDIS_CLIENT],
+  exports: [CACHE_CLIENT],
 })
-export class RedisModule {}
+export class CacheModule implements OnModuleDestroy {
+    constructor(
+    @Inject(CACHE_CLIENT) private readonly client: ReturnType<typeof createClient>,
+  ) {}
+
+  async onModuleDestroy() {
+    await this.client.quit();
+  }
+}

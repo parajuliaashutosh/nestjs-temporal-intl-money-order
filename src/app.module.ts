@@ -7,7 +7,7 @@ import { envValidationSchema } from './config/env.validation';
 import { typeOrmConfigAsync } from './config/orm.config';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AdminModule } from './modules/admin/admin.module';
-import { RedisModule } from './modules/infrastructure/redis/redis.module';
+import { CacheModule } from './modules/infrastructure/cache/cache.module';
 import { RegistrationModule } from './modules/registration/registration.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
 import { WalletModule } from './modules/wallet/wallet.module';
@@ -27,7 +27,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
     SystemConfigModule,
     ActivityLogModule,
     WalletModule,
-    RedisModule,
+    CacheModule,
   ],
   controllers: [],
   providers: [],
