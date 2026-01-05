@@ -1,3 +1,4 @@
+import { RestResponse } from '@/src/common/response-type/rest/rest-response';
 import { Body, Controller, Inject, Post, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
@@ -35,5 +36,10 @@ export class AuthController {
       sameSite: 'strict',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
     });
+
+    return RestResponse.builder()
+      .setSuccess(true)
+      .setMessage('Login successful')
+      .build();
   }
 }

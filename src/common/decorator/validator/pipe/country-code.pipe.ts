@@ -8,7 +8,7 @@ export class CountryCodePipe implements PipeTransform {
       throw new BadRequestException('x-country-code header is required');
     }
 
-    const normalized = value.toLowerCase();
+    const normalized = value.toUpperCase();
 
     if (!Object.values(SupportedCountry).includes(normalized as SupportedCountry)) {
       throw new BadRequestException(

@@ -5,7 +5,7 @@ import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-c
 import { Role } from '@/src/common/enum/role.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
-import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Post } from '@nestjs/common';
 import type { SystemConfigContract } from '../../contract/system-config.contract';
 import { CreateSystemConfigDTO } from '../../dto/create-system-config.dto';
 import { SYSTEM_CONFIG_SERVICE } from '../../system-config.constant';
@@ -30,17 +30,16 @@ export class SystemConfigController {
         exchangeRate: data.exchangeRate,
     };
 
-    const resp = await this.systemConfigService.createOrUpdateSystemConfig(payload);
+    await this.systemConfigService.createOrUpdateSystemConfig(payload);
     return RestResponse.builder()
       .setSuccess(true)
       .setMessage('System config created/updated successfully')
-      .setData(resp)
       .build();
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async getSystemConfig(@Query('countryCode') countryCode: string) {
+  async getSystemConfig(@CountryCode(CountryCodePipe) countryCode: SupportedCountry) {
     const resp = await this.systemConfigService.getSystemConfigByKey(countryCode);
     return RestResponse.builder()
       .setSuccess(true)
