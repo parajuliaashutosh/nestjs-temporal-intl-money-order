@@ -11,6 +11,7 @@ import { CacheModule } from './modules/infrastructure/cache/cache.module';
 import { RegistrationModule } from './modules/registration/registration.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
 import { WalletModule } from './modules/wallet/wallet.module';
+import { TemporalModule } from './modules/infrastructure/temporal/temporal.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
     ActivityLogModule,
     WalletModule,
     CacheModule,
+    TemporalModule,
   ],
   controllers: [],
   providers: [],
