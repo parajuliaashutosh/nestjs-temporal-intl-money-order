@@ -11,13 +11,11 @@ import { TokenPayload, TokenService } from './token/token.service';
 
 @Injectable()
 export class AuthService implements AuthContract {
-  
   constructor(
     @InjectRepository(Auth) private authRepo: Repository<Auth>,
     private readonly tokenService: TokenService,
     private readonly hashService: HashingService,
   ) {}
-
 
   public async create(data: CreateAuthDTO): Promise<Auth> {
     const auth = new Auth();
@@ -25,17 +23,21 @@ export class AuthService implements AuthContract {
     auth.password = await this.hashService.hash(data.password);
     auth.phone = data.phone;
     auth.role = data.role;
-    
-    const resp =  await this.authRepo.save(auth);
+
+    const resp = await this.authRepo.save(auth);
     const { password, ...result } = resp;
     void password;
     return result as Auth;
   }
 
-  public async login(data: LoginDTO): Promise<{ accessToken: string, refreshToken: string }> {
-    
-    const auth = await this.authRepo.createQueryBuilder('auth')
-      .where('auth.email = :username OR auth.phone = :username', { username: data.username })
+  public async login(
+    data: LoginDTO,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const auth = await this.authRepo
+      .createQueryBuilder('auth')
+      .where('auth.email = :username OR auth.phone = :username', {
+        username: data.username,
+      })
       .addSelect('auth.password')
       .getOne();
     if (!auth) {
@@ -56,8 +58,37 @@ export class AuthService implements AuthContract {
       userId: auth.users?.[0]?.id,
       adminId: auth.admin?.id,
       role: auth.role,
+    };
+
+    return this.tokenService.generateAccessAndRefreshTokens(tokenPayload);
+  }
+
+  public async refreshToken(
+    refreshToken: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const check = this.tokenService.verifyRefreshToken(refreshToken);
+
+    const auth = await this.getAuthById(check.id);
+    if (!auth) {
+      throw AppException.badRequest('AUTH_NOT_FOUND');
     }
 
-    return this.tokenService.generateAccessAndRefreshTokens(tokenPayload)
+    const tokenPayload: TokenPayload = {
+      key: crypto.randomUUID(),
+      id: auth.id,
+      userId: auth.users?.[0]?.id,
+      adminId: auth.admin?.id,
+      role: auth.role,
+    };
+    return this.tokenService.generateAccessAndRefreshTokens(tokenPayload);
+  }
+
+  public async getAuthById(id: string): Promise<Auth | null> {
+    return this.authRepo
+      .createQueryBuilder('auth')
+      .leftJoinAndSelect('auth.users', 'users')
+      .leftJoinAndSelect('auth.admin', 'admin')
+      .where('auth.id = :id', { id })
+      .getOne();
   }
 }

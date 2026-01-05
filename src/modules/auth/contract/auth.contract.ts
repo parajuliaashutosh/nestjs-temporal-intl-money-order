@@ -5,4 +5,6 @@ import { Auth } from "../entity/auth.entity";
 export interface AuthContract {
   create(data:CreateAuthDTO): Promise<Auth>;
   login(data: LoginDTO): Promise<{ accessToken: string, refreshToken: string }>;
+  refreshToken(refreshToken: string): Promise<{ accessToken: string, refreshToken: string }>;
+  getAuthById(id: string): Promise<Auth | null>;
 }

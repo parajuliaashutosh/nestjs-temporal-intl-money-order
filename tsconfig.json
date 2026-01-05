@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "nodenext",
-    "typeRoots": ["src/types", "./node_modules/@types"],
+    "typeRoots": ["./src/types", "./node_modules/@types"],
     "moduleResolution": "nodenext",
     "resolvePackageJsonExports": true,
     "esModuleInterop": true,
@@ -25,5 +25,9 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+   "include": [
+    "src/**/*",
+    "src/types/**/*.d.ts" 
+  ]
 }
