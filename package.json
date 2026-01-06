@@ -16,7 +16,7 @@
     "start:prod": "node dist/main",
     "worker:prod": "node dist/modules/infrastructure/temporal/worker/worker.js",
     "seed:admin": "node -r ts-node/register -r tsconfig-paths/register src/modules/seed/admin/admin.seed.ts",
-    "seed:admin:prod": "node dist/scripts/seed-admin.js",
+    "seed:admin:prod": "node dist/modules/seed/admin/admin.seed.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
