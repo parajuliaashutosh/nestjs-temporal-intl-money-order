@@ -6,16 +6,16 @@ export class TemporalClientService implements OnModuleInit {
   private client: Client;
   private readonly logger = new Logger(TemporalClientService.name);
 
-  async onModuleInit() {
-    await this.connect();
+  onModuleInit() {
+    this.connect();
   }
 
-  private async connect() {
+  private connect() {
     try {
       this.client = new Client({
         // Optional: specify your Temporal server address, namespace, etc.
-        // connection: { address: 'localhost:7233' }, 
-        namespace: 'default',
+        // connection: { address: 'localhost:7233' },
+        namespace: 'money-order',
       });
 
       this.logger.log('✅ Connected to Temporal');
