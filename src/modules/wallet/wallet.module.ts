@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TemporalModule } from '../infrastructure/temporal/temporal.module';
 import { UserModule } from '../user/user.module';
 import { WalletTransaction } from './entity/wallet-transaction.entity';
 import { Wallet } from './entity/wallet.entity';
@@ -9,7 +10,7 @@ import { WalletService } from './service/wallet.service';
 import { WALLET_SERVICE, WALLET_TRANSACTION_SERVICE } from './wallet.constant';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Wallet, WalletTransaction]), UserModule],
+  imports: [TypeOrmModule.forFeature([Wallet, WalletTransaction]), UserModule, TemporalModule],
   providers: [
     {
       provide: WALLET_SERVICE,

@@ -7,6 +7,6 @@ import { TemporalWorkerService } from './worker/temporal-worker.service';
 @Module({
   imports: [ConfigModule.forFeature(temporalConfig)],
   providers: [TemporalClientService, TemporalWorkerService],
-  exports: [TemporalClientService],
+  exports: [TemporalClientService, TemporalWorkerService],
 })
 export class TemporalModule {}
