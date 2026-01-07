@@ -12,6 +12,7 @@ import { RegistrationModule } from './modules/registration/registration.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { TemporalModule } from './modules/infrastructure/temporal/temporal.module';
+import { ReceiverModule } from './modules/receiver/receiver.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { TemporalModule } from './modules/infrastructure/temporal/temporal.modul
     WalletModule,
     CacheModule,
     TemporalModule,
+    ReceiverModule,
   ],
   controllers: [],
   providers: [],

@@ -40,13 +40,13 @@ export class SystemConfigService implements SystemConfigContract {
   ): Promise<SystemConfig | null> {
     const cacheKey = CACHE_KEYS.systemConfigByCountry(countryCode);
 
-    // 1️⃣ Try cache
-    const cached = await this.cache.get(cacheKey);
+    // write back cache
+    
+    const cached: string | null = await this.cache.get(cacheKey) as string;
     if (cached) {
       return JSON.parse(cached) as SystemConfig;
     }
 
-    // 2️⃣ Query DB
     const config = await this.systemConfigRepo
       .createQueryBuilder('systemConfig')
       .where('systemConfig.countryCode = :countryCode', { countryCode })
