@@ -13,6 +13,7 @@ import { SystemConfigModule } from './modules/system-config/system-config.module
 import { WalletModule } from './modules/wallet/wallet.module';
 import { TemporalModule } from './modules/infrastructure/temporal/temporal.module';
 import { ReceiverModule } from './modules/receiver/receiver.module';
+import { MoneyOrderModule } from './modules/money-order/money-order.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ReceiverModule } from './modules/receiver/receiver.module';
     CacheModule,
     TemporalModule,
     ReceiverModule,
+    MoneyOrderModule,
   ],
   controllers: [],
   providers: [],
