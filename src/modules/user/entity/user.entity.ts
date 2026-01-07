@@ -1,8 +1,9 @@
 import { KYCStatus } from '@/src/common/enum/kyc-status.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import Base from 'src/common/entity/base.entity';
-import { Column, Entity, Index, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { Auth } from '../../auth/entity/auth.entity';
+import { Receiver } from '../../receiver/entity/receiver.entity';
 
 @Entity('user')
 @Index(['auth', 'country'], { unique: true })
@@ -36,4 +37,7 @@ export class User extends Base {
     onDelete: 'CASCADE',
   })
   auth: Auth;
+
+  @OneToMany(() => Receiver, (receiver) => receiver.user)
+  receivers: Receiver[];
 }
