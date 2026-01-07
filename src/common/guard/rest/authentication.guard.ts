@@ -2,12 +2,12 @@ import { TokenService } from '@/src/modules/auth/service/token/token.service';
 import {
   CanActivate,
   ExecutionContext,
-  Injectable,
-  UnauthorizedException,
+  Injectable
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { UserContext, UserContextStorage } from '../../context/user.context';
 import { Role } from '../../enum/role.enum';
+import { SupportedCountry } from '../../enum/supported-country.enum';
 import { AppException } from '../../exception/app.exception';
 
 @Injectable()
@@ -16,21 +16,31 @@ export class AuthenticationGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
+    const countryCode = request.headers['x-country-code'] as SupportedCountry;
+
+    if (!countryCode) {
+      throw AppException.badRequest('MISSING_COUNTRY_HEADER');
+    }
     const token = this.extractTokenFromHeader(request);
     if (!token) {
-      throw new UnauthorizedException('NOT_AUTHORIZED');
+      throw AppException.unauthorized('NOT_AUTHORIZED');
     }
     try {
       const payload = this.jwtService.verifyAccessToken(token);
 
-      request.user = payload;
+      const userPayload = {
+        ...payload,
+        userId: payload.user.find(user => user.country == countryCode)?.userId || undefined,
+      }
+      request.user = userPayload;
 
       const userContext = new UserContext(
       {
         key: payload.key,
         id: payload.id,
         role: payload.role as Role,
-        userId: payload.userId,
+        user: payload.user,
+        userId: payload.user.find(user => user.country == countryCode)?.userId,
         adminId: payload.adminId,
         tokenPayload: payload,
       }

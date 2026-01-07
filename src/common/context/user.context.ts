@@ -6,6 +6,7 @@ export interface UserContextPayload {
   key: string;
   id: string;
   role: Role;
+  user?: { userId: string; country: string }[];
   userId?: string;
   adminId?: string;
   tokenPayload?: TokenPayload;
