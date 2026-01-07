@@ -1,3 +1,4 @@
+import { AppException } from '@/src/common/exception/app.exception';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Client } from '@temporalio/client';
 
@@ -26,8 +27,11 @@ export class TemporalClientService implements OnModuleInit {
   }
 
   async startWorkflow(workflowType: string, args: any[], taskQueue: string) {
+    console.log("🚀 ~ TemporalClientService ~ startWorkflow ~ taskQueue:", taskQueue)
+    console.log("🚀 ~ TemporalClientService ~ startWorkflow ~ args:", args)
+    console.log("🚀 ~ TemporalClientService ~ startWorkflow ~ workflowType:", workflowType)
     if (!this.client) {
-      throw new Error('Temporal client not initialized');
+      throw AppException.internalServerError('Service maintenance in progress. Please try again later.');
     }
 
     const handle = await this.client.workflow.start(workflowType, {
