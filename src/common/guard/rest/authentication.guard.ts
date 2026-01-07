@@ -1,4 +1,4 @@
-import { TokenService } from '@/src/modules/auth/service/token/token.service';
+import { TokenPayload, TokenService } from '@/src/modules/auth/service/token/token.service';
 import {
   CanActivate,
   ExecutionContext,
@@ -9,6 +9,10 @@ import { UserContext, UserContextStorage } from '../../context/user.context';
 import { Role } from '../../enum/role.enum';
 import { SupportedCountry } from '../../enum/supported-country.enum';
 import { AppException } from '../../exception/app.exception';
+
+export interface ReqUserPayload extends TokenPayload {
+  userId?: string;
+}
 
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
@@ -28,7 +32,7 @@ export class AuthenticationGuard implements CanActivate {
     try {
       const payload = this.jwtService.verifyAccessToken(token);
 
-      const userPayload = {
+      const userPayload: ReqUserPayload = {
         ...payload,
         userId: payload.user.find(user => user.country == countryCode)?.userId || undefined,
       }

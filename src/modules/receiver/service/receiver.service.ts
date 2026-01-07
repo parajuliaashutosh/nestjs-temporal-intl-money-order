@@ -1,15 +1,17 @@
 import { AppException } from '@/src/common/exception/app.exception';
+import { DataAndCount } from '@/src/common/response-type/pagination/data-and-count';
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository } from 'typeorm';
 import type { UserContract } from '../../user/contract/user.contract';
 import { USER_SERVICE } from '../../user/user.constant';
+import { ReceiverContract } from '../contract/receiver.contract';
 import { CreateReceiverDTO } from '../dto/create-receiver.dto';
 import { GetReceiverDTO } from '../dto/get-receiver.dto';
 import { Receiver } from '../entity/receiver.entity';
 
 @Injectable()
-export class ReceiverService {
+export class ReceiverService implements ReceiverContract {
   constructor(
     @InjectRepository(Receiver) private receiverRepo: Repository<Receiver>,
     @Inject(USER_SERVICE) private userService: UserContract,
@@ -35,10 +37,7 @@ export class ReceiverService {
     return await this.receiverRepo.save(receiver);
   }
 
-  async getReceiversByUserId(data: GetReceiverDTO): Promise<{
-    data: Receiver[];
-    count: number;
-  }> {
+  async getReceiversByUserId(data: GetReceiverDTO): Promise<DataAndCount<Receiver[]>> {
     const query = this.receiverRepo
       .createQueryBuilder('receiver')
       .where('receiver.user_id = :userId', { userId: data.userId });
@@ -55,10 +54,13 @@ export class ReceiverService {
     }
 
     const [receivers, count] = await query
-      .take(data.limit ?? 10)
-      .skip(data.page ?? 0)
+      .limit(data.limit)
+      .offset((data.page - 1) * data.limit)
       .getManyAndCount();
 
-    return {data: receivers, count}
+    return  DataAndCount.builder<Receiver[]>()
+      .setData(receivers)
+      .setCount(count)
+      .build();
   }
 }
