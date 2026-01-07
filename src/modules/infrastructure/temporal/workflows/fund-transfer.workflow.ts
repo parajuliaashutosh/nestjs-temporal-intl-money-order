@@ -1,9 +1,9 @@
 import {
-    defineQuery,
-    defineSignal,
-    log,
-    proxyActivities,
-    setHandler
+  defineQuery,
+  defineSignal,
+  log,
+  proxyActivities,
+  setHandler
 } from '@temporalio/workflow';
 import type * as activities from '../activities';
 
@@ -157,4 +157,25 @@ export async function fundTransferWorkflow(
 
     throw error;
   }
+}
+
+export async function updateWalletWorkflow(
+  userId: string,
+  amount: number,
+): Promise<void> {
+  log.info('Starting wallet update workflow', { userId, amount });
+
+  // Here you can add more complex logic if needed
+  // For simplicity, we directly call the creditWallet activity
+
+  await proxyActivities<typeof activities>({
+    startToCloseTimeout: '30s',
+  }).creditWallet({
+    userId,
+    amount,
+    currency: 'USD', // Assuming USD for simplicity
+    description: 'Complex wallet update via workflow',
+  });
+
+  log.info('Wallet update workflow completed', { userId, amount });
 }
