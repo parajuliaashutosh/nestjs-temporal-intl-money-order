@@ -20,7 +20,7 @@ export class MoneyOrder extends Base {
     precision: 18,
     scale: 8,
   })
-  exchangeRate: string;
+  promiseExchangeRate: string;
 
   @Column({ type: 'jsonb', nullable: true })
   metadata: any;
