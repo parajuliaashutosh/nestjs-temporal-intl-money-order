@@ -21,6 +21,12 @@ export class SystemConfig extends Base {
   })
   currency: SupportedCurrency;
 
-  @Column({ name: 'exchange_rate', type: 'float' })
-  exchangeRate: number;
+  // storing in cents
+  @Column({
+    name: 'exchange_rate',
+    type: 'decimal',
+    precision: 18,
+    scale: 8,
+  })
+  exchangeRate: string;
 }

@@ -1,5 +1,6 @@
 import Base from '@/src/common/entity/base.entity';
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { MoneyOrder } from '../../money-order/entity/money-order.entity';
 import { User } from '../../user/entity/user.entity';
 
 @Entity('receiver')
@@ -33,4 +34,7 @@ export class Receiver extends Base {
   })
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @OneToMany(() => MoneyOrder, (moneyOrder) => moneyOrder.receiver)
+  moneyOrders: MoneyOrder[];
 }

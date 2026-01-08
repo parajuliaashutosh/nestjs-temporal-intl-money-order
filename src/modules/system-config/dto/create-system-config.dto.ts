@@ -15,7 +15,7 @@ export class CreateSystemConfigDTO {
     currency: SupportedCurrency;
 
     @IsNotBlank()
-    @IsNumber() 
+    @IsNumber({maxDecimalPlaces: 0}) 
     @IsPositive({ message: 'Exchange rate must be a positive number' })
     exchangeRate: number;
 }
