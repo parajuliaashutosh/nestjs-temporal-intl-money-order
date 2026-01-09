@@ -15,5 +15,5 @@ export class CreateMoneyOrderReqDTO {
   exchangeRate: number;
 
   @IsNotBlank()
-  receiverId: string;
+  receiver: string;
 }

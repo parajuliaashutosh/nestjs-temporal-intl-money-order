@@ -36,6 +36,7 @@ export class AuthenticationGuard implements CanActivate {
         ...payload,
         userId: payload.user.find(user => user.country == countryCode)?.userId || undefined,
       }
+      console.log("🚀 ~ AuthenticationGuard ~ canActivate ~ userPayload:", userPayload)
       request.user = userPayload;
 
       const userContext = new UserContext(

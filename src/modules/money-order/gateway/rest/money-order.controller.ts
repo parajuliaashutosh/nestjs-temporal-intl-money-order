@@ -1,6 +1,9 @@
+import { Authenticate } from '@/src/common/decorator/authenticate/rest/authenticate.decorator';
+import { Authorize } from '@/src/common/decorator/authenticate/rest/authorize.decorator';
 import { User } from '@/src/common/decorator/authenticate/rest/user.decorator';
 import { CountryCode } from '@/src/common/decorator/header/country-code.decorator';
 import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-code.pipe';
+import { Role } from '@/src/common/enum/role.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import type { ReqUserPayload } from '@/src/common/guard/rest/authentication.guard';
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
@@ -19,7 +22,9 @@ export class MoneyOrderController {
 
   // TODO: a web hook guard to be added here
   @Post('/')
-  async updateBalanceWebhook(
+  @Authenticate()
+  @Authorize([Role.USER])
+  async createMoneyOrder(
     @CountryCode(CountryCodePipe) countryCode: SupportedCountry,
     @User() user: ReqUserPayload,
     @Body() body: CreateMoneyOrderReqDTO,
@@ -31,7 +36,7 @@ export class MoneyOrderController {
         receiverAmount: body.receiverAmount,
         exchangeRate: body.exchangeRate,
         userId: user.userId,
-        receiverId: body.receiverId,
+        receiverId: body.receiver,
     };
 
     await moneyOrderService.createMoneyOrder(payload);

@@ -1,4 +1,7 @@
-import { MoneyOrderDeliveryStatus, MoneyOrderStatus } from '@/src/common/enum/money-order-status.enum';
+import {
+  MoneyOrderDeliveryStatus,
+  MoneyOrderStatus,
+} from '@/src/common/enum/money-order-status.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { AppException } from '@/src/common/exception/app.exception';
 import { TemporalClientService } from '@/src/modules/infrastructure/temporal/client/temporal-client.service';
@@ -11,6 +14,7 @@ import type { UserContract } from '@/src/modules/user/contract/user.contract';
 import { USER_SERVICE } from '@/src/modules/user/user.constant';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import Decimal from 'decimal.js';
 import { Repository } from 'typeorm';
 import { MoneyOrderContract } from '../../contract/money-order.contract';
 import { CreateMoneyOrderDTO } from '../../dto/create-money-order.dto';
@@ -46,29 +50,33 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
       throw AppException.badRequest('SYSTEM_CONFIG_NOT_FOUND_FOR_USA');
     }
 
-    const exchangeRate = BigInt(data.exchangeRate);
+    // ✅ Use Decimal for precise decimal arithmetic
+    const exchangeRate = new Decimal(data.exchangeRate);
+    const systemExchangeRate = new Decimal(systemConfig.exchangeRate);
 
-    if (exchangeRate !== BigInt(systemConfig.exchangeRate)) {
+    if (!exchangeRate.equals(systemExchangeRate)) {
       throw AppException.badRequest('INVALID_EXCHANGE_RATE_PROVIDED');
     }
 
-    const sendingAmount = BigInt(data.sendingAmount);
-    const receiverAmount = BigInt(data.receiverAmount);
+    const sendingAmount = new Decimal(data.sendingAmount);
+    const receiverAmount = new Decimal(data.receiverAmount);
 
     // 🔴 CORE VALIDATION
-    const calculatedReceiverAmount = sendingAmount * exchangeRate;
+    const calculatedReceiverAmount = sendingAmount.times(exchangeRate);
 
-    if (calculatedReceiverAmount !== receiverAmount) {
+    if (!calculatedReceiverAmount.equals(receiverAmount)) {
       throw AppException.badRequest('INVALID_RECEIVER_AMOUNT');
     }
 
+    // ✅ Save amounts as strings to avoid JS floating point issues
     const moneyOrder = new MoneyOrder();
-    moneyOrder.sendingAmount = sendingAmount.toString();
-    moneyOrder.receiverAmount = receiverAmount.toString();
-    moneyOrder.promiseExchangeRate = exchangeRate.toString();
-    
+    moneyOrder.sendingAmount = sendingAmount.toFixed(); // string
+    moneyOrder.receiverAmount = receiverAmount.toFixed();
+    moneyOrder.promiseExchangeRate = exchangeRate.toFixed();
+
     moneyOrder.status = MoneyOrderStatus.INITIATED;
-    moneyOrder.deliveryStatus = MoneyOrderDeliveryStatus.DELIVERY_NOT_AUTHORIZED;
+    moneyOrder.deliveryStatus =
+      MoneyOrderDeliveryStatus.DELIVERY_NOT_AUTHORIZED;
 
     moneyOrder.user = await this.userService.getUserById(data.userId);
     moneyOrder.receiver = await this.receiverService.getReceiverByIdAndUserId(
@@ -83,7 +91,11 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
       [save.id],
       'money-order-task-queue',
     );
-    Logger.log(`Started workflow ${workflow.workflowId} for Money Order ID: ${save.id}`);
+
+    Logger.log(
+      `Started workflow ${workflow.workflowId} for Money Order ID: ${save.id}`,
+    );
+
     return save;
   }
 }

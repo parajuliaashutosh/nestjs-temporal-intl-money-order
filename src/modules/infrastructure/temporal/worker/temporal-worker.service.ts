@@ -15,7 +15,7 @@ export class TemporalWorkerService {
     try {
       const address = this.configService.get<string>('temporal.connection.address') || 'localhost:7233';
       const namespace = this.configService.get<string>('temporal.namespace') || 'money-order';
-      const taskQueue = this.configService.get<string>('temporal.taskQueue') || 'money-order-queue';
+      const taskQueue = this.configService.get<string>('temporal.taskQueue') || 'money-order-task-queue';
 
       // Connect to Temporal server
       const connection: NativeConnection = await NativeConnection.connect({ address });

@@ -42,13 +42,13 @@ export class MoneyOrder extends Base {
   @Column({ type: 'jsonb', nullable: true })
   metadata: any;
 
-  @ManyToOne(() => Receiver, (receiver) => receiver.moneyOrders, {
+  @ManyToOne(() => User, (user) => user.moneyOrders, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => User, (user) => user.receivers, {
+  @ManyToOne(() => Receiver, (receiver) => receiver.moneyOrders, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'receiver_id' })
