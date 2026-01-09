@@ -7,4 +7,6 @@ export interface AuthContract {
   login(data: LoginDTO): Promise<{ accessToken: string, refreshToken: string }>;
   refreshToken(refreshToken: string): Promise<{ accessToken: string, refreshToken: string }>;
   getAuthById(id: string): Promise<Auth | null>;
+  getAuthByEmail(email: string): Promise<Auth | null>;
+  getAuthByPhone(phone: string): Promise<Auth | null>;
 }

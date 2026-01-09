@@ -1,33 +1,40 @@
+import { User } from '@/src/common/decorator/authenticate/rest/user.decorator';
 import { CountryCode } from '@/src/common/decorator/header/country-code.decorator';
 import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-code.pipe';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
+import type { ReqUserPayload } from '@/src/common/guard/rest/authentication.guard';
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
 import { Body, Controller, Inject, Post } from '@nestjs/common';
-import type { WalletContract } from '../../contract/wallet.contract';
-import { WalletTopUpDTO } from '../../dto/wallet-topup.dto';
-import { WALLET_SERVICE } from '../../wallet.constant';
-import { WalletTopUpReqDTO } from './dto/wallet-topup-req.dto';
+import { CreateMoneyOrderDTO } from '../../dto/create-money-order.dto';
+import { MONEY_ORDER_FACTORY } from '../../money-order.constant';
+import { MoneyOrderFactory } from '../../service/money-order.factory';
+import { CreateMoneyOrderReqDTO } from './dto/create-money-order-req.dto';
 
-@Controller('wallet')
-export class WalletController {
+@Controller('money-order')
+export class MoneyOrderController {
   constructor(
-    @Inject(WALLET_SERVICE) private readonly walletService: WalletContract,
+    @Inject(MONEY_ORDER_FACTORY) private readonly moneyOrderFactory: MoneyOrderFactory,
     // private readonly temporalClient: TemporalClientService,
   ) {}
 
   // TODO: a web hook guard to be added here
-  @Post('/update-balance')
+  @Post('/')
   async updateBalanceWebhook(
     @CountryCode(CountryCodePipe) countryCode: SupportedCountry,
-    @Body() body: WalletTopUpReqDTO,
+    @User() user: ReqUserPayload,
+    @Body() body: CreateMoneyOrderReqDTO,
   ) {
-    const payload: WalletTopUpDTO = {
-      id: body.id,
-      userId: body.userId,
-      country: countryCode,
-      amount: body.amount,
+    const moneyOrderService = this.moneyOrderFactory.getMoneyOrderService(countryCode);
+    
+    const payload: CreateMoneyOrderDTO = {
+        sendingAmount: body.sendingAmount,
+        receiverAmount: body.receiverAmount,
+        exchangeRate: body.exchangeRate,
+        userId: user.userId,
+        receiverId: body.receiverId,
     };
-    await this.walletService.walletTopUp(payload);
+
+    await moneyOrderService.createMoneyOrder(payload);
     return RestResponse.builder()
       .setSuccess(true)
       .setMessage('Wallet topped up successfully')

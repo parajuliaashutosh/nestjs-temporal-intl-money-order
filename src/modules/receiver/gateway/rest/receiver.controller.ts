@@ -26,7 +26,7 @@ export class ReceiverController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Authenticate()
-  @Authorize([Role.SUDO_ADMIN, Role.SUPER_ADMIN, Role.ADMIN])
+  @Authorize([Role.USER])
   async register(@CountryCode(CountryCodePipe) _: SupportedCountry, @User() user: ReqUserPayload, @Body() data: CreateReceiverReqDTO) {
     const payload: CreateReceiverDTO = {
       firstName: data.firstName,
@@ -49,6 +49,9 @@ export class ReceiverController {
   }
 
   @Get()
+  @HttpCode(HttpStatus.OK)              
+  @Authenticate()
+  @Authorize([Role.USER])
   async getReceiver(
     @User() user: ReqUserPayload,
     @Param('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -73,7 +76,7 @@ export class ReceiverController {
 
     return RestResponse.builder()
       .setSuccess(true)
-      .setMessage('System config fetched successfully')
+      .setMessage('Receiver fetched successfully')
       .setData(paginatedData)
       .build();
   }

@@ -35,10 +35,12 @@ export class AuthService implements AuthContract {
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const auth = await this.authRepo
       .createQueryBuilder('auth')
+      .addSelect('auth.password')
+      .leftJoinAndSelect('auth.users', 'users')
+      .leftJoinAndSelect('auth.admin', 'admin')
       .where('auth.email = :username OR auth.phone = :username', {
         username: data.username,
       })
-      .addSelect('auth.password')
       .getOne();
     if (!auth) {
       throw AppException.badRequest('INVALID_CREDENTIALS');
@@ -55,7 +57,11 @@ export class AuthService implements AuthContract {
     const tokenPayload: TokenPayload = {
       key: crypto.randomUUID(),
       id: auth.id,
-      user: auth.users?.map(user => ({ userId: user.id, country: user.country })) || [],
+      user:
+        auth.users?.map((user) => ({
+          userId: user.id,
+          country: user.country,
+        })) || [],
       adminId: auth.admin?.id,
       role: auth.role,
     };
@@ -76,7 +82,11 @@ export class AuthService implements AuthContract {
     const tokenPayload: TokenPayload = {
       key: crypto.randomUUID(),
       id: auth.id,
-      user: auth.users?.map(user => ({ userId: user.id, country: user.country })) || [],
+      user:
+        auth.users?.map((user) => ({
+          userId: user.id,
+          country: user.country,
+        })) || [],
       adminId: auth.admin?.id,
       role: auth.role,
     };
@@ -89,6 +99,20 @@ export class AuthService implements AuthContract {
       .leftJoinAndSelect('auth.users', 'users')
       .leftJoinAndSelect('auth.admin', 'admin')
       .where('auth.id = :id', { id })
+      .getOne();
+  }
+
+  public async getAuthByEmail(email: string): Promise<Auth | null> {
+    return await this.authRepo
+      .createQueryBuilder('auth')
+      .where('auth.email = :email', { email })
+      .getOne();
+  }
+
+  public async getAuthByPhone(phone: string): Promise<Auth | null> {
+    return await this.authRepo
+      .createQueryBuilder('auth')
+      .where('auth.phone = :phone', { phone })
       .getOne();
   }
 }

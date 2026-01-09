@@ -5,7 +5,7 @@ export default registerAs('temporal', () => ({
     address: process.env.TEMPORAL_ADDRESS || 'localhost:7233',
   },
   namespace: process.env.TEMPORAL_NAMESPACE || 'default',
-  taskQueue: process.env.TEMPORAL_TASK_QUEUE || 'wallet-task-queue',
+  taskQueue: process.env.TEMPORAL_TASK_QUEUE || 'money-order-task-queue',
   workflowOptions: {
     workflowExecutionTimeout: '10m',
     workflowRunTimeout: '5m',

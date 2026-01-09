@@ -81,7 +81,7 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
     const workflow = await this.workflowClient.startWorkflow(
       'usaMoneyOrderWorkflow',
       [save.id],
-      'money-order',
+      'money-order-task-queue',
     );
     Logger.log(`Started workflow ${workflow.workflowId} for Money Order ID: ${save.id}`);
     return save;

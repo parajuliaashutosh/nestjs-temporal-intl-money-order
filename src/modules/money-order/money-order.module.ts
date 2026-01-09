@@ -22,6 +22,7 @@ import { UsaMoneyOrderService } from './service/usa/usa-money-order.service';
         provide: MONEY_ORDER_FACTORY,
         useClass: MoneyOrderFactory
     }],
-    exports: [MONEY_ORDER_FACTORY]
+    exports: [MONEY_ORDER_FACTORY],
+    controllers: [],
 })
 export class MoneyOrderModule {}
