@@ -98,4 +98,12 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
 
     return save;
   }
+
+  public async screenReceiver(moneyOrderId: string): Promise<boolean> {
+    // Implement receiver screening logic specific to USA
+    await new Promise((resolve) => setTimeout(resolve, 100)); 
+    Logger.log(`Screening receiver for Money Order ID: ${moneyOrderId}`);
+    // For demonstration, assume screening is always successful
+    return true;
+  }
 }

@@ -5,7 +5,6 @@ import {
 } from '@nestjs/typeorm';
 import path from 'path';
 import { DataSource } from 'typeorm';
-import { DataSourceOptions } from 'typeorm/browser';
 import { initializeTransactionalContext } from '../common/context/transaction/patch-typeorm';
 import { AppDataSource } from '../common/provider/datasource.provider';
 
@@ -36,7 +35,7 @@ export const typeOrmConfigAsync: TypeOrmModuleAsyncOptions = {
   },
   inject: [ConfigService],
   dataSourceFactory: async (options) => {
-    const dataSource = new DataSource(options as DataSourceOptions);
+    const dataSource = new DataSource(options);
     await dataSource.initialize();
     AppDataSource.dataSource = dataSource;
     return dataSource;

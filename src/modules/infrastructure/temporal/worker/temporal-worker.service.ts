@@ -1,15 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
+import type { MoneyOrderFactoryContract } from '@/src/modules/money-order/contract/money-order-factory.contract';
+import { MONEY_ORDER_FACTORY } from '@/src/modules/money-order/money-order.constant';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NativeConnection, Worker } from '@temporalio/worker';
 import { join } from 'path';
-import * as activities from '../activities';
 
 @Injectable()
 export class TemporalWorkerService {
   private readonly logger = new Logger(TemporalWorkerService.name);
   private worker: Worker;
 
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    @Inject(MONEY_ORDER_FACTORY)
+    private readonly moneyOrderActivities: MoneyOrderFactoryContract,
+  ) {}
 
   async start() {
     try {
@@ -26,7 +31,9 @@ export class TemporalWorkerService {
         namespace,
         taskQueue,
         workflowsPath: join(__dirname, '../workflows'),
-        activities,
+        activities: {
+          screenReceiver: this.moneyOrderActivities.screenReceiver.bind(this.moneyOrderActivities),
+        },
       });
 
       this.logger.log(`Worker starting on task queue: ${taskQueue}`);
