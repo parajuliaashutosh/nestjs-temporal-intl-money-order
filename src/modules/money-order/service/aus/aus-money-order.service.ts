@@ -14,7 +14,7 @@ import { CreateMoneyOrderDTO } from '../../dto/create-money-order.dto';
 import { MoneyOrder } from '../../entity/money-order.entity';
 
 @Injectable()
-export class UsaMoneyOrderService implements MoneyOrderContract {
+export class AusMoneyOrderService implements MoneyOrderContract {
   constructor(
     @InjectRepository(MoneyOrder)
     private readonly moneyOrderRepo: Repository<MoneyOrder>,
@@ -33,11 +33,11 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
     data: CreateMoneyOrderDTO,
   ): Promise<MoneyOrder> {
     const systemConfig = await this.systemConfigService.getSystemConfigByKey(
-      SupportedCountry.USA,
+      SupportedCountry.AUS,
     );
 
     if (!systemConfig) {
-      throw AppException.badRequest('SYSTEM_CONFIG_NOT_FOUND_FOR_USA');
+      throw AppException.badRequest('SYSTEM_CONFIG_NOT_FOUND_FOR_AUS');
     }
 
     const exchangeRate = BigInt(data.exchangeRate);

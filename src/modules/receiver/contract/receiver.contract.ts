@@ -6,4 +6,6 @@ import { Receiver } from "../entity/receiver.entity";
 export interface ReceiverContract {
     create(data: CreateReceiverDTO): Promise<Receiver>;
     getReceiversByUserId(data: GetReceiverDTO): Promise<DataAndCount<Receiver[]>>;
+    getReceiverById(receiverId: string): Promise<Receiver | null>;
+    getReceiverByIdAndUserId(receiverId: string, userId: string): Promise<Receiver | null>;
 }

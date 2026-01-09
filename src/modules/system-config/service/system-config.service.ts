@@ -56,7 +56,7 @@ export class SystemConfigService implements SystemConfigContract {
     return saved;
   }
 
-  public async invalidateSystemConfigCache(
+  private async invalidateSystemConfigCache(
     countryCode: string,
   ): Promise<void> {
     const cacheKey = CACHE_KEYS.systemConfigByCountry(countryCode);

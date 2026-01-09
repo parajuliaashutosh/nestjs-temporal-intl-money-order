@@ -63,4 +63,19 @@ export class ReceiverService implements ReceiverContract {
       .setCount(count)
       .build();
   }
+
+  async getReceiverById(receiverId: string): Promise<Receiver | null> {
+    return this.receiverRepo
+      .createQueryBuilder('receiver')
+      .where('receiver.id = :receiverId', { receiverId })
+      .getOne();
+  }
+
+  async getReceiverByIdAndUserId(receiverId: string, userId: string): Promise<Receiver | null> {
+    return this.receiverRepo
+      .createQueryBuilder('receiver')
+      .where('receiver.id = :receiverId', { receiverId })
+      .andWhere('receiver.user_id = :userId', { userId })
+      .getOne();
+  }
 }
