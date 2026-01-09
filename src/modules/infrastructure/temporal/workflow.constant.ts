@@ -1,0 +1,2 @@
+export const WORKFLOW_CLIENT = Symbol('WORKFLOW_CLIENT');
+export const WORKFLOW_WORKER = Symbol('WORKFLOW_WORKER');

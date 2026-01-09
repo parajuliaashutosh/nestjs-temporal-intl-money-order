@@ -1,4 +1,5 @@
 import Base from '@/src/common/entity/base.entity';
+import { MoneyOrderDeliveryStatus, MoneyOrderStatus } from '@/src/common/enum/money-order-status.enum';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { Receiver } from '../../receiver/entity/receiver.entity';
 import { User } from '../../user/entity/user.entity';
@@ -21,6 +22,22 @@ export class MoneyOrder extends Base {
     scale: 8,
   })
   promiseExchangeRate: string;
+
+  @Column({
+    type: 'enum',
+    enum: MoneyOrderStatus,
+    name: 'status',
+    default: MoneyOrderStatus.INITIATED,
+  })
+  status: MoneyOrderStatus;
+
+  @Column({
+    type: 'enum',
+    enum: MoneyOrderDeliveryStatus,
+    name: 'delivery_status',
+    default: MoneyOrderDeliveryStatus.DELIVERY_NOT_AUTHORIZED,
+  })
+  deliveryStatus: MoneyOrderDeliveryStatus;
 
   @Column({ type: 'jsonb', nullable: true })
   metadata: any;

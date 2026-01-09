@@ -1,0 +1,1 @@
+export const MONEY_ORDER_FACTORY = Symbol('MONEY_ORDER_FACTORY');

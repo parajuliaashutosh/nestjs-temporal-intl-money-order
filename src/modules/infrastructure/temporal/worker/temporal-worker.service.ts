@@ -15,12 +15,12 @@ export class TemporalWorkerService {
     try {
       const address = this.configService.get<string>('temporal.connection.address') || 'localhost:7233';
       const namespace = this.configService.get<string>('temporal.namespace') || 'money-order';
-      const taskQueue = this.configService.get<string>('temporal.taskQueue') || 'wallet-task-queue';
+      const taskQueue = this.configService.get<string>('temporal.taskQueue') || 'money-order-queue';
 
       // Connect to Temporal server
-      const connection = await NativeConnection.connect({ address });
+      const connection: NativeConnection = await NativeConnection.connect({ address });
 
-      // Create workerz*
+      // Create worker
       this.worker = await Worker.create({
         connection,
         namespace,

@@ -13,6 +13,7 @@ import { ReceiverService } from './service/receiver.service';
   providers: [{
     provide: RECEIVER_SERVICE,
     useClass: ReceiverService,
-  }]
+  }],
+  exports: [RECEIVER_SERVICE],
 })
 export class ReceiverModule {}

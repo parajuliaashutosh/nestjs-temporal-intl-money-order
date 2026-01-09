@@ -2,7 +2,6 @@ import { CountryCode } from '@/src/common/decorator/header/country-code.decorato
 import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-code.pipe';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
-import { TemporalClientService } from '@/src/modules/infrastructure/temporal/client/temporal-client.service';
 import { Body, Controller, Inject, Post } from '@nestjs/common';
 import type { WalletContract } from '../../contract/wallet.contract';
 import { WalletTopUpDTO } from '../../dto/wallet-topup.dto';
@@ -13,7 +12,7 @@ import { WalletTopUpReqDTO } from './dto/wallet-topup-req.dto';
 export class WalletController {
   constructor(
     @Inject(WALLET_SERVICE) private readonly walletService: WalletContract,
-    private readonly temporalClient: TemporalClientService,
+    // private readonly temporalClient: TemporalClientService,
   ) {}
 
   // TODO: a web hook guard to be added here
@@ -35,19 +34,19 @@ export class WalletController {
       .build();
   }
 
-  @Post('update-complex-balance')
-  async updateBalance(@Body() body: { userId: string; amount: number }) {
-    console.log("🚀 ~ WalletController ~ updateBalance ~ body:", body);
-    const handle = await this.temporalClient.startWorkflow(
-      'updateWalletWorkflow', // 👈 WORKFLOW NAME
-      [body.userId, body.amount],
-      'wallet-task-queue', // 👈 TASK QUEUE NAME
-    );
+  // @Post('update-complex-balance')
+  // async updateBalance(@Body() body: { userId: string; amount: number }) {
+  //   console.log("🚀 ~ WalletController ~ updateBalance ~ body:", body);
+  //   const handle = await this.temporalClient.startWorkflow(
+  //     'updateWalletWorkflow', // 👈 WORKFLOW NAME
+  //     [body.userId, body.amount],
+  //     'wallet-task-queue', // 👈 TASK QUEUE NAME
+  //   );
 
-    return {
-      message: 'Workflow triggered',
-      workflowId: handle.workflowId,
-      runId: handle?.workflowId,
-    };
-  }
+  //   return {
+  //     message: 'Workflow triggered',
+  //     workflowId: handle.workflowId,
+  //     runId: handle?.workflowId,
+  //   };
+  // }
 }
