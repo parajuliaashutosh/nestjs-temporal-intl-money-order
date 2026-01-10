@@ -70,4 +70,18 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     await this.moneyOrderRepo.save(moneyOrder);
     return moneyOrder;
   }
+
+  public async screenReceiver(moneyOrderId: string): Promise<boolean> {
+    console.log("🚀 ~ AusMoneyOrderService ~ screenReceiver ~ moneyOrderId:", moneyOrderId)
+    // const moneyOrder = await this.moneyOrderRepo.findOne({
+    //   where: { id: moneyOrderId },
+    //   relations: ['receiver'],
+    // });
+
+    // if (!moneyOrder) {
+    //   throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
+    // }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    return true;
+  }
 }

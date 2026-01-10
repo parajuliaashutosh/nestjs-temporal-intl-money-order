@@ -4,6 +4,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NativeConnection, Worker } from '@temporalio/worker';
 import { join } from 'path';
+import * as activities from '../activities';
 
 @Injectable()
 export class TemporalWorkerService {
@@ -18,22 +19,21 @@ export class TemporalWorkerService {
 
   async start() {
     try {
-      const address = this.configService.get<string>('temporal.connection.address') || 'localhost:7233';
-      const namespace = this.configService.get<string>('temporal.namespace') || 'money-order';
-      const taskQueue = this.configService.get<string>('temporal.taskQueue') || 'money-order-task-queue';
+      const address = 'localhost:7233';
+      const namespace =  'money-order';
+      const taskQueue =  'money-order-task-queue';
 
       // Connect to Temporal server
       const connection: NativeConnection = await NativeConnection.connect({ address });
 
       // Create worker
+      console.log("🚀 ~ TemporalWorkerService ~ start ~ activities:", join(__dirname, '../workflows'))
       this.worker = await Worker.create({
         connection,
         namespace,
         taskQueue,
         workflowsPath: join(__dirname, '../workflows'),
-        activities: {
-          screenReceiver: this.moneyOrderActivities.screenReceiver.bind(this.moneyOrderActivities),
-        },
+        activities: activities,
       });
 
       this.logger.log(`Worker starting on task queue: ${taskQueue}`);

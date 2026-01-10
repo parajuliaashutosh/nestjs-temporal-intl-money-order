@@ -1,1 +1,1 @@
-export * from './fund-transfer.workflow';
+export * from './usa-money-order.workflow';
