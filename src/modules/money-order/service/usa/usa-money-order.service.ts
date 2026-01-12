@@ -166,7 +166,6 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
       .createQueryBuilder('moneyOrder')
       .leftJoinAndSelect('moneyOrder.user', 'user')
       .leftJoinAndSelect('user.wallet', 'wallet')
-      .setLock('pessimistic_write')
       .where('moneyOrder.id = :moneyOrderId', { moneyOrderId })
       .getOne();
 
