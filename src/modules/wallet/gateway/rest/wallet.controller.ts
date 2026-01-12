@@ -12,7 +12,6 @@ import { WalletTopUpReqDTO } from './dto/wallet-topup-req.dto';
 export class WalletController {
   constructor(
     @Inject(WALLET_SERVICE) private readonly walletService: WalletContract,
-    // private readonly temporalClient: TemporalClientService,
   ) {}
 
   // TODO: a web hook guard to be added here
@@ -33,20 +32,4 @@ export class WalletController {
       .setMessage('Wallet topped up successfully')
       .build();
   }
-
-  // @Post('update-complex-balance')
-  // async updateBalance(@Body() body: { userId: string; amount: number }) {
-  //   console.log("🚀 ~ WalletController ~ updateBalance ~ body:", body);
-  //   const handle = await this.temporalClient.startWorkflow(
-  //     'updateWalletWorkflow', // 👈 WORKFLOW NAME
-  //     [body.userId, body.amount],
-  //     'wallet-task-queue', // 👈 TASK QUEUE NAME
-  //   );
-
-  //   return {
-  //     message: 'Workflow triggered',
-  //     workflowId: handle.workflowId,
-  //     runId: handle?.workflowId,
-  //   };
-  // }
 }

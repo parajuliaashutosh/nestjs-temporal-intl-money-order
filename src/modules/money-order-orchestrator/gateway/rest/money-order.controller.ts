@@ -38,7 +38,7 @@ export class MoneyOrderController {
 
     return RestResponse.builder()
       .setSuccess(true)
-      .setMessage('Wallet topped up successfully')
+      .setMessage('Money order initiated successfully')
       .build();
   }
 
