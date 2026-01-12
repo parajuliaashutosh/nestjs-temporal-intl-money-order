@@ -1,6 +1,4 @@
-import type { MoneyOrderFactoryContract } from '@/src/modules/money-order/contract/money-order-factory.contract';
-import { MONEY_ORDER_FACTORY } from '@/src/modules/money-order/money-order.constant';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NativeConnection, Worker } from '@temporalio/worker';
 import { join } from 'path';
@@ -13,8 +11,6 @@ export class TemporalWorkerService {
 
   constructor(
     private configService: ConfigService,
-    @Inject(MONEY_ORDER_FACTORY)
-    private readonly moneyOrderActivities: MoneyOrderFactoryContract,
   ) {}
 
   async start() {
