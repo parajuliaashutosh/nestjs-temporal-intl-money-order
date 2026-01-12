@@ -2,7 +2,7 @@ import { CountryCode } from '@/src/common/decorator/header/country-code.decorato
 import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-code.pipe';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
-import { Body, Controller, Inject, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Inject, Post } from '@nestjs/common';
 import type { WalletContract } from '../../contract/wallet.contract';
 import { WalletTopUpDTO } from '../../dto/wallet-topup.dto';
 import { WALLET_SERVICE } from '../../wallet.constant';
@@ -16,6 +16,7 @@ export class WalletController {
 
   // TODO: a web hook guard to be added here
   @Post('/update-balance')
+  @HttpCode(HttpStatus.OK)
   async updateBalanceWebhook(
     @CountryCode(CountryCodePipe) countryCode: SupportedCountry,
     @Body() body: WalletTopUpReqDTO,

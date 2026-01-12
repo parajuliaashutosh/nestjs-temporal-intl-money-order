@@ -1,14 +1,18 @@
 import { AppException } from '@/src/common/exception/app.exception';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Client } from '@temporalio/client';
 
 @Injectable()
-export class TemporalClientService  {
+export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
   private client: Client;
   private readonly logger = new Logger(TemporalClientService.name);
 
   onModuleInit() {
     this.connect();
+  }
+
+  async onModuleDestroy() {
+    await this.stopWorker();
   }
 
   private connect() {
@@ -26,12 +30,27 @@ export class TemporalClientService  {
     }
   }
 
+  private async stopWorker() {
+    if (this.client) {
+      await this.client.options.connection.close();
+      this.logger.log('Temporal worker stopped');
+    }
+  }
+
   async startWorkflow(workflowType: string, args: any[], taskQueue: string) {
-    console.log("🚀 ~ TemporalClientService ~ startWorkflow ~ taskQueue:", taskQueue)
-    console.log("🚀 ~ TemporalClientService ~ startWorkflow ~ args:", args)
-    console.log("🚀 ~ TemporalClientService ~ startWorkflow ~ workflowType:", workflowType)
+    console.log(
+      '🚀 ~ TemporalClientService ~ startWorkflow ~ taskQueue:',
+      taskQueue,
+    );
+    console.log('🚀 ~ TemporalClientService ~ startWorkflow ~ args:', args);
+    console.log(
+      '🚀 ~ TemporalClientService ~ startWorkflow ~ workflowType:',
+      workflowType,
+    );
     if (!this.client) {
-      throw AppException.internalServerError('Service maintenance in progress. Please try again later.');
+      throw AppException.internalServerError(
+        'Service maintenance in progress. Please try again later.',
+      );
     }
 
     const handle = await this.client.workflow.start(workflowType, {

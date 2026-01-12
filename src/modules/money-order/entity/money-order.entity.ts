@@ -40,7 +40,7 @@ export class MoneyOrder extends Base {
   deliveryStatus: MoneyOrderDeliveryStatus;
 
   @Column({ type: 'jsonb', nullable: true })
-  metadata: any;
+  metadata: Record<string, any> | null;
 
   @ManyToOne(() => User, (user) => user.moneyOrders, {
     onDelete: 'CASCADE',

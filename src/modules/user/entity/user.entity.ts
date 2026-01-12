@@ -8,10 +8,12 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { Auth } from '../../auth/entity/auth.entity';
 import { MoneyOrder } from '../../money-order/entity/money-order.entity';
 import { Receiver } from '../../receiver/entity/receiver.entity';
+import { Wallet } from '../../wallet/entity/wallet.entity';
 
 @Entity('user')
 @Index(['auth', 'country'], { unique: true })
@@ -40,6 +42,13 @@ export class User extends Base {
     nullable: true,
   })
   country: SupportedCountry;
+
+  @OneToOne(() => Wallet, (wallet) => wallet.user, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'wallet_id' })
+  wallet: Wallet;
 
   @ManyToOne(() => Auth, (auth) => auth.users, {
     onDelete: 'CASCADE',

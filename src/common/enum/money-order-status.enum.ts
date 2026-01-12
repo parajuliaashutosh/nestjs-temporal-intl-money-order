@@ -1,7 +1,11 @@
 export enum MoneyOrderStatus {
   INITIATED = 'PENDING',
 
+  PROCESSING = 'PROCESSING',
+
+  ON_HOLD = 'ON_HOLD',
   COMPLETED = 'COMPLETED',
+  
   FAILED = 'FAILED',
   CANCELLED = 'CANCELLED',
 }

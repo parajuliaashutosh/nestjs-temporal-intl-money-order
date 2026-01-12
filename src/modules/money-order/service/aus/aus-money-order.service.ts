@@ -1,3 +1,4 @@
+import { MoneyOrderStatus } from '@/src/common/enum/money-order-status.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { AppException } from '@/src/common/exception/app.exception';
 import type { ReceiverContract } from '@/src/modules/receiver/contract/receiver.contract';
@@ -6,7 +7,7 @@ import type { SystemConfigContract } from '@/src/modules/system-config/contract/
 import { SYSTEM_CONFIG_SERVICE } from '@/src/modules/system-config/system-config.constant';
 import type { UserContract } from '@/src/modules/user/contract/user.contract';
 import { USER_SERVICE } from '@/src/modules/user/user.constant';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MoneyOrderContract } from '../../contract/money-order.contract';
@@ -72,16 +73,119 @@ export class AusMoneyOrderService implements MoneyOrderContract {
   }
 
   public async screenReceiver(moneyOrderId: string): Promise<boolean> {
-    console.log("🚀 ~ AusMoneyOrderService ~ screenReceiver ~ moneyOrderId:", moneyOrderId)
-    // const moneyOrder = await this.moneyOrderRepo.findOne({
-    //   where: { id: moneyOrderId },
-    //   relations: ['receiver'],
-    // });
+    Logger.log('========================================');
+    Logger.log('🔍 ACTIVITY: screenReceiver');
+    Logger.log('   Money Order ID:', moneyOrderId);
+    Logger.log('========================================');
 
-    // if (!moneyOrder) {
-    //   throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
-    // }
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const moneyOrder = await this.moneyOrderRepo
+      .createQueryBuilder('moneyOrder')
+      .leftJoinAndSelect('moneyOrder.receiver', 'receiver')
+      .where('moneyOrder.id = :moneyOrderId', { moneyOrderId })
+      .getOne();
+
+    if (!moneyOrder) {
+      throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
+    }
+
+    const passed = Math.random() > 0.4;
+    Logger.log(`✅ Result: ${passed ? 'PASSED' : 'FAILED'}`);
+
+    if (passed) {
+      moneyOrder.metadata = {
+        ...moneyOrder.metadata,
+        screeningPassedAt: `Screening passed ${new Date().toISOString()}`,
+      };
+      await this.moneyOrderRepo.save(moneyOrder);
+      return true;
+    } else {
+      moneyOrder.status = MoneyOrderStatus.ON_HOLD;
+      moneyOrder.metadata = {
+        ...(moneyOrder.metadata ?? {}),
+        screeningFailureReason: `Receiver failed the screening process - ${new Date().toISOString()}`,
+      };
+      await this.moneyOrderRepo.save(moneyOrder);
+      return false;
+    }
+  }
+
+  public async checkWalletBalance(moneyOrderId: string): Promise<boolean> {
+    Logger.log('========================================');
+    Logger.log('💰 ACTIVITY: checkWalletBalance');
+    Logger.log('========================================');
+
+    const moneyOrder = await this.moneyOrderRepo
+      .createQueryBuilder('moneyOrder')
+      .leftJoinAndSelect('moneyOrder.user', 'user')
+      .leftJoinAndSelect('user.wallet', 'wallet')
+      .where('moneyOrder.id = :moneyOrderId', { moneyOrderId })
+      .getOne();
+
+    if (!moneyOrder) {
+      throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
+    }
+
+    const walletBalance = new Decimal(moneyOrder.user.wallet.balance);
+    const sendingAmount = new Decimal(moneyOrder.sendingAmount);
+
+    if (walletBalance.greaterThanOrEqualTo(sendingAmount)) {
+      Logger.log(
+        `✅ Sufficient wallet balance: ${walletBalance.toFixed()} cents`,
+      );
+      return true;
+    } else {
+      Logger.log(
+        `❌ Insufficient wallet balance: ${walletBalance.toFixed()} cents`,
+      );
+      moneyOrder.status = MoneyOrderStatus.ON_HOLD;
+      moneyOrder.metadata = {
+        ...(moneyOrder.metadata ?? {}),
+        insufficientWalletBalanceAt: `Insufficient wallet balance - ${new Date().toISOString()}`,
+      };
+      await this.moneyOrderRepo.save(moneyOrder);
+      return false;
+    }
+  }
+
+  public async transferFunds(moneyOrderId: string): Promise<boolean> {
+    Logger.log('========================================');
+    Logger.log('💸 ACTIVITY: transferFunds');
+    Logger.log('========================================');
+
+    const moneyOrder = await this.moneyOrderRepo
+      .createQueryBuilder('moneyOrder')
+      .leftJoinAndSelect('moneyOrder.user', 'user')
+      .leftJoinAndSelect('user.wallet', 'wallet')
+      .setLock('pessimistic_write')
+      .where('moneyOrder.id = :moneyOrderId', { moneyOrderId })
+      .getOne();
+
+    if (!moneyOrder) {
+      throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
+    }
+
+    const walletBalance = new Decimal(moneyOrder.user.wallet.balance);
+    const sendingAmount = new Decimal(moneyOrder.sendingAmount);
+
+    if (!walletBalance.greaterThanOrEqualTo(sendingAmount)) {
+      throw AppException.badRequest('INSUFFICIENT_WALLET_BALANCE');
+    }
+
+    // Deduct sending amount from wallet
+    const newBalance = walletBalance.minus(sendingAmount);
+    moneyOrder.user.wallet.balance = newBalance.toFixed();
+
+    moneyOrder.status = MoneyOrderStatus.COMPLETED;
+    moneyOrder.metadata = {
+      ...(moneyOrder.metadata ?? {}),
+      fundsTransferredAt: `Funds transferred - ${new Date().toISOString()}`,
+    };
+
+    await this.moneyOrderRepo.save(moneyOrder);
+    Logger.log(
+      `✅ Transferred ${sendingAmount.toFixed()} cents. New wallet balance: ${newBalance.toFixed()} cents`,
+    );
+
     return true;
   }
 }
