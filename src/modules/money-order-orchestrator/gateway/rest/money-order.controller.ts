@@ -7,20 +7,18 @@ import { Role } from '@/src/common/enum/role.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import type { ReqUserPayload } from '@/src/common/guard/rest/authentication.guard';
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
+import { CreateMoneyOrderDTO } from '@/src/modules/money-order/dto/create-money-order.dto';
 import { Body, Controller, Inject, Post } from '@nestjs/common';
-import { CreateMoneyOrderDTO } from '../../dto/create-money-order.dto';
-import { MONEY_ORDER_FACTORY } from '../../money-order.constant';
-import { MoneyOrderFactory } from '../../service/money-order.factory';
+import { MONEY_ORDER_ORCHESTRATOR_SERVICE } from '../../money-order-orchestrator.constant';
+import { MoneyOrderOrchestratorService } from '../../service/money-order-orchestrator.service';
 import { CreateMoneyOrderReqDTO } from './dto/create-money-order-req.dto';
 
 @Controller('money-order')
 export class MoneyOrderController {
   constructor(
-    @Inject(MONEY_ORDER_FACTORY) private readonly moneyOrderFactory: MoneyOrderFactory,
-    // private readonly temporalClient: TemporalClientService,
+    @Inject(MONEY_ORDER_ORCHESTRATOR_SERVICE) private readonly moneyOrderOrchestratorService: MoneyOrderOrchestratorService,
   ) {}
 
-  // TODO: a web hook guard to be added here
   @Post('/')
   @Authenticate()
   @Authorize([Role.USER])
@@ -29,8 +27,6 @@ export class MoneyOrderController {
     @User() user: ReqUserPayload,
     @Body() body: CreateMoneyOrderReqDTO,
   ) {
-    const moneyOrderService = this.moneyOrderFactory.getMoneyOrderService(countryCode);
-    
     const payload: CreateMoneyOrderDTO = {
         sendingAmount: body.sendingAmount,
         receiverAmount: body.receiverAmount,
@@ -38,8 +34,8 @@ export class MoneyOrderController {
         userId: user.userId,
         receiverId: body.receiver,
     };
+    await this.moneyOrderOrchestratorService.createMoneyOrder(payload, countryCode);
 
-    await moneyOrderService.createMoneyOrder(payload);
     return RestResponse.builder()
       .setSuccess(true)
       .setMessage('Wallet topped up successfully')

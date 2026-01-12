@@ -4,8 +4,6 @@ import {
 } from '@/src/common/enum/money-order-status.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { AppException } from '@/src/common/exception/app.exception';
-import { TemporalClientService } from '@/src/modules/infrastructure/temporal/client/temporal-client.service';
-import { WORKFLOW_CLIENT } from '@/src/modules/infrastructure/temporal/workflow.constant';
 import type { ReceiverContract } from '@/src/modules/receiver/contract/receiver.contract';
 import { RECEIVER_SERVICE } from '@/src/modules/receiver/receiver.constant';
 import type { SystemConfigContract } from '@/src/modules/system-config/contract/system-config.contract';
@@ -35,8 +33,6 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
     @Inject(SYSTEM_CONFIG_SERVICE)
     private readonly systemConfigService: SystemConfigContract,
 
-    @Inject(WORKFLOW_CLIENT)
-    private readonly workflowClient: TemporalClientService,
   ) {}
 
   public async createMoneyOrder(
@@ -84,19 +80,7 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
       data.userId,
     );
 
-    const save = await this.moneyOrderRepo.save(moneyOrder);
-
-    const workflow = await this.workflowClient.startWorkflow(
-      'usaMoneyOrderWorkflow',
-      [save.id],
-      'money-order-task-queue',
-    );
-
-    Logger.log(
-      `Started workflow ${workflow.workflowId} for Money Order ID: ${save.id}`,
-    );
-
-    return save;
+    return await this.moneyOrderRepo.save(moneyOrder);
   }
 
   public async screenReceiver(moneyOrderId: string): Promise<boolean> {

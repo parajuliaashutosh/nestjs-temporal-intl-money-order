@@ -14,6 +14,7 @@ import { ReceiverModule } from './modules/receiver/receiver.module';
 import { RegistrationModule } from './modules/registration/registration.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
 import { WalletModule } from './modules/wallet/wallet.module';
+import { MoneyOrderOrchestratorModule } from './modules/money-order-orchestrator/money-order-orchestrator.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
     TemporalModule,
     ReceiverModule,
     MoneyOrderModule,
+    MoneyOrderOrchestratorModule,
   ],
   controllers: [],
   providers: [],
