@@ -1,6 +1,8 @@
 import { AppException } from '@/src/common/exception/app.exception';
+import { UTIL_FUNCTIONS } from '@/src/common/util/common-functions';
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Client } from '@temporalio/client';
+import { WorkflowValue } from '../workflow.constant';
 
 @Injectable()
 export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
@@ -37,26 +39,27 @@ export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async startWorkflow(workflowType: string, args: any[], taskQueue: string) {
+  async startWorkflow(WorkflowValue: WorkflowValue, args: any[], taskQueue: string) {
     console.log(
       '🚀 ~ TemporalClientService ~ startWorkflow ~ taskQueue:',
       taskQueue,
     );
     console.log('🚀 ~ TemporalClientService ~ startWorkflow ~ args:', args);
     console.log(
-      '🚀 ~ TemporalClientService ~ startWorkflow ~ workflowType:',
-      workflowType,
+      '🚀 ~ TemporalClientService ~ startWorkflow ~ workflowKey:',
+      WorkflowValue,
     );
     if (!this.client) {
       throw AppException.internalServerError(
         'Service maintenance in progress. Please try again later.',
       );
     }
+    const workflowId = `${UTIL_FUNCTIONS.toKebabCase(WorkflowValue)}-${args?.[0]}-${Date.now()}`;
 
-    const handle = await this.client.workflow.start(workflowType, {
+    const handle = await this.client.workflow.start(WorkflowValue, {
       args,
       taskQueue,
-      workflowId: `${workflowType}-${Date.now()}`,
+      workflowId,
     });
 
     this.logger.log(`🚀 Workflow started: ${handle.workflowId}`);
