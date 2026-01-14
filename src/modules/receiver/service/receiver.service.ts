@@ -72,7 +72,7 @@ export class ReceiverService implements ReceiverContract {
   }
 
   async getReceiverByIdAndUserId(receiverId: string, userId: string): Promise<Receiver | null> {
-    return this.receiverRepo
+    return await this.receiverRepo
       .createQueryBuilder('receiver')
       .where('receiver.id = :receiverId', { receiverId })
       .andWhere('receiver.user_id = :userId', { userId })

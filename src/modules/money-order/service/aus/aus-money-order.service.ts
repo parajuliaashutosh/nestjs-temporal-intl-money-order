@@ -9,6 +9,7 @@ import type { UserContract } from '@/src/modules/user/contract/user.contract';
 import { USER_SERVICE } from '@/src/modules/user/user.constant';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import Decimal from 'decimal.js';
 import { Repository } from 'typeorm';
 import { MoneyOrderContract } from '../../contract/money-order.contract';
 import { CreateMoneyOrderDTO } from '../../dto/create-money-order.dto';
@@ -19,13 +20,8 @@ export class AusMoneyOrderService implements MoneyOrderContract {
   constructor(
     @InjectRepository(MoneyOrder)
     private readonly moneyOrderRepo: Repository<MoneyOrder>,
-
-    @Inject(USER_SERVICE)
-    private readonly userService: UserContract,
-
-    @Inject(RECEIVER_SERVICE)
-    private readonly receiverService: ReceiverContract,
-
+    @Inject(USER_SERVICE) private readonly userService: UserContract,
+    @Inject(RECEIVER_SERVICE) private readonly receiverService: ReceiverContract,
     @Inject(SYSTEM_CONFIG_SERVICE)
     private readonly systemConfigService: SystemConfigContract,
   ) {}
@@ -41,34 +37,44 @@ export class AusMoneyOrderService implements MoneyOrderContract {
       throw AppException.badRequest('SYSTEM_CONFIG_NOT_FOUND_FOR_AUS');
     }
 
-    const exchangeRate = BigInt(data.exchangeRate);
+    const exchangeRate = new Decimal(data.exchangeRate);
+    const systemExchangeRate = new Decimal(systemConfig.exchangeRate);
 
-    if (exchangeRate !== BigInt(systemConfig.exchangeRate)) {
+    if (!exchangeRate.equals(systemExchangeRate)) {
       throw AppException.badRequest('INVALID_EXCHANGE_RATE_PROVIDED');
     }
 
-    const sendingAmount = BigInt(data.sendingAmount);
-    const receiverAmount = BigInt(data.receiverAmount);
+    const sendingAmount = new Decimal(data.sendingAmount);
+    const receiverAmount = new Decimal(data.receiverAmount);
 
     // 🔴 CORE VALIDATION
-    const calculatedReceiverAmount = sendingAmount * exchangeRate;
-
-    if (calculatedReceiverAmount !== receiverAmount) {
+    const calculatedReceiverAmount = sendingAmount.times(exchangeRate);
+    
+    if (!calculatedReceiverAmount.equals(receiverAmount)) {
       throw AppException.badRequest('INVALID_RECEIVER_AMOUNT');
     }
 
-    const moneyOrder = new MoneyOrder();
-    moneyOrder.sendingAmount = sendingAmount.toString();
-    moneyOrder.receiverAmount = receiverAmount.toString();
-    moneyOrder.promiseExchangeRate = exchangeRate.toString();
-
-    moneyOrder.user = await this.userService.getUserById(data.userId);
-    moneyOrder.receiver = await this.receiverService.getReceiverByIdAndUserId(
+    const user = await this.userService.getUserById(data.userId);
+    if (!user) {
+      throw AppException.badRequest('USER_NOT_FOUND');
+    }
+    
+    const receiver = await this.receiverService.getReceiverByIdAndUserId( 
       data.receiverId,
       data.userId,
     );
+    if (!receiver) {
+      throw AppException.badRequest('RECEIVER_NOT_FOUND_FOR_USER');
+    }
 
+    const moneyOrder = new MoneyOrder();
+    moneyOrder.sendingAmount = sendingAmount.toFixed();
+    moneyOrder.receiverAmount = receiverAmount.toFixed();
+    moneyOrder.promiseExchangeRate = exchangeRate.toFixed();
+    moneyOrder.user = user;
+    moneyOrder.receiver = receiver;
     await this.moneyOrderRepo.save(moneyOrder);
+
     return moneyOrder;
   }
 
@@ -174,7 +180,6 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     // Deduct sending amount from wallet
     const newBalance = walletBalance.minus(sendingAmount);
     moneyOrder.user.wallet.balance = newBalance.toFixed();
-
     moneyOrder.status = MoneyOrderStatus.COMPLETED;
     moneyOrder.metadata = {
       ...(moneyOrder.metadata ?? {}),
@@ -182,6 +187,7 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     };
 
     await this.moneyOrderRepo.save(moneyOrder);
+
     Logger.log(
       `✅ Transferred ${sendingAmount.toFixed()} cents. New wallet balance: ${newBalance.toFixed()} cents`,
     );
