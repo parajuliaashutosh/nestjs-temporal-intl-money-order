@@ -1,7 +1,7 @@
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { TemporalClientService } from '../../infrastructure/temporal/client/temporal-client.service';
-import { WORKFLOW_CLIENT, WORKFLOWS } from '../../infrastructure/temporal/workflow.constant';
+import { WORKFLOW_CLIENT, workflowBYCountry } from '../../infrastructure/temporal/workflow.constant';
 import { CreateMoneyOrderDTO } from '../../money-order/dto/create-money-order.dto';
 import { MONEY_ORDER_FACTORY } from '../../money-order/money-order.constant';
 import { MoneyOrderFactory } from '../../money-order/service/money-order.factory';
@@ -25,7 +25,7 @@ export class MoneyOrderOrchestratorService {
     const resp = await moneyOrderService.createMoneyOrder(data);
 
     const workflow = await this.workflowClient.startWorkflow(
-      WORKFLOWS.USA_MONEY_ORDER,
+      workflowBYCountry(countryCode),
       [resp.id],
       'money-order-task-queue'
     );
