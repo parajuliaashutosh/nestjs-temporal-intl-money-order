@@ -2,6 +2,7 @@
 export interface RestResponseBuilder<T> {
   setSuccess(value: boolean): this;
   setMessage(message: string): this;
+  setErrors(errors: Array<{ field?: string; message: string }>): this;
   setData(data: T): this;
   build(): RestResponse<T>;
 }
@@ -13,6 +14,7 @@ export class RestResponse<T> {
     public readonly success: boolean,
     public readonly message: string,
     public readonly data?: T,
+    public readonly errors?: Array<{ field?: string; message: string }>,
   ) {
     this.time = new Date().toISOString();
   }
@@ -22,6 +24,7 @@ export class RestResponse<T> {
       private success!: boolean;
       private message!: string;
       private data?: T;
+      private error?: Array<{ field?: string; message: string }>;
 
       setSuccess(value: boolean): this {
         this.success = value;
@@ -35,6 +38,11 @@ export class RestResponse<T> {
 
       setData(data: T): this {
         this.data = data;
+        return this;
+      }
+
+      setErrors(errors: Array<{ field?: string; message: string }>): this {
+        this.error = errors;
         return this;
       }
 

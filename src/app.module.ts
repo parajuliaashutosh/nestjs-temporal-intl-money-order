@@ -2,19 +2,21 @@ import { AuthModule } from '@/src/modules/auth/auth.module';
 import { UserModule } from '@/src/modules/user/user.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserAgentGuard } from './common/guard/rest/user-agent.guard';
 import { envValidationSchema } from './config/env.validation';
 import { typeOrmConfigAsync } from './config/orm.config';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CacheModule } from './modules/infrastructure/cache/cache.module';
 import { TemporalModule } from './modules/infrastructure/temporal/temporal.module';
+import { MoneyOrderOrchestratorModule } from './modules/money-order-orchestrator/money-order-orchestrator.module';
 import { MoneyOrderModule } from './modules/money-order/money-order.module';
 import { ReceiverModule } from './modules/receiver/receiver.module';
 import { RegistrationModule } from './modules/registration/registration.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
 import { WalletModule } from './modules/wallet/wallet.module';
-import { MoneyOrderOrchestratorModule } from './modules/money-order-orchestrator/money-order-orchestrator.module';
 
 @Module({
   imports: [
@@ -39,10 +41,15 @@ import { MoneyOrderOrchestratorModule } from './modules/money-order-orchestrator
     MoneyOrderOrchestratorModule,
   ],
   controllers: [],
-  providers: [],
-  // providers: [{
-  //   provide: APP_GUARD,
-  //   useClass: UserAgentGuard,
-  // }],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: UserAgentGuard,
+    },
+    // {
+    //   provide: APP_FILTER,
+    //   useClass: GlobalExceptionFilter,
+    // },
+  ],
 })
 export class AppModule {}
