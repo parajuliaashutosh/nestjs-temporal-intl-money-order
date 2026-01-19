@@ -2,8 +2,10 @@ import { AuthModule } from '@/src/modules/auth/auth.module';
 import { UserModule } from '@/src/modules/user/user.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppExceptionFilter } from './common/exception/app.exception.middleware';
+import { ValidationExceptionFilter } from './common/exception/validation.exception.middleware';
 import { UserAgentGuard } from './common/guard/rest/user-agent.guard';
 import { envValidationSchema } from './config/env.validation';
 import { typeOrmConfigAsync } from './config/orm.config';
@@ -46,10 +48,14 @@ import { WalletModule } from './modules/wallet/wallet.module';
       provide: APP_GUARD,
       useClass: UserAgentGuard,
     },
-    // {
-    //   provide: APP_FILTER,
-    //   useClass: GlobalExceptionFilter,
-    // },
+    {
+      provide: APP_FILTER,
+      useClass: ValidationExceptionFilter
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AppExceptionFilter,
+    },
   ],
 })
 export class AppModule {}
