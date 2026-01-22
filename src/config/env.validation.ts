@@ -3,7 +3,7 @@ import Joi from 'joi';
 export interface EnvConfig {
   NODE_ENV: 'DEVELOPMENT' | 'UAT' | 'PRODUCTION';
   PORT: number;
-  
+
   DATABASE_HOST: string;
   DATABASE_PORT: number;
   DATABASE_USERNAME: string;
@@ -23,6 +23,8 @@ export interface EnvConfig {
   TEMPORAL_ADDRESS: string;
   TEMPORAL_NAMESPACE: string;
   TEMPORAL_TASK_QUEUE: string;
+
+  WALLET_WEBHOOK_KEY: string;
 }
 
 export const envValidationSchema = Joi.object<EnvConfig>({
@@ -42,10 +44,12 @@ export const envValidationSchema = Joi.object<EnvConfig>({
 
   API_KEY: Joi.string().required(),
   ALLOWED_ORIGINS: Joi.string().required(),
-  
+
   REDIS_URL: Joi.string().required(),
 
   TEMPORAL_ADDRESS: Joi.string().required(),
   TEMPORAL_NAMESPACE: Joi.string().required(),
   TEMPORAL_TASK_QUEUE: Joi.string().required(),
+
+  WALLET_WEBHOOK_KEY: Joi.string().required(),
 }).required();

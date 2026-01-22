@@ -1,3 +1,4 @@
+import { WalletWebhookAuth } from '@/src/common/decorator/authenticate/rest/wallet-webhook.decorator';
 import { CountryCode } from '@/src/common/decorator/header/country-code.decorator';
 import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-code.pipe';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
@@ -28,15 +29,16 @@ export class WalletController {
     @Inject(WALLET_SERVICE) private readonly walletService: WalletContract,
   ) {}
 
-  // TODO: a web hook guard to be added here
   @Post('/update-balance')
   @HttpCode(HttpStatus.OK)
+  @WalletWebhookAuth()
   @ApiOperation({
     summary: 'Update wallet balance (Webhook)',
     description:
-      'Update user wallet balance via webhook. This endpoint should be called by payment gateway webhooks. Country code must be provided in x-country-code header.',
+      'Update user wallet balance via webhook. This endpoint should be called by payment gateway webhooks. Requires webhook authentication key in Authorization header (Bearer token) or x-webhook-key header. Country code must be provided in x-country-code header.',
   })
   @ApiSecurity('x-country-code')
+  @ApiSecurity('JWT-auth')
   @ApiResponse({
     status: 200,
     description: 'Wallet topped up successfully',
@@ -52,6 +54,10 @@ export class WalletController {
     status: 400,
     description:
       'Bad request - Invalid input data or missing country code header',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Missing or invalid webhook key',
   })
   @ApiResponse({
     status: 404,

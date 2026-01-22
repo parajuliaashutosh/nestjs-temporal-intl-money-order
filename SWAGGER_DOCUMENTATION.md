@@ -36,6 +36,7 @@ http://localhost:<PORT>/api/docs
    - JWT Bearer token authentication
    - Cookie-based authentication (accessToken, refreshToken)
    - Custom header authentication (x-country-code)
+   - Webhook authentication (for payment gateway webhooks)
 
 3. **Interactive Testing**
    - Try out all endpoints directly from Swagger UI
@@ -102,6 +103,36 @@ Some endpoints require the `x-country-code` header:
 1. Click the "Authorize" button
 2. Enter country code (e.g., US, GB, IN) in the "x-country-code" section
 3. Click "Authorize"
+
+### Using Webhook Authentication
+
+The `/api/v1/wallet/update-balance` endpoint is protected by webhook authentication. This endpoint should only be called by trusted payment gateways.
+
+**Authentication Methods:**
+
+1. **Bearer Token in Authorization Header:**
+
+   ```
+   Authorization: Bearer <WALLET_WEBHOOK_KEY>
+   ```
+
+2. **Custom Header:**
+   ```
+   x-webhook-key: <WALLET_WEBHOOK_KEY>
+   ```
+
+**Setup:**
+
+- The webhook key is configured in your `.env` file as `WALLET_WEBHOOK_KEY`
+- Share this key securely with your payment gateway provider
+- The key is validated on every webhook request
+
+**In Swagger UI:**
+
+1. Click the "Authorize" button
+2. Enter the webhook key in the "JWT-auth" section (it accepts Bearer tokens)
+3. Click "Authorize"
+4. The webhook endpoint will now accept your requests
 
 ## DTO Schemas
 
