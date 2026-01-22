@@ -2,6 +2,10 @@
 
 ## Overview
 
+# This swagger documentation tags and decorator are purely vibe coded. Apologies for any mistakes.
+
+# The goal is to provide clear and comprehensive API documentation for developers consuming the REST API.
+
 This project now includes comprehensive Swagger/OpenAPI documentation for all REST API endpoints.
 
 ## Accessing Swagger UI

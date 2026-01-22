@@ -110,6 +110,7 @@ export class ReceiverController {
       'Get paginated list of receivers for the authenticated user. Requires authentication and USER role.',
   })
   @ApiSecurity('JWT-auth')
+  @ApiSecurity('x-country-code')
   @ApiQuery({
     name: 'page',
     required: false,
@@ -149,9 +150,12 @@ export class ReceiverController {
               bankAccountNumber: '1234567890',
             },
           ],
-          currentPage: 1,
-          perPage: 10,
-          total: 1,
+          pagination: {
+            currentPage: 1,
+            perPage: 10,
+            total: 50,
+            totalPages: 5,
+          },
         },
       },
     },
