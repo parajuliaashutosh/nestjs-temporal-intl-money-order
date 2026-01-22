@@ -2,6 +2,7 @@ import { AppModule } from '@/src/app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 
 export async function AppConfig() {
@@ -17,7 +18,12 @@ export async function AppConfig() {
     origin: allowedOrigins.length ? allowedOrigins : '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-country-code'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'x-country-code',
+    ],
     exposedHeaders: ['X-Total-Count'],
     maxAge: 3600,
   });
@@ -32,5 +38,60 @@ export async function AppConfig() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  // Swagger Configuration
+  const config = new DocumentBuilder()
+    .setTitle('International Money Order API')
+    .setDescription(
+      'API documentation for the International Money Order system using NestJS and Temporal',
+    )
+    .setVersion('1.0')
+    .addTag('auth', 'Authentication endpoints')
+    .addTag('registration', 'User and admin registration endpoints')
+    .addTag('money-order', 'Money order management endpoints')
+    .addTag('wallet', 'Wallet management endpoints')
+    .addTag('receiver', 'Receiver management endpoints')
+    .addTag('system-config', 'System configuration endpoints')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
+    .addCookieAuth('accessToken', {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'accessToken',
+    })
+    .addCookieAuth('refreshToken', {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'refreshToken',
+    })
+    .addApiKey(
+      {
+        type: 'apiKey',
+        name: 'x-country-code',
+        in: 'header',
+        description: 'Country code header (e.g., US, GB, IN)',
+      },
+      'x-country-code',
+    )
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+      tagsSorter: 'alpha',
+      operationsSorter: 'alpha',
+    },
+  });
+
   return app;
 }
