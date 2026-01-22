@@ -4,7 +4,7 @@ export default registerAs('temporal', () => ({
   connection: {
     address: process.env.TEMPORAL_ADDRESS || 'localhost:7233',
   },
-  namespace: process.env.TEMPORAL_NAMESPACE || 'default',
+  namespace: process.env.TEMPORAL_NAMESPACE || 'money-order',
   taskQueue: process.env.TEMPORAL_TASK_QUEUE || 'money-order-task-queue',
   workflowOptions: {
     workflowExecutionTimeout: '10m',

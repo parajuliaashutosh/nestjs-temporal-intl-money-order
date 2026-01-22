@@ -21,10 +21,10 @@ export class AuthorizationGuard implements CanActivate {
     if (!requiredRoles || requiredRoles.length === 0) return true; //if no roles are specified then pass through the guard
     const { user } = context.switchToHttp().getRequest<Request>();
 
-    if (!user) throw AppException.unauthorized("NOT_AUTHORIZED");
+    if (!user) throw AppException.forbidden("NOT_AUTHORIZED");
 
     if (!requiredRoles.some((role) => user.role?.includes(role)))
-      throw AppException.unauthorized("NOT_PERMITTED");
+      throw AppException.forbidden("NOT_PERMITTED");
     return true;
   }
 }

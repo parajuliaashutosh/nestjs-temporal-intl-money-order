@@ -30,6 +30,13 @@ export class AppException extends Error {
     })();
   }
 
+  static forbidden(message: string): AppException {
+    return AppException.builder()
+      .setMessage(message)
+      .setStatus(AppExceptionStatus.FORBIDDEN)
+      .build();
+  }
+
   static unauthorized(message: string): AppException {
     return AppException.builder()
       .setMessage(message)

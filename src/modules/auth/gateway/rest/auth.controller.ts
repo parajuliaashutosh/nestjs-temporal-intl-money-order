@@ -11,11 +11,18 @@ import {
   Res,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import {
+  ApiCookieAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { AUTH_SERVICE } from '../../auth.constant';
 import type { AuthContract } from '../../contract/auth.contract';
 import { LoginReqDTO } from './dto/login-req.dto';
 
+@ApiTags('auth')
 @Controller('/auth')
 export class AuthController {
   constructor(
@@ -26,6 +33,30 @@ export class AuthController {
 
   @Post('/login')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'User login',
+    description:
+      'Authenticate user with email and password. Returns access and refresh tokens as HTTP-only cookies.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful. Tokens set in cookies.',
+    schema: {
+      example: {
+        success: true,
+        message: 'Login successful',
+        data: null,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid credentials',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid email or password',
+  })
   async login(
     @Body() data: LoginReqDTO,
     @Res({ passthrough: true }) res: Response,
@@ -56,14 +87,43 @@ export class AuthController {
 
   @Post('/refresh-token')
   @HttpCode(HttpStatus.OK)
-  async refreshToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  @ApiOperation({
+    summary: 'Refresh access token',
+    description:
+      'Generate new access and refresh tokens using the refresh token from cookies.',
+  })
+  @ApiCookieAuth('refreshToken')
+  @ApiResponse({
+    status: 200,
+    description: 'Token refreshed successfully. New tokens set in cookies.',
+    schema: {
+      example: {
+        success: true,
+        message: 'Token refreshed successfully',
+        data: null,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Refresh token not found in cookies',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or expired refresh token',
+  })
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const cookies = (req.cookies ?? {}) as Record<string, string | undefined>;
     const refreshToken = cookies.refreshToken;
-    
+
     if (!refreshToken)
       throw AppException.badRequest('Refresh token not found in cookies');
 
-    const { accessToken, refreshToken: newRefreshToken } = await this.authService.refreshToken(refreshToken);
+    const { accessToken, refreshToken: newRefreshToken } =
+      await this.authService.refreshToken(refreshToken);
 
     // Set access token as HTTP-only cookie
     res.cookie('accessToken', accessToken, {

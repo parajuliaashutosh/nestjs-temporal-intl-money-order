@@ -16,6 +16,10 @@ export class UserAgentGuard implements CanActivate {
     const userAgent = request.headers['user-agent'] || '';
     const restrictedMethods = ['POST', 'PATCH', 'DELETE', 'PUT'];
 
+    if (this.configService.get('NODE_ENV') === 'DEVELOPMENT') {
+      return true;
+    }
+
     if (restrictedMethods.includes(request.method)) {
       if (!userAgent.includes('Mozilla')) {
         // If User-Agent doesn't contain Mozilla, check x-api-key
