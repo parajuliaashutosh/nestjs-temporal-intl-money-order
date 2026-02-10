@@ -6,12 +6,13 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { CreateIntentDTO } from '../dto/create-payment-intent.dto';
+import { STRIPE_SERVICE } from '../stripe.constant';
 
 @Injectable()
 export class StripeService {
   private readonly log = new Logger(StripeService.name);
   constructor(
-    @Inject('STRIPE') private stripe: Stripe,
+    @Inject(STRIPE_SERVICE) private stripe: Stripe,
     private readonly configService: ConfigService,
     private readonly walletService: WalletContract,
   ) {}
