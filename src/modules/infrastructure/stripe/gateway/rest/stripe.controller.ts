@@ -56,9 +56,11 @@ export class StripeController {
   }
 
   @Post('webhook')
-  handleWebhook(@Req() req: Request, @Headers('stripe-signature') sig: string) {
-    this.stripeService.handleWebhook(req.body, sig);
-
+  async handleWebhook(
+    @Req() req: Request,
+    @Headers('stripe-signature') sig: string,
+  ) {
+    await this.stripeService.handleWebhook(req.body, sig);
     return { received: true };
   }
 }

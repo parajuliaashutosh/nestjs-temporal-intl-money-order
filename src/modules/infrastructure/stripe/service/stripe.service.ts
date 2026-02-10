@@ -1,3 +1,7 @@
+import { SupportedCurrency } from '@/src/common/enum/supported-currency.enum';
+import { Mapper } from '@/src/common/util/mapper';
+import type { WalletContract } from '@/src/modules/wallet/contract/wallet.contract';
+import { WalletTopUpDTO } from '@/src/modules/wallet/dto/wallet-topup.dto';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
@@ -9,6 +13,7 @@ export class StripeService {
   constructor(
     @Inject('STRIPE') private stripe: Stripe,
     private readonly configService: ConfigService,
+    private readonly walletService: WalletContract,
   ) {}
 
   //   note amount is in cents, so $10 would be 1000
@@ -44,8 +49,16 @@ export class StripeService {
       const intent = event.data.object;
       console.log('🚀 ~ StripeService ~ handleWebhook ~ intent:', intent);
 
-      // ✅ CREDIT WALLET HERE
-      // intent.amount / 100
+      const walletTopUpDTO: WalletTopUpDTO = {
+        // idempotency is handled in wallet service
+        id: intent.id,
+        userId: intent.metadata.userId,
+        amount: intent.amount, // amount in cents
+        country: Mapper.currencyToCountryMap(
+          intent.currency.toUpperCase() as SupportedCurrency,
+        ),
+      };
+      await this.walletService.walletTopUp(walletTopUpDTO);
     }
 
     return true;

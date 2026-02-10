@@ -13,7 +13,18 @@ const countryToCurrencyMap = (country: SupportedCountry) => {
   }
 };
 
+const currencyToCountryMap = (currency: SupportedCurrency) => {
+  switch (currency) {
+    case SupportedCurrency.USD:
+      return SupportedCountry.USA;
+    case SupportedCurrency.AUD:
+      return SupportedCountry.AUS;
+    default:
+      throw AppException.badRequest('Unsupported currency for country mapping');
+  }
+};
 
 export const Mapper = {
-    countryToCurrencyMap,
+  countryToCurrencyMap,
+  currencyToCountryMap,
 };
