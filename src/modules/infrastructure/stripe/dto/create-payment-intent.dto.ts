@@ -3,7 +3,6 @@ import { SupportedCurrency } from '@/src/common/enum/supported-currency.enum';
 import { IsEnum } from 'class-validator';
 
 export class CreateIntentDTO {
-  //amount in cents, so $10 would be 1000
   @IsNotBlank()
   amount: number;
 
@@ -12,4 +11,7 @@ export class CreateIntentDTO {
 
   @IsEnum(SupportedCurrency)
   supportedCurrency: SupportedCurrency;
+
+  @IsNotBlank()
+  userId: string;
 }
