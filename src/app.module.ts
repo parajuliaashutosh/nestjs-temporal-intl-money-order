@@ -12,6 +12,7 @@ import { typeOrmConfigAsync } from './config/orm.config';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CacheModule } from './modules/infrastructure/cache/cache.module';
+import { StripeModule } from './modules/infrastructure/stripe/stripe.module';
 import { TemporalModule } from './modules/infrastructure/temporal/temporal.module';
 import { MoneyOrderOrchestratorModule } from './modules/money-order-orchestrator/money-order-orchestrator.module';
 import { MoneyOrderModule } from './modules/money-order/money-order.module';
@@ -41,6 +42,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
     ReceiverModule,
     MoneyOrderModule,
     MoneyOrderOrchestratorModule,
+    StripeModule,
   ],
   controllers: [],
   providers: [
@@ -50,7 +52,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
     },
     {
       provide: APP_FILTER,
-      useClass: ValidationExceptionFilter
+      useClass: ValidationExceptionFilter,
     },
     {
       provide: APP_FILTER,
