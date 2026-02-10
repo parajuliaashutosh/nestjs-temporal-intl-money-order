@@ -7,10 +7,12 @@ import type { SystemConfigContract } from '@/src/modules/system-config/contract/
 import { SYSTEM_CONFIG_SERVICE } from '@/src/modules/system-config/system-config.constant';
 import type { UserContract } from '@/src/modules/user/contract/user.contract';
 import { USER_SERVICE } from '@/src/modules/user/user.constant';
+import { Wallet } from '@/src/modules/wallet/entity/wallet.entity';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import Decimal from 'decimal.js';
 import { Repository } from 'typeorm';
+import { DataSource } from 'typeorm/browser';
 import { MoneyOrderContract } from '../../contract/money-order.contract';
 import { CreateMoneyOrderDTO } from '../../dto/create-money-order.dto';
 import { MoneyOrder } from '../../entity/money-order.entity';
@@ -21,9 +23,12 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     @InjectRepository(MoneyOrder)
     private readonly moneyOrderRepo: Repository<MoneyOrder>,
     @Inject(USER_SERVICE) private readonly userService: UserContract,
-    @Inject(RECEIVER_SERVICE) private readonly receiverService: ReceiverContract,
+    @Inject(RECEIVER_SERVICE)
+    private readonly receiverService: ReceiverContract,
     @Inject(SYSTEM_CONFIG_SERVICE)
     private readonly systemConfigService: SystemConfigContract,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   public async createMoneyOrder(
@@ -49,7 +54,7 @@ export class AusMoneyOrderService implements MoneyOrderContract {
 
     // 🔴 CORE VALIDATION
     const calculatedReceiverAmount = sendingAmount.times(exchangeRate);
-    
+
     if (!calculatedReceiverAmount.equals(receiverAmount)) {
       throw AppException.badRequest('INVALID_RECEIVER_AMOUNT');
     }
@@ -58,8 +63,8 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     if (!user) {
       throw AppException.badRequest('USER_NOT_FOUND');
     }
-    
-    const receiver = await this.receiverService.getReceiverByIdAndUserId( 
+
+    const receiver = await this.receiverService.getReceiverByIdAndUserId(
       data.receiverId,
       data.userId,
     );
@@ -158,39 +163,76 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     Logger.log('💸 ACTIVITY: transferFunds');
     Logger.log('========================================');
 
-    const moneyOrder = await this.moneyOrderRepo
-      .createQueryBuilder('moneyOrder')
-      .leftJoinAndSelect('moneyOrder.user', 'user')
-      .leftJoinAndSelect('user.wallet', 'wallet')
-      .setLock('pessimistic_write')
-      .where('moneyOrder.id = :moneyOrderId', { moneyOrderId })
-      .getOne();
+    await this.dataSource.transaction(async (manager) => {
+      const moneyOrder = await manager
+        .getRepository(MoneyOrder)
+        .createQueryBuilder('moneyOrder')
+        .leftJoinAndSelect('moneyOrder.user', 'user')
+        .leftJoinAndSelect('user.wallet', 'wallet')
+        .where('moneyOrder.id = :moneyOrderId', { moneyOrderId })
+        .setLock('pessimistic_write')
+        .getOne();
 
-    if (!moneyOrder) {
-      throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
-    }
+      if (!moneyOrder) {
+        throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
+      }
 
-    const walletBalance = new Decimal(moneyOrder.user.wallet.balance);
-    const sendingAmount = new Decimal(moneyOrder.sendingAmount);
+      const wallet = moneyOrder.user.wallet;
 
-    if (!walletBalance.greaterThanOrEqualTo(sendingAmount)) {
-      throw AppException.badRequest('INSUFFICIENT_WALLET_BALANCE');
-    }
+      // Explicitly lock the wallet row
+      await manager
+        .getRepository(Wallet)
+        .createQueryBuilder('wallet')
+        .where('wallet.id = :id', { id: wallet.id })
+        .setLock('pessimistic_write')
+        .getOne();
 
-    // Deduct sending amount from wallet
-    const newBalance = walletBalance.minus(sendingAmount);
-    moneyOrder.user.wallet.balance = newBalance.toFixed();
-    moneyOrder.status = MoneyOrderStatus.COMPLETED;
-    moneyOrder.metadata = {
-      ...(moneyOrder.metadata ?? {}),
-      fundsTransferredAt: `Funds transferred - ${new Date().toISOString()}`,
-    };
+      const walletBalance = new Decimal(wallet.balance);
+      const sendingAmount = new Decimal(moneyOrder.sendingAmount);
 
-    await this.moneyOrderRepo.save(moneyOrder);
+      if (!walletBalance.greaterThanOrEqualTo(sendingAmount)) {
+        throw AppException.badRequest('INSUFFICIENT_WALLET_BALANCE');
+      }
 
-    Logger.log(
-      `✅ Transferred ${sendingAmount.toFixed()} cents. New wallet balance: ${newBalance.toFixed()} cents`,
-    );
+      wallet.balance = walletBalance.minus(sendingAmount).toFixed();
+      moneyOrder.status = MoneyOrderStatus.COMPLETED;
+
+      await manager.save([wallet, moneyOrder]);
+    });
+
+    // const moneyOrder = await this.moneyOrderRepo
+    //   .createQueryBuilder('moneyOrder')
+    //   .leftJoinAndSelect('moneyOrder.user', 'user')
+    //   .leftJoinAndSelect('user.wallet', 'wallet')
+    //   .setLock('pessimistic_write')
+    //   .where('moneyOrder.id = :moneyOrderId', { moneyOrderId })
+    //   .getOne();
+
+    // if (!moneyOrder) {
+    //   throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
+    // }
+
+    // const walletBalance = new Decimal(moneyOrder.user.wallet.balance);
+    // const sendingAmount = new Decimal(moneyOrder.sendingAmount);
+
+    // if (!walletBalance.greaterThanOrEqualTo(sendingAmount)) {
+    //   throw AppException.badRequest('INSUFFICIENT_WALLET_BALANCE');
+    // }
+
+    // // Deduct sending amount from wallet
+    // const newBalance = walletBalance.minus(sendingAmount);
+    // moneyOrder.user.wallet.balance = newBalance.toFixed();
+    // moneyOrder.status = MoneyOrderStatus.COMPLETED;
+    // moneyOrder.metadata = {
+    //   ...(moneyOrder.metadata ?? {}),
+    //   fundsTransferredAt: `Funds transferred - ${new Date().toISOString()}`,
+    // };
+
+    // await this.moneyOrderRepo.save(moneyOrder);
+
+    // Logger.log(
+    //   `✅ Transferred ${sendingAmount.toFixed()} cents. New wallet balance: ${newBalance.toFixed()} cents`,
+    // );
 
     return true;
   }
