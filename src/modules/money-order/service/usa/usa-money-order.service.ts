@@ -1,8 +1,13 @@
+import { Transactional } from '@/src/common/decorator/orm/transactional.decorator';
 import {
   MoneyOrderDeliveryStatus,
   MoneyOrderStatus,
 } from '@/src/common/enum/money-order-status.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
+import {
+  WalletHistoryType,
+  WalletTxnDirection,
+} from '@/src/common/enum/wallet.enum';
 import { AppException } from '@/src/common/exception/app.exception';
 import type { ReceiverContract } from '@/src/modules/receiver/contract/receiver.contract';
 import { RECEIVER_SERVICE } from '@/src/modules/receiver/receiver.constant';
@@ -10,6 +15,9 @@ import type { SystemConfigContract } from '@/src/modules/system-config/contract/
 import { SYSTEM_CONFIG_SERVICE } from '@/src/modules/system-config/system-config.constant';
 import type { UserContract } from '@/src/modules/user/contract/user.contract';
 import { USER_SERVICE } from '@/src/modules/user/user.constant';
+import type { WalletContract } from '@/src/modules/wallet/contract/wallet.contract';
+import { WalletUpdateBalanceDTO } from '@/src/modules/wallet/dto/wallet-update-balance.dto';
+import { WALLET_SERVICE } from '@/src/modules/wallet/wallet.constant';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import Decimal from 'decimal.js';
@@ -20,6 +28,7 @@ import { MoneyOrder } from '../../entity/money-order.entity';
 
 @Injectable()
 export class UsaMoneyOrderService implements MoneyOrderContract {
+  private readonly log = new Logger(UsaMoneyOrderService.name);
   constructor(
     @InjectRepository(MoneyOrder)
     private readonly moneyOrderRepo: Repository<MoneyOrder>,
@@ -32,6 +41,9 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
 
     @Inject(SYSTEM_CONFIG_SERVICE)
     private readonly systemConfigService: SystemConfigContract,
+
+    @Inject(WALLET_SERVICE)
+    private readonly walletService: WalletContract,
   ) {}
 
   public async createMoneyOrder(
@@ -83,10 +95,10 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
   }
 
   public async screenReceiver(moneyOrderId: string): Promise<boolean> {
-    Logger.log('========================================');
-    Logger.log('🔍 ACTIVITY: screenReceiver');
-    Logger.log('   Money Order ID:', moneyOrderId);
-    Logger.log('========================================');
+    this.log.log('========================================');
+    this.log.log('🔍 ACTIVITY: screenReceiver');
+    this.log.log('   Money Order ID:', moneyOrderId);
+    this.log.log('========================================');
 
     const moneyOrder = await this.moneyOrderRepo
       .createQueryBuilder('moneyOrder')
@@ -99,7 +111,7 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
     }
 
     const passed = Math.random() > 0.4;
-    Logger.log(`✅ Result: ${passed ? 'PASSED' : 'FAILED'}`);
+    this.log.log(`✅ Result: ${passed ? 'PASSED' : 'FAILED'}`);
 
     if (passed) {
       moneyOrder.metadata = {
@@ -120,9 +132,9 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
   }
 
   public async checkWalletBalance(moneyOrderId: string): Promise<boolean> {
-    Logger.log('========================================');
-    Logger.log('💰 ACTIVITY: checkWalletBalance');
-    Logger.log('========================================');
+    this.log.log('========================================');
+    this.log.log('💰 ACTIVITY: checkWalletBalance');
+    this.log.log('========================================');
 
     const moneyOrder = await this.moneyOrderRepo
       .createQueryBuilder('moneyOrder')
@@ -139,12 +151,12 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
     const sendingAmount = new Decimal(moneyOrder.sendingAmount);
 
     if (walletBalance.greaterThanOrEqualTo(sendingAmount)) {
-      Logger.log(
+      this.log.log(
         `✅ Sufficient wallet balance: ${walletBalance.toFixed()} cents`,
       );
       return true;
     } else {
-      Logger.log(
+      this.log.log(
         `❌ Insufficient wallet balance: ${walletBalance.toFixed()} cents`,
       );
       moneyOrder.status = MoneyOrderStatus.ON_HOLD;
@@ -157,10 +169,11 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
     }
   }
 
+  @Transactional()
   public async transferFunds(moneyOrderId: string): Promise<boolean> {
-    Logger.log('========================================');
-    Logger.log('💸 ACTIVITY: transferFunds');
-    Logger.log('========================================');
+    this.log.log('========================================');
+    this.log.log('💸 ACTIVITY: transferFunds');
+    this.log.log('========================================');
 
     const moneyOrder = await this.moneyOrderRepo
       .createQueryBuilder('moneyOrder')
@@ -191,9 +204,15 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
     };
 
     await this.moneyOrderRepo.save(moneyOrder);
-    Logger.log(
-      `✅ Transferred ${sendingAmount.toFixed()} cents. New wallet balance: ${newBalance.toFixed()} cents`,
-    );
+
+    const payload: WalletUpdateBalanceDTO = {
+      walletId: moneyOrder.user.wallet.id,
+      amount: sendingAmount.toFixed(),
+      direction: WalletTxnDirection.DEBIT,
+      historyType: WalletHistoryType.ORDER_PAYMENT,
+      idempotencyKey: moneyOrder.id,
+    };
+    await this.walletService.updateBalance(payload);
 
     return true;
   }

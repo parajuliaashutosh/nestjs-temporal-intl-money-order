@@ -6,7 +6,9 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 
 export async function AppConfig() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true, // Enable raw body for Stripe webhook signature verification
+  });
   const configService = app.get(ConfigService);
 
   const allowedOriginsStr = configService.getOrThrow<string>('ALLOWED_ORIGINS');
@@ -52,6 +54,7 @@ export async function AppConfig() {
     .addTag('wallet', 'Wallet management endpoints')
     .addTag('receiver', 'Receiver management endpoints')
     .addTag('system-config', 'System configuration endpoints')
+    .addTag('stripe', 'Stripe payment integration endpoints')
     .addBearerAuth(
       {
         type: 'http',
