@@ -44,26 +44,24 @@ export class StripeService {
   async createPaymentIntent(
     payload: CreateIntentDTO,
   ): Promise<PaymentIntentResponse> {
-    const { amount, supportedCurrency, idempotencyKey } = payload;
     const startTime = Date.now();
 
-    this.log.log(
-      `Creating payment intent for amount: ${amount} cents in ${supportedCurrency}`,
-    );
+    this.log.log(`Creating payment intent for amount:`, payload);
 
     const requestPayload: Stripe.PaymentIntentCreateParams = {
-      amount: amount,
-      currency: supportedCurrency.toLowerCase(),
-      automatic_payment_methods: { enabled: true },
+      amount: payload.amount,
+      currency: payload.supportedCurrency.toLowerCase(),
+      // automatic_payment_methods: { enabled: true },
+      payment_method_types: ['card'],
       metadata: {
-        idempotencyKey: idempotencyKey,
+        idempotencyKey: payload.idempotencyKey,
         userId: payload?.userId,
       },
     };
 
     try {
       const requestOptions: Stripe.RequestOptions = {
-        idempotencyKey: idempotencyKey,
+        idempotencyKey: payload.idempotencyKey,
       };
 
       const paymentIntent = await this.stripe.paymentIntents.create(
@@ -81,9 +79,9 @@ export class StripeService {
         status: StripeLogStatus.SUCCESS,
         stripeId: paymentIntent.id,
         userId: payload?.userId,
-        amount: amount,
-        currency: supportedCurrency.toLowerCase(),
-        idempotencyKey: idempotencyKey,
+        amount: payload.amount,
+        currency: payload.supportedCurrency.toLowerCase(),
+        idempotencyKey: payload.idempotencyKey,
         requestPayload: requestPayload as unknown as Record<string, unknown>,
         responsePayload: {
           id: paymentIntent.id,
@@ -114,9 +112,9 @@ export class StripeService {
         operationType: StripeOperationType.PAYMENT_INTENT_CREATE,
         status: StripeLogStatus.FAILED,
         userId: payload?.userId,
-        amount: amount,
-        currency: supportedCurrency.toLowerCase(),
-        idempotencyKey: idempotencyKey,
+        amount: payload.amount,
+        currency: payload.supportedCurrency.toLowerCase(),
+        idempotencyKey: payload.idempotencyKey,
         requestPayload: requestPayload as unknown as Record<string, unknown>,
         errorMessage: errorDetails.message,
         errorCode: errorDetails.code,
@@ -281,7 +279,10 @@ export class StripeService {
   private async handlePaymentIntentSucceeded(
     paymentIntent: Stripe.PaymentIntent,
   ): Promise<void> {
-    this.log.log(`Processing successful payment: ${paymentIntent.id}`);
+    this.log.log(
+      `Processing successful payment: ${paymentIntent.id}`,
+      paymentIntent,
+    );
 
     const userId = paymentIntent.metadata?.userId;
 
