@@ -5,6 +5,7 @@ import { CountryCode } from '@/src/common/decorator/header/country-code.decorato
 import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-code.pipe';
 import { Role } from '@/src/common/enum/role.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
+import { AppException } from '@/src/common/exception/app.exception';
 import type { ReqUserPayload } from '@/src/common/guard/rest/authentication.guard';
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
 import { Mapper } from '@/src/common/util/mapper';
@@ -165,7 +166,7 @@ export class StripeController {
       this.logger.error(
         'Raw body not available for webhook signature verification',
       );
-      throw new Error('Raw body not available');
+      throw AppException.badRequest('Invalid request body');
     }
 
     await this.stripeService.handleWebhook(rawBody, signature);
