@@ -218,6 +218,9 @@ export class StripeService {
         case 'payment_intent.payment_failed':
           this.handlePaymentIntentFailed(paymentIntent);
           break;
+        case 'payment_intent.created':
+          this.handlePaymentIntentCreated(paymentIntent);
+          break;
         default:
           this.log.log(`Unhandled event type: ${event.type}`);
       }
@@ -314,6 +317,14 @@ export class StripeService {
         `reason: ${paymentIntent.last_payment_error?.message ?? 'Unknown'}`,
     );
 
+    // Log is already handled in the webhook handler
+    // Additional notification logic can be added here
+  }
+
+  private handlePaymentIntentCreated(
+    paymentIntent: Stripe.PaymentIntent,
+  ): void {
+    this.log.log(`Payment intent created: ${paymentIntent.id}`);
     // Log is already handled in the webhook handler
     // Additional notification logic can be added here
   }

@@ -6,6 +6,7 @@ import { AuthModule } from '../../auth/auth.module';
 import { WalletModule } from '../../wallet/wallet.module';
 import { StripeLog } from './entity/stripe-log.entity';
 import { StripeController } from './gateway/rest/stripe.controller';
+import { StripeLogRepository } from './repository/stripe-log.repository';
 import { StripeService } from './service/stripe.service';
 import { STRIPE, STRIPE_SERVICE } from './stripe.constant';
 
@@ -26,6 +27,7 @@ import { STRIPE, STRIPE_SERVICE } from './stripe.constant';
       provide: STRIPE_SERVICE,
       useClass: StripeService,
     },
+    StripeLogRepository,
   ],
   controllers: [StripeController],
   exports: [],
