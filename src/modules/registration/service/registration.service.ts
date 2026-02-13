@@ -53,7 +53,7 @@ export class RegistrationService implements RegistrationContract {
     } else {
       user = await this.userService.create(userPayload, check);
     }
-    
+
     return user;
   }
 
