@@ -8,6 +8,12 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { CreateIntentDTO } from '../dto/create-payment-intent.dto';
+import {
+  StripeLogDirection,
+  StripeLogStatus,
+  StripeOperationType,
+} from '../repository/dto/stripe-log.dto';
+import { StripeLogRepository } from '../repository/stripe-log.repository';
 import { STRIPE } from '../stripe.constant';
 
 export interface PaymentIntentResponse {
@@ -26,6 +32,7 @@ export class StripeService {
     @Inject(STRIPE) private readonly stripe: Stripe,
     private readonly configService: ConfigService,
     @Inject(WALLET_SERVICE) private readonly walletService: WalletContract,
+    private readonly stripeLogRepository: StripeLogRepository,
   ) {}
 
   /**
@@ -38,32 +45,56 @@ export class StripeService {
     payload: CreateIntentDTO,
   ): Promise<PaymentIntentResponse> {
     const { amount, supportedCurrency, idempotencyKey } = payload;
+    const startTime = Date.now();
 
     this.log.log(
       `Creating payment intent for amount: ${amount} cents in ${supportedCurrency}`,
     );
 
-    try {
-      const paymentIntentCreateParams: Stripe.PaymentIntentCreateParams = {
-        amount: amount,
-        currency: supportedCurrency.toLowerCase(),
-        automatic_payment_methods: { enabled: true },
-        metadata: {
-          idempotencyKey: idempotencyKey,
-          userId: payload?.userId,
-        },
-      };
+    const requestPayload: Stripe.PaymentIntentCreateParams = {
+      amount: amount,
+      currency: supportedCurrency.toLowerCase(),
+      automatic_payment_methods: { enabled: true },
+      metadata: {
+        idempotencyKey: idempotencyKey,
+        userId: payload?.userId,
+      },
+    };
 
+    try {
       const requestOptions: Stripe.RequestOptions = {
         idempotencyKey: idempotencyKey,
       };
 
       const paymentIntent = await this.stripe.paymentIntents.create(
-        paymentIntentCreateParams,
+        requestPayload,
         requestOptions,
       );
 
+      const processingTimeMs = Date.now() - startTime;
       this.log.log(`Payment intent created successfully: ${paymentIntent.id}`);
+
+      // Log successful upstream request
+      await this.stripeLogRepository.create({
+        direction: StripeLogDirection.UPSTREAM,
+        operationType: StripeOperationType.PAYMENT_INTENT_CREATE,
+        status: StripeLogStatus.SUCCESS,
+        stripeId: paymentIntent.id,
+        userId: payload?.userId,
+        amount: amount,
+        currency: supportedCurrency.toLowerCase(),
+        idempotencyKey: idempotencyKey,
+        requestPayload: requestPayload as unknown as Record<string, unknown>,
+        responsePayload: {
+          id: paymentIntent.id,
+          status: paymentIntent.status,
+          amount: paymentIntent.amount,
+          currency: paymentIntent.currency,
+          ...paymentIntent,
+        },
+        httpStatusCode: 200,
+        processingTimeMs,
+      });
 
       return {
         clientSecret: paymentIntent.client_secret ?? '',
@@ -73,7 +104,26 @@ export class StripeService {
         status: paymentIntent.status,
       };
     } catch (error) {
+      const processingTimeMs = Date.now() - startTime;
       this.log.error(`Failed to create payment intent: ${error}`);
+
+      // Log failed upstream request
+      const errorDetails = this.extractStripeError(error);
+      await this.stripeLogRepository.create({
+        direction: StripeLogDirection.UPSTREAM,
+        operationType: StripeOperationType.PAYMENT_INTENT_CREATE,
+        status: StripeLogStatus.FAILED,
+        userId: payload?.userId,
+        amount: amount,
+        currency: supportedCurrency.toLowerCase(),
+        idempotencyKey: idempotencyKey,
+        requestPayload: requestPayload as unknown as Record<string, unknown>,
+        errorMessage: errorDetails.message,
+        errorCode: errorDetails.code,
+        errorType: errorDetails.type,
+        httpStatusCode: errorDetails.statusCode,
+        processingTimeMs,
+      });
 
       if (error instanceof Stripe.errors.StripeError) {
         switch (error.type) {
@@ -116,11 +166,17 @@ export class StripeService {
    * Handles incoming Stripe webhook events
    * @param rawBody - Raw request body as Buffer for signature verification
    * @param signature - Stripe webhook signature from headers
+   * @param ipAddress - IP address of the webhook request
    * @returns true if webhook was processed successfully
    * @throws AppException on signature verification failure or processing errors
    */
-  async handleWebhook(rawBody: Buffer, signature: string): Promise<boolean> {
+  async handleWebhook(
+    rawBody: Buffer,
+    signature: string,
+    ipAddress?: string,
+  ): Promise<boolean> {
     let event: Stripe.Event;
+    const startTime = Date.now();
 
     try {
       const webhookSecret = this.configService.getOrThrow<string>(
@@ -134,24 +190,82 @@ export class StripeService {
       );
     } catch (error) {
       this.log.error(`Webhook signature verification failed: ${error}`);
+
+      // Log failed webhook verification
+      await this.stripeLogRepository.create({
+        direction: StripeLogDirection.DOWNSTREAM,
+        operationType: StripeOperationType.WEBHOOK_UNKNOWN,
+        status: StripeLogStatus.FAILED,
+        errorMessage: 'Webhook signature verification failed',
+        webhookSignature: signature?.substring(0, 50), // Store partial signature for debugging
+        ipAddress,
+        processingTimeMs: Date.now() - startTime,
+      });
+
       throw AppException.badRequest('Invalid webhook signature');
     }
 
     this.log.log(`Received webhook event: ${event.type} (${event.id})`);
 
+    const operationType = this.mapWebhookEventToOperationType(event.type);
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
     try {
       switch (event.type) {
         case 'payment_intent.succeeded':
-          await this.handlePaymentIntentSucceeded(event.data.object);
+          await this.handlePaymentIntentSucceeded(paymentIntent);
           break;
         case 'payment_intent.payment_failed':
-          this.handlePaymentIntentFailed(event.data.object);
+          this.handlePaymentIntentFailed(paymentIntent);
           break;
         default:
           this.log.log(`Unhandled event type: ${event.type}`);
       }
+
+      // Log successful webhook processing
+      await this.stripeLogRepository.create({
+        direction: StripeLogDirection.DOWNSTREAM,
+        operationType,
+        status: StripeLogStatus.SUCCESS,
+        stripeId: event.id,
+        userId: paymentIntent?.metadata?.userId,
+        amount: paymentIntent?.amount,
+        currency: paymentIntent?.currency,
+        responsePayload: {
+          eventType: event.type,
+          eventId: event.id,
+          paymentIntentId: paymentIntent?.id,
+          paymentIntentStatus: paymentIntent?.status,
+        },
+        webhookSignature: signature?.substring(0, 50),
+        ipAddress,
+        processingTimeMs: Date.now() - startTime,
+      });
     } catch (error) {
       this.log.error(`Error processing webhook event ${event.type}: ${error}`);
+
+      // Log failed webhook processing
+      const errorDetails = this.extractStripeError(error);
+      await this.stripeLogRepository.create({
+        direction: StripeLogDirection.DOWNSTREAM,
+        operationType,
+        status: StripeLogStatus.FAILED,
+        stripeId: event.id,
+        userId: paymentIntent?.metadata?.userId,
+        amount: paymentIntent?.amount,
+        currency: paymentIntent?.currency,
+        responsePayload: {
+          eventType: event.type,
+          eventId: event.id,
+          paymentIntentId: paymentIntent?.id,
+        },
+        errorMessage: errorDetails.message,
+        errorCode: errorDetails.code,
+        webhookSignature: signature?.substring(0, 50),
+        ipAddress,
+        processingTimeMs: Date.now() - startTime,
+      });
+
       throw error;
     }
 
@@ -200,7 +314,57 @@ export class StripeService {
         `reason: ${paymentIntent.last_payment_error?.message ?? 'Unknown'}`,
     );
 
-    // TODO: Implement notification to user about failed payment
-    // TODO: Consider storing failed payment attempts for analytics
+    // Log is already handled in the webhook handler
+    // Additional notification logic can be added here
+  }
+
+  /**
+   * Maps Stripe webhook event type to our operation type enum
+   */
+  private mapWebhookEventToOperationType(
+    eventType: string,
+  ): StripeOperationType {
+    const eventMap: Record<string, StripeOperationType> = {
+      'payment_intent.succeeded':
+        StripeOperationType.WEBHOOK_PAYMENT_INTENT_SUCCEEDED,
+      'payment_intent.payment_failed':
+        StripeOperationType.WEBHOOK_PAYMENT_INTENT_FAILED,
+      'payment_intent.canceled':
+        StripeOperationType.WEBHOOK_PAYMENT_INTENT_CANCELED,
+      'charge.succeeded': StripeOperationType.WEBHOOK_CHARGE_SUCCEEDED,
+      'charge.failed': StripeOperationType.WEBHOOK_CHARGE_FAILED,
+      'refund.created': StripeOperationType.WEBHOOK_REFUND_CREATED,
+    };
+
+    return eventMap[eventType] ?? StripeOperationType.WEBHOOK_UNKNOWN;
+  }
+
+  /**
+   * Extracts error details from various error types
+   */
+  private extractStripeError(error: unknown): {
+    message: string;
+    code?: string;
+    type?: string;
+    statusCode?: number;
+  } {
+    if (error instanceof Stripe.errors.StripeError) {
+      return {
+        message: error.message,
+        code: error.code,
+        type: error.type,
+        statusCode: error.statusCode,
+      };
+    }
+
+    if (error instanceof Error) {
+      return {
+        message: error.message,
+      };
+    }
+
+    return {
+      message: 'Unknown error',
+    };
   }
 }

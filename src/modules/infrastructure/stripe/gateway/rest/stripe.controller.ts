@@ -104,11 +104,12 @@ export class StripeController {
       userId: user.userId,
     };
 
-    await this.stripeService.createPaymentIntent(createIntentDTO);
+    const resp = await this.stripeService.createPaymentIntent(createIntentDTO);
 
     return RestResponse.builder()
       .setSuccess(true)
       .setMessage('Payment intent created successfully')
+      .setData(resp)
       .build();
   }
 
@@ -169,7 +170,13 @@ export class StripeController {
       throw AppException.badRequest('Invalid request body');
     }
 
-    await this.stripeService.handleWebhook(rawBody, signature);
+    // Extract IP address for logging
+    const ipAddress =
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ??
+      req.ip ??
+      req.socket?.remoteAddress;
+
+    await this.stripeService.handleWebhook(rawBody, signature, ipAddress);
 
     return { received: true };
   }
