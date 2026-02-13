@@ -1,31 +1,44 @@
 import { AppException } from '@/src/common/exception/app.exception';
 import { UTIL_FUNCTIONS } from '@/src/common/util/common-functions';
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { Client } from '@temporalio/client';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Client, Connection } from '@temporalio/client';
 import { WorkflowValue } from '../workflow.constant';
 
 @Injectable()
 export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
   private client: Client;
+  private connection: Connection;
+
   private readonly logger = new Logger(TemporalClientService.name);
 
-  onModuleInit() {
-    this.connect();
+  constructor(private readonly configService: ConfigService) {}
+
+  async onModuleInit() {
+    await this.connect();
   }
 
   async onModuleDestroy() {
     await this.stopWorker();
   }
 
-  private connect() {
+  private async connect() {
     try {
-      this.client = new Client({
-        // Optional: specify your Temporal server address, namespace, etc.
-        // connection: { address: 'localhost:7233' },
-        namespace: 'money-order',
+      this.connection = await Connection.connect({
+        address: this.configService.getOrThrow<string>('TEMPORAL_ADDRESS'),
       });
 
-      this.logger.log('✅ Connected to Temporal');
+      this.client = new Client({
+        connection: this.connection,
+        namespace: this.configService.getOrThrow<string>('TEMPORAL_NAMESPACE'),
+      });
+
+      this.logger.log('✅ Temporal client created successfully');
     } catch (err) {
       this.logger.error('❌ Failed to connect to Temporal', err);
       throw err;
@@ -35,17 +48,21 @@ export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
   private async stopWorker() {
     if (this.client) {
       await this.client.options.connection.close();
-      this.logger.log('Temporal worker stopped');
+      this.logger.log('✅ Temporal client stopped');
     }
   }
 
-  async startWorkflow(WorkflowValue: WorkflowValue, args: any[], taskQueue: string) {
-    console.log(
+  async startWorkflow(
+    WorkflowValue: WorkflowValue,
+    args: any[],
+    taskQueue: string,
+  ) {
+    this.logger.log(
       '🚀 ~ TemporalClientService ~ startWorkflow ~ taskQueue:',
       taskQueue,
     );
-    console.log('🚀 ~ TemporalClientService ~ startWorkflow ~ args:', args);
-    console.log(
+    this.logger.log('🚀 ~ TemporalClientService ~ startWorkflow ~ args:', args);
+    this.logger.log(
       '🚀 ~ TemporalClientService ~ startWorkflow ~ workflowKey:',
       WorkflowValue,
     );
