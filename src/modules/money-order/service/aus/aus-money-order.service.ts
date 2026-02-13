@@ -199,40 +199,6 @@ export class AusMoneyOrderService implements MoneyOrderContract {
       await manager.save([wallet, moneyOrder]);
     });
 
-    // const moneyOrder = await this.moneyOrderRepo
-    //   .createQueryBuilder('moneyOrder')
-    //   .leftJoinAndSelect('moneyOrder.user', 'user')
-    //   .leftJoinAndSelect('user.wallet', 'wallet')
-    //   .setLock('pessimistic_write')
-    //   .where('moneyOrder.id = :moneyOrderId', { moneyOrderId })
-    //   .getOne();
-
-    // if (!moneyOrder) {
-    //   throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
-    // }
-
-    // const walletBalance = new Decimal(moneyOrder.user.wallet.balance);
-    // const sendingAmount = new Decimal(moneyOrder.sendingAmount);
-
-    // if (!walletBalance.greaterThanOrEqualTo(sendingAmount)) {
-    //   throw AppException.badRequest('INSUFFICIENT_WALLET_BALANCE');
-    // }
-
-    // // Deduct sending amount from wallet
-    // const newBalance = walletBalance.minus(sendingAmount);
-    // moneyOrder.user.wallet.balance = newBalance.toFixed();
-    // moneyOrder.status = MoneyOrderStatus.COMPLETED;
-    // moneyOrder.metadata = {
-    //   ...(moneyOrder.metadata ?? {}),
-    //   fundsTransferredAt: `Funds transferred - ${new Date().toISOString()}`,
-    // };
-
-    // await this.moneyOrderRepo.save(moneyOrder);
-
-    // Logger.log(
-    //   `✅ Transferred ${sendingAmount.toFixed()} cents. New wallet balance: ${newBalance.toFixed()} cents`,
-    // );
-
     return true;
   }
 }
