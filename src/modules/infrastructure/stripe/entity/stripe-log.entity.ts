@@ -7,7 +7,7 @@ import {
 } from '../repository/dto/stripe-log.dto';
 
 @Entity('stripe_log')
-@Index(['direction', 'createdAt'])
+@Index(['direction', 'idempotencyKey'], { unique: true })
 @Index(['stripeId'])
 @Index(['userId'])
 @Index(['status'])
@@ -46,8 +46,7 @@ export class StripeLog extends Base {
   @Column({ nullable: true })
   currency?: string;
 
-  /** Idempotency key used for the request */
-  @Column({ nullable: true })
+  @Column()
   idempotencyKey?: string;
 
   /** Request payload sent to Stripe (for upstream) */

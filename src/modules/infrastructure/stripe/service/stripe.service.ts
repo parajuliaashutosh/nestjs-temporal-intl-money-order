@@ -64,6 +64,24 @@ export class StripeService {
         idempotencyKey: payload.idempotencyKey,
       };
 
+      const alreadyExist =
+        await this.stripeLogRepository.findByIdempotencyKeyAndDirectionAndUserId(
+          payload.idempotencyKey,
+          StripeLogDirection.UPSTREAM,
+          payload?.userId,
+        );
+
+      if (alreadyExist) {
+        return {
+          clientSecret:
+            (alreadyExist.responsePayload?.clientSecret as string) ?? '',
+          paymentIntentId: alreadyExist.stripeId,
+          amount: alreadyExist.amount,
+          currency: alreadyExist.currency,
+          status: alreadyExist.status,
+        };
+      }
+
       const paymentIntent = await this.stripe.paymentIntents.create(
         requestPayload,
         requestOptions,

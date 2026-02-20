@@ -41,6 +41,19 @@ export class StripeLogRepository {
     });
   }
 
+  async findByIdempotencyKeyAndDirectionAndUserId(
+    idempotencyKey: string,
+    direction: StripeLogDirection,
+    userId: string,
+  ): Promise<StripeLog | null> {
+    return this.repository
+      .createQueryBuilder('log')
+      .where('log.idempotencyKey = :idempotencyKey', { idempotencyKey })
+      .andWhere('log.direction = :direction', { direction })
+      .andWhere('log.userId = :userId', { userId })
+      .getOne();
+  }
+
   /**
    * Find logs by user ID
    */
