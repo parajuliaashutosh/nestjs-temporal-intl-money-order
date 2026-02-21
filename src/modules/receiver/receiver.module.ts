@@ -4,20 +4,23 @@ import { AuthModule } from '../auth/auth.module';
 import { UserModule } from '../user/user.module';
 import { Receiver } from './entity/receiver.entity';
 import { ReceiverController } from './gateway/rest/receiver.controller';
-import { RECEIVER_SERVICE } from './receiver.constant';
+import { RECEIVER_REPO, RECEIVER_SERVICE } from './receiver.constant';
+import { ReceiverRepo } from './repo/receiver.repo';
 import { ReceiverService } from './service/receiver.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Receiver]),
-    UserModule,
-    AuthModule
+  imports: [TypeOrmModule.forFeature([Receiver]), UserModule, AuthModule],
+  providers: [
+    {
+      provide: RECEIVER_SERVICE,
+      useClass: ReceiverService,
+    },
+    {
+      provide: RECEIVER_REPO,
+      useClass: ReceiverRepo,
+    },
   ],
-  providers: [{
-    provide: RECEIVER_SERVICE,
-    useClass: ReceiverService,
-  }],
   exports: [RECEIVER_SERVICE],
-  controllers: [ReceiverController]
+  controllers: [ReceiverController],
 })
 export class ReceiverModule {}
