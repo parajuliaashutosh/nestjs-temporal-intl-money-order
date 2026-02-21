@@ -2,9 +2,10 @@ import Base from '@/src/common/entity/base.entity';
 import { SupportedCurrency } from '@/src/common/enum/supported-currency.enum';
 import { Column, Entity, OneToOne } from 'typeorm';
 import { User } from '../../user/entity/user.entity';
+import { WalletModel } from '../model/wallet.model';
 
 @Entity('wallet')
-export class Wallet extends Base {
+export class Wallet extends Base implements WalletModel {
   // storing in cents to avoid floating point issues
   @Column({ type: 'bigint', default: '0' })
   balance: string;

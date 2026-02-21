@@ -12,10 +12,11 @@ import {
 } from 'typeorm';
 import { Admin } from '../../admin/entity/admin.entity';
 import { User } from '../../user/entity/user.entity';
+import { AuthModel } from '../model/auth.model';
 
 @Entity('auth')
 @Index(['phone'])
-export class Auth extends Base {
+export class Auth extends Base implements AuthModel {
   @Column({
     unique: true,
   })

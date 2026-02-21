@@ -1,37 +1,3 @@
-export interface CreateStripeLogDTO {
-  direction: StripeLogDirection;
-  operationType: StripeOperationType;
-  status: StripeLogStatus;
-  stripeId?: string;
-  userId?: string;
-  amount?: number;
-  currency?: string;
-  idempotencyKey?: string;
-  requestPayload?: Record<string, any>;
-  responsePayload?: Record<string, any>;
-  errorMessage?: string;
-  errorCode?: string;
-  errorType?: string;
-  httpStatusCode?: number;
-  processingTimeMs?: number;
-  webhookSignature?: string;
-  ipAddress?: string;
-  metadata?: Record<string, any>;
-}
-
-/**
- * Direction of Stripe communication
- */
-export enum StripeLogDirection {
-  /** Outgoing request to Stripe API (upstream) */
-  UPSTREAM = 'UPSTREAM',
-  /** Incoming webhook from Stripe (downstream) */
-  DOWNSTREAM = 'DOWNSTREAM',
-}
-
-/**
- * Type of Stripe operation
- */
 export enum StripeOperationType {
   // Upstream operations
   PAYMENT_INTENT_CREATE = 'PAYMENT_INTENT_CREATE',

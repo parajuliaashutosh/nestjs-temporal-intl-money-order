@@ -6,7 +6,8 @@ import { SystemConfigModule } from '../system-config/system-config.module';
 import { UserModule } from '../user/user.module';
 import { WalletModule } from '../wallet/wallet.module';
 import { MoneyOrder } from './entity/money-order.entity';
-import { MONEY_ORDER_FACTORY } from './money-order.constant';
+import { MONEY_ORDER_FACTORY, MONEY_ORDER_REPO } from './money-order.constant';
+import { MoneyOrderRepo } from './repo/money-order.repo';
 import { AusMoneyOrderService } from './service/aus/aus-money-order.service';
 import { MoneyOrderFactory } from './service/money-order.factory';
 import { UsaMoneyOrderService } from './service/usa/usa-money-order.service';
@@ -26,6 +27,10 @@ import { UsaMoneyOrderService } from './service/usa/usa-money-order.service';
     {
       provide: MONEY_ORDER_FACTORY,
       useClass: MoneyOrderFactory,
+    },
+    {
+      provide: MONEY_ORDER_REPO,
+      useClass: MoneyOrderRepo,
     },
   ],
   exports: [MONEY_ORDER_FACTORY],

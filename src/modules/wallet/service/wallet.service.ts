@@ -6,27 +6,25 @@ import {
 import { AppException } from '@/src/common/exception/app.exception';
 import { Mapper } from '@/src/common/util/mapper';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import Decimal from 'decimal.js';
-import { Repository } from 'typeorm';
 import type { UserContract } from '../../user/contract/user.contract';
 import { USER_SERVICE } from '../../user/user.constant';
 import type { WalletTransactionContract } from '../contract/wallet-transaction.contract';
 import { WalletContract } from '../contract/wallet.contract';
+import type { WalletRepoContract } from '../contract/wallet.repo.contract';
 import { WalletTopUpDTO } from '../dto/wallet-topup.dto';
 import { CreateWalletTransactionDTO } from '../dto/wallet-transaction/create-wallet-transaction.dto';
 import { WalletUpdateBalanceDTO } from '../dto/wallet-update-balance.dto';
 import { Wallet } from '../entity/wallet.entity';
-import { WALLET_TRANSACTION_SERVICE } from '../wallet.constant';
+import { WALLET_REPO, WALLET_TRANSACTION_SERVICE } from '../wallet.constant';
 
 @Injectable()
 export class WalletService implements WalletContract {
   constructor(
-    @InjectRepository(Wallet)
-    private readonly walletRepository: Repository<Wallet>,
+    @Inject(WALLET_REPO)
+    private readonly walletRepo: WalletRepoContract,
     @Inject(WALLET_TRANSACTION_SERVICE)
     private readonly walletTransactionService: WalletTransactionContract,
-
     @Inject(USER_SERVICE)
     private readonly userService: UserContract,
   ) {}
@@ -42,15 +40,10 @@ export class WalletService implements WalletContract {
     }
 
     // Acquire lock BEFORE checking idempotency to prevent race conditions
-    let wallet = await this.walletRepository
-      .createQueryBuilder('wallet')
-      .leftJoinAndSelect('wallet.user', 'user')
-      .setLock('pessimistic_write')
-      .where('user.id = :userId', { userId: data.userId })
-      .andWhere('wallet.currency = :currency', {
-        currency: Mapper.countryToCurrencyMap(data.country),
-      })
-      .getOne();
+    let wallet = await this.walletRepo.findByUserIdAndCurrencyWithLock(
+      data.userId,
+      Mapper.countryToCurrencyMap(data.country),
+    );
 
     // Check idempotency AFTER acquiring lock
     const existingTransaction =
@@ -70,11 +63,11 @@ export class WalletService implements WalletContract {
       wallet.user = user;
       wallet.currency = Mapper.countryToCurrencyMap(data.country);
       wallet.balance = amountToAdd.toString();
-      wallet = await this.walletRepository.save(wallet);
+      wallet = await this.walletRepo.save(wallet);
     } else {
       const currentBalance = BigInt(wallet.balance);
       wallet.balance = (currentBalance + amountToAdd).toString();
-      wallet = await this.walletRepository.save(wallet);
+      wallet = await this.walletRepo.save(wallet);
     }
 
     const payload: CreateWalletTransactionDTO = {
@@ -105,11 +98,7 @@ export class WalletService implements WalletContract {
     }
 
     // Acquire pessimistic lock on wallet to prevent race conditions
-    const wallet = await this.walletRepository
-      .createQueryBuilder('wallet')
-      .setLock('pessimistic_write')
-      .where('wallet.id = :walletId', { walletId: data.walletId })
-      .getOne();
+    const wallet = await this.walletRepo.findByIdWithLock(data.walletId);
 
     if (!wallet) {
       throw AppException.notFound('WALLET_NOT_FOUND');
@@ -133,7 +122,7 @@ export class WalletService implements WalletContract {
     }
 
     wallet.balance = newBalance.toString();
-    await this.walletRepository.save(wallet);
+    await this.walletRepo.save(wallet);
 
     // Create transaction record
     const transactionPayload: CreateWalletTransactionDTO = {

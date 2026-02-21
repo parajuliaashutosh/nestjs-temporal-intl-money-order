@@ -1,1 +1,2 @@
 export const MONEY_ORDER_FACTORY = Symbol('MONEY_ORDER_FACTORY');
+export const MONEY_ORDER_REPO = Symbol('MONEY_ORDER_REPO');

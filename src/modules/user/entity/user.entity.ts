@@ -14,10 +14,11 @@ import { Auth } from '../../auth/entity/auth.entity';
 import { MoneyOrder } from '../../money-order/entity/money-order.entity';
 import { Receiver } from '../../receiver/entity/receiver.entity';
 import { Wallet } from '../../wallet/entity/wallet.entity';
+import { UserModel } from '../model/user.model';
 
 @Entity('user')
 @Index(['auth', 'country'], { unique: true })
-export class User extends Base {
+export class User extends Base implements UserModel {
   @Column()
   firstName: string;
 

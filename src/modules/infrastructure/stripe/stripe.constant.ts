@@ -1,2 +1,9 @@
 export const STRIPE_SERVICE = Symbol('STRIPE_SERVICE');
 export const STRIPE = Symbol('STRIPE');
+
+// Repository constants
+export const STRIPE_DOWNSTREAM_REPO = Symbol('STRIPE_DOWNSTREAM_REPO');
+export const STRIPE_USER_UPSTREAM_REPO = Symbol('STRIPE_USER_UPSTREAM_REPO');
+export const STRIPE_WEBHOOK_UPSTREAM_REPO = Symbol(
+  'STRIPE_WEBHOOK_UPSTREAM_REPO',
+);
