@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Auth } from '../entity/auth.entity';
+import { AuthModel } from '../model/auth.model';
 
 @Injectable()
 export class AuthRepo {
   constructor(@InjectRepository(Auth) private authRepo: Repository<Auth>) {}
 
-  public async create(auth: Partial<Auth>): Promise<Auth> {
+  public async create(auth: Partial<AuthModel>): Promise<Auth> {
     const resp = await this.authRepo.save(auth);
     const { password, ...result } = resp;
     void password;
