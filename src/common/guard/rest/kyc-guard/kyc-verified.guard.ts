@@ -9,11 +9,13 @@ import {
   ExecutionContext,
   Inject,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import type { Request } from 'express';
 
 @Injectable()
 export class KycVerifiedGuard implements CanActivate {
+  private readonly logger = new Logger(KycVerifiedGuard.name);
   constructor(
     @Inject(AUTH_SERVICE) private readonly authService: AuthContract,
   ) {}
@@ -22,9 +24,14 @@ export class KycVerifiedGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const countryCode = request.headers['x-country-code'] as SupportedCountry;
 
-    const userId = request.user?.userId;
+    const payload = request.user;
+
+    this.logger.debug('Request user jwt payload', payload);
+
     try {
-      if (request.user.role != Role.USER) return true;
+      const userId = payload?.userId;
+
+      if (payload?.role != Role.USER) return true;
 
       const auth = await this.authService.getAuthByUserIdAndCountry(
         userId,
@@ -41,8 +48,9 @@ export class KycVerifiedGuard implements CanActivate {
       }
 
       return false;
-    } catch {
-      throw AppException.unauthorized('INVALID_TOKEN');
+    } catch (err: any) {
+      Logger.error(`Error in KycVerifiedGuard: ${err}`, KycVerifiedGuard.name);
+      throw err;
     }
   }
 }

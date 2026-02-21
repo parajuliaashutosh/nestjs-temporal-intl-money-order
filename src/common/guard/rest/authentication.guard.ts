@@ -1,12 +1,10 @@
-import { TokenPayload, TokenService } from '@/src/modules/auth/service/token/token.service';
 import {
-  CanActivate,
-  ExecutionContext,
-  Injectable
-} from '@nestjs/common';
+  TokenPayload,
+  TokenService,
+} from '@/src/modules/auth/service/token/token.service';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import type { Request } from 'express';
 import { UserContext, UserContextStorage } from '../../context/user.context';
-import { Role } from '../../enum/role.enum';
 import { SupportedCountry } from '../../enum/supported-country.enum';
 import { AppException } from '../../exception/app.exception';
 
@@ -34,22 +32,22 @@ export class AuthenticationGuard implements CanActivate {
 
       const userPayload: ReqUserPayload = {
         ...payload,
-        userId: payload.user.find(user => user.country == countryCode)?.userId || undefined,
-      }
-      console.log("🚀 ~ AuthenticationGuard ~ canActivate ~ userPayload:", userPayload)
+        userId:
+          payload.user.find((user) => user.country == countryCode)?.userId ||
+          undefined,
+      };
       request.user = userPayload;
 
-      const userContext = new UserContext(
-      {
+      const userContext = new UserContext({
         key: payload.key,
         id: payload.id,
-        role: payload.role as Role,
+        role: payload.role,
         user: payload.user,
-        userId: payload.user.find(user => user.country == countryCode)?.userId,
+        userId: payload.user.find((user) => user.country == countryCode)
+          ?.userId,
         adminId: payload.adminId,
         tokenPayload: payload,
-      }
-      );
+      });
       UserContextStorage.run(userContext, () => true);
     } catch {
       throw AppException.unauthorized('INVALID_TOKEN');

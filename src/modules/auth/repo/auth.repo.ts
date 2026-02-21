@@ -58,7 +58,7 @@ export class AuthRepo implements AuthRepoContract {
   ): Promise<Auth | null> {
     return await this.authRepo
       .createQueryBuilder('auth')
-      .leftJoin('auth.users', 'users')
+      .leftJoinAndSelect('auth.users', 'users')
       .where('users.id = :userId AND users.country = :country', {
         userId,
         country,
