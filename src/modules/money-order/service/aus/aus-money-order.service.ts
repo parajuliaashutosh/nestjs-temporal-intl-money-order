@@ -9,18 +9,19 @@ import type { UserContract } from '@/src/modules/user/contract/user.contract';
 import { USER_SERVICE } from '@/src/modules/user/user.constant';
 import { Wallet } from '@/src/modules/wallet/entity/wallet.entity';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import Decimal from 'decimal.js';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { MoneyOrderContract } from '../../contract/money-order.contract';
+import type { MoneyOrderRepoContract } from '../../contract/money-order.repo.contract';
 import { CreateMoneyOrderDTO } from '../../dto/create-money-order.dto';
 import { MoneyOrder } from '../../entity/money-order.entity';
+import { MONEY_ORDER_REPO } from '../../money-order.constant';
 
 @Injectable()
 export class AusMoneyOrderService implements MoneyOrderContract {
   constructor(
-    @InjectRepository(MoneyOrder)
-    private readonly moneyOrderRepo: Repository<MoneyOrder>,
+    @Inject(MONEY_ORDER_REPO)
+    private readonly moneyOrderRepo: MoneyOrderRepoContract,
     @Inject(USER_SERVICE) private readonly userService: UserContract,
     @Inject(RECEIVER_SERVICE)
     private readonly receiverService: ReceiverContract,
@@ -88,11 +89,7 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     Logger.log('   Money Order ID:', moneyOrderId);
     Logger.log('========================================');
 
-    const moneyOrder = await this.moneyOrderRepo
-      .createQueryBuilder('moneyOrder')
-      .leftJoinAndSelect('moneyOrder.receiver', 'receiver')
-      .where('moneyOrder.id = :moneyOrderId', { moneyOrderId })
-      .getOne();
+    const moneyOrder = await this.moneyOrderRepo.findById(moneyOrderId);
 
     if (!moneyOrder) {
       throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
@@ -124,12 +121,7 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     Logger.log('💰 ACTIVITY: checkWalletBalance');
     Logger.log('========================================');
 
-    const moneyOrder = await this.moneyOrderRepo
-      .createQueryBuilder('moneyOrder')
-      .leftJoinAndSelect('moneyOrder.user', 'user')
-      .leftJoinAndSelect('user.wallet', 'wallet')
-      .where('moneyOrder.id = :moneyOrderId', { moneyOrderId })
-      .getOne();
+    const moneyOrder = await this.moneyOrderRepo.findById(moneyOrderId);
 
     if (!moneyOrder) {
       throw AppException.notFound('MONEY_ORDER_NOT_FOUND');

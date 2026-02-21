@@ -1,38 +1,28 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Inject, Injectable } from '@nestjs/common';
 import { WalletTransactionContract } from '../contract/wallet-transaction.contract';
+import type { WalletTransactionRepoContract } from '../contract/wallet-transaction.repo.contract';
 import { CreateWalletTransactionDTO } from '../dto/wallet-transaction/create-wallet-transaction.dto';
 import { WalletTransaction } from '../entity/wallet-transaction.entity';
 import { Wallet } from '../entity/wallet.entity';
+import { WALLET_TRANSACTION_REPO } from '../wallet.constant';
 
 @Injectable()
 export class WalletTransactionService implements WalletTransactionContract {
   constructor(
-    @InjectRepository(WalletTransaction)
-    private readonly walletTransactionRepository: Repository<WalletTransaction>,
+    @Inject(WALLET_TRANSACTION_REPO)
+    private readonly walletTransactionRepo: WalletTransactionRepoContract,
   ) {}
 
   checkIdemPotencyKey(
     idempotencyKey: string,
   ): Promise<WalletTransaction | null> {
-    return this.walletTransactionRepository
-      .createQueryBuilder('walletTransaction')
-      .leftJoinAndSelect('walletTransaction.wallet', 'wallet')
-      .where('walletTransaction.idemPotent = :idempotencyKey', {
-        idempotencyKey,
-      })
-      .getOne();
+    return this.walletTransactionRepo.findByIdempotencyKey(idempotencyKey);
   }
 
-  createTransaction(data: CreateWalletTransactionDTO, wallet: Wallet): Promise<WalletTransaction> {
-    const txn = new WalletTransaction();
-    txn.direction = data.direction;
-    txn.historyType = data.historyType;
-    txn.amount = (BigInt(data.amount)).toString();
-    txn.balanceAfter = (BigInt(data.balanceAfter)).toString();
-    txn.idemPotent = data.idemPotent;
-    txn.wallet = wallet;
-    return this.walletTransactionRepository.save(txn);
+  createTransaction(
+    data: CreateWalletTransactionDTO,
+    wallet: Wallet,
+  ): Promise<WalletTransaction> {
+    return this.walletTransactionRepo.create(data, wallet);
   }
 }

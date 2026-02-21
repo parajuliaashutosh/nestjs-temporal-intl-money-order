@@ -1,1 +1,2 @@
 export const SYSTEM_CONFIG_SERVICE = Symbol('SYSTEM_CONFIG_SERVICE');
+export const SYSTEM_CONFIG_REPO = Symbol('SYSTEM_CONFIG_REPO');
