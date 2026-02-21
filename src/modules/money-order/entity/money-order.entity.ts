@@ -1,12 +1,16 @@
 import Base from '@/src/common/entity/base.entity';
-import { MoneyOrderDeliveryStatus, MoneyOrderStatus } from '@/src/common/enum/money-order-status.enum';
+import {
+  MoneyOrderDeliveryStatus,
+  MoneyOrderStatus,
+} from '@/src/common/enum/money-order-status.enum';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { Receiver } from '../../receiver/entity/receiver.entity';
 import { User } from '../../user/entity/user.entity';
+import { MoneyOrderModel } from '../model/money-order.model';
 
 // like transaction
 @Entity('money-order')
-export class MoneyOrder extends Base {
+export class MoneyOrder extends Base implements MoneyOrderModel {
   // storing in cents to avoid floating point issues
   @Column({ type: 'bigint', default: '0', name: 'sending_amount' })
   sendingAmount: string;

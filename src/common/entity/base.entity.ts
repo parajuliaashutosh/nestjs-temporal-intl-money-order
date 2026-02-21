@@ -3,10 +3,11 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   PrimaryGeneratedColumn,
-  UpdateDateColumn
+  UpdateDateColumn,
 } from 'typeorm';
+import { BaseModel } from '../model/base.model';
 
-abstract class Base extends BaseEntity {
+abstract class Base extends BaseEntity implements BaseModel {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

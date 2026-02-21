@@ -2,9 +2,10 @@ import Base from '@/src/common/entity/base.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { MoneyOrder } from '../../money-order/entity/money-order.entity';
 import { User } from '../../user/entity/user.entity';
+import { ReceiverModel } from '../model/receiver.model';
 
 @Entity('receiver')
-export class Receiver extends Base {
+export class Receiver extends Base implements ReceiverModel {
   @Column({ name: 'first_name', nullable: false })
   firstName: string;
 

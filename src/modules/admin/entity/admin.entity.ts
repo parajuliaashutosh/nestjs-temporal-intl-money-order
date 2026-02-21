@@ -1,9 +1,10 @@
 import Base from 'src/common/entity/base.entity';
 import { Auth } from 'src/modules/auth/entity/auth.entity';
 import { Column, Entity, OneToOne } from 'typeorm';
+import { AdminModel } from '../model/admin.model';
 
 @Entity('admin')
-export class Admin extends Base {
+export class Admin extends Base implements AdminModel {
   @Column({ name: 'first_name' })
   firstName: string;
 
