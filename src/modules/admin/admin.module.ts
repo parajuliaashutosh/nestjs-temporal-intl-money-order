@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ADMIN_SERVICE } from './admin.constant';
+import { ADMIN_REPO, ADMIN_SERVICE } from './admin.constant';
 import { Admin } from './entity/admin.entity';
+import { AdminRepo } from './repo/admin.repo';
 import { AdminService } from './service/admin.service';
 
 @Module({
@@ -10,6 +11,10 @@ import { AdminService } from './service/admin.service';
     {
       provide: ADMIN_SERVICE,
       useClass: AdminService,
+    },
+    {
+      provide: ADMIN_REPO,
+      useClass: AdminRepo,
     },
   ],
   exports: [ADMIN_SERVICE],

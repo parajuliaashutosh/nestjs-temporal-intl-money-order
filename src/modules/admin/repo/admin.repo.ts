@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { AdminRepoContract } from '../contract/admin.repo.contract';
 import { Admin } from '../entity/admin.entity';
 import { AdminModel } from '../model/admin.model';
 
 @Injectable()
-export class AdminRepo {
+export class AdminRepo implements AdminRepoContract {
   constructor(@InjectRepository(Admin) private adminRepo: Repository<Admin>) {}
 
   public async create(admin: Partial<AdminModel>): Promise<Admin> {
