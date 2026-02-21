@@ -1,4 +1,5 @@
 // token.service.ts
+import { Role } from '@/src/common/enum/role.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -12,7 +13,7 @@ export interface TokenPayload {
     country: SupportedCountry;
   }[];
   adminId: string;
-  role: string;
+  role: Role;
 }
 
 @Injectable()

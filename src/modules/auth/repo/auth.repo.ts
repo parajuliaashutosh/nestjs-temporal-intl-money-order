@@ -1,11 +1,13 @@
+import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { AuthRepoContract } from '../contract/auth.repo.contract';
 import { Auth } from '../entity/auth.entity';
 import { AuthModel } from '../model/auth.model';
 
 @Injectable()
-export class AuthRepo {
+export class AuthRepo implements AuthRepoContract {
   constructor(@InjectRepository(Auth) private authRepo: Repository<Auth>) {}
 
   public async create(auth: Partial<AuthModel>): Promise<Auth> {
@@ -47,6 +49,20 @@ export class AuthRepo {
     return await this.authRepo
       .createQueryBuilder('auth')
       .where('auth.phone = :phone', { phone })
+      .getOne();
+  }
+
+  public async getAuthByUserIdAndCountry(
+    userId: string,
+    country: SupportedCountry,
+  ): Promise<Auth | null> {
+    return await this.authRepo
+      .createQueryBuilder('auth')
+      .leftJoin('auth.users', 'users')
+      .where('users.id = :userId AND users.country = :country', {
+        userId,
+        country,
+      })
       .getOne();
   }
 }
