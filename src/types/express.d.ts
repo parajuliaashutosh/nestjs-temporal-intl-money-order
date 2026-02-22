@@ -1,13 +1,13 @@
-import type { TokenPayload } from '../modules/auth/service/token/token.service';
+import { ReqUserPayload } from '../common/guard/rest/authentication.guard';
 
 declare global {
   namespace Express {
     interface Request {
-      user: TokenPayload;
+      user: ReqUserPayload;
       cookies: {
         accessToken?: string;
         refreshToken?: string;
-      }
+      };
     }
   }
 }

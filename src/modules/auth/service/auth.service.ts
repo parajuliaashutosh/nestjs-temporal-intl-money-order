@@ -1,3 +1,4 @@
+import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { AppException } from '@/src/common/exception/app.exception';
 import { Inject, Injectable } from '@nestjs/common';
 import { AUTH_REPO } from '../auth.constant';
@@ -97,5 +98,12 @@ export class AuthService implements AuthContract {
 
   public async getAuthByPhone(phone: string): Promise<Auth | null> {
     return await this.authRepo.getAuthByPhone(phone);
+  }
+
+  public async getAuthByUserIdAndCountry(
+    userId: string,
+    country: SupportedCountry,
+  ): Promise<Auth | null> {
+    return await this.authRepo.getAuthByUserIdAndCountry(userId, country);
   }
 }

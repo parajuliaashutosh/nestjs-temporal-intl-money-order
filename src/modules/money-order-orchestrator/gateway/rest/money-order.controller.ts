@@ -1,5 +1,6 @@
 import { Authenticate } from '@/src/common/decorator/authenticate/rest/authenticate.decorator';
 import { Authorize } from '@/src/common/decorator/authenticate/rest/authorize.decorator';
+import { KycVerified } from '@/src/common/decorator/authenticate/rest/kyc-verified/kyc-verified.decorator';
 import { User } from '@/src/common/decorator/authenticate/rest/user.decorator';
 import { CountryCode } from '@/src/common/decorator/header/country-code.decorator';
 import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-code.pipe';
@@ -30,6 +31,7 @@ export class MoneyOrderController {
   @Post('/')
   @Authenticate()
   @Authorize([Role.USER])
+  @KycVerified()
   @ApiOperation({
     summary: 'Create a money order',
     description:
@@ -82,20 +84,4 @@ export class MoneyOrderController {
       .setMessage('Money order initiated successfully')
       .build();
   }
-
-  // @Post('update-complex-balance')
-  // async updateBalance(@Body() body: { userId: string; amount: number }) {
-  //   console.log("🚀 ~ WalletController ~ updateBalance ~ body:", body);
-  //   const handle = await this.temporalClient.startWorkflow(
-  //     'updateWalletWorkflow', // 👈 WORKFLOW NAME
-  //     [body.userId, body.amount],
-  //     'wallet-task-queue', // 👈 TASK QUEUE NAME
-  //   );
-
-  //   return {
-  //     message: 'Workflow triggered',
-  //     workflowId: handle.workflowId,
-  //     runId: handle?.workflowId,
-  //   };
-  // }
 }

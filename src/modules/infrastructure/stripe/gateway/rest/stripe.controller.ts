@@ -1,5 +1,6 @@
 import { Authenticate } from '@/src/common/decorator/authenticate/rest/authenticate.decorator';
 import { Authorize } from '@/src/common/decorator/authenticate/rest/authorize.decorator';
+import { KycVerified } from '@/src/common/decorator/authenticate/rest/kyc-verified/kyc-verified.decorator';
 import { User } from '@/src/common/decorator/authenticate/rest/user.decorator';
 import { CountryCode } from '@/src/common/decorator/header/country-code.decorator';
 import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-code.pipe';
@@ -48,6 +49,7 @@ export class StripeController {
   @HttpCode(HttpStatus.CREATED)
   @Authenticate()
   @Authorize([Role.USER])
+  @KycVerified()
   @ApiOperation({
     summary: 'Create a payment intent',
     description:
