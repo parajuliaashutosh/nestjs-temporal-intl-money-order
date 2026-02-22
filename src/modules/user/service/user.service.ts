@@ -23,7 +23,7 @@ export class UserService implements UserContract {
       country: data.country,
       auth: auth,
     };
-
+    throw AppException.badRequest('USER_CREATION_FAILED');
     return await this.userRepo.create(user);
   }
 
