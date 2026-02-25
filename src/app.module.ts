@@ -21,6 +21,8 @@ import { TemporalModule } from './modules/temporal/temporal.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { StripeClientModule } from './modules/external/stripe-client/stripe-client.module';
 import { StripeIdentityModule } from './modules/external/identity/stripe-identity/stripe-identity.module';
+import { AddressModule } from './modules/address/address.module';
+import { KycModule } from './modules/kyc/kyc.module';
 
 @Module({
   imports: [
@@ -46,6 +48,8 @@ import { StripeIdentityModule } from './modules/external/identity/stripe-identit
     StripeModule,
     StripeClientModule,
     StripeIdentityModule,
+    AddressModule,
+    KycModule,
   ],
   controllers: [],
   providers: [

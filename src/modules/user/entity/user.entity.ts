@@ -10,6 +10,7 @@ import {
   OneToMany,
   OneToOne,
 } from 'typeorm';
+import { Address } from '../../address/entity/address.entity';
 import { Auth } from '../../auth/entity/auth.entity';
 import { MoneyOrder } from '../../money-order/entity/money-order.entity';
 import { Receiver } from '../../receiver/entity/receiver.entity';
@@ -50,6 +51,13 @@ export class User extends Base implements UserModel {
   })
   @JoinColumn({ name: 'wallet_id' })
   wallet: Wallet;
+
+  @OneToOne(() => Address, (address) => address.user, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'address_id' })
+  address: Address;
 
   @ManyToOne(() => Auth, (auth) => auth.users, {
     onDelete: 'CASCADE',
