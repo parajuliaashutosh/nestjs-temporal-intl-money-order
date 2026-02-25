@@ -1,9 +1,8 @@
+import { AuthModule } from '@/src/modules/auth/auth.module';
+import { WalletModule } from '@/src/modules/wallet/wallet.module';
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Stripe } from 'stripe';
-import { AuthModule } from '../../auth/auth.module';
-import { WalletModule } from '../../wallet/wallet.module';
+import { StripeClientModule } from '../../stripe-client/stripe-client.module';
 import { StripeDownstreamLog } from './entity/stripe-api-downstream.entity';
 import { StripeUserUpstream } from './entity/stripe-user-upstream.entity';
 import { StripeWebhookUpstream } from './entity/stripe-webhook-upstream.entity';
@@ -13,7 +12,6 @@ import { StripeUserUpstreamRepo } from './repo/stripe-user-upstream.repo';
 import { StripeWebhookUpstreamRepo } from './repo/stripe-webhook-upstream.repo';
 import { StripeService } from './service/stripe.service';
 import {
-  STRIPE,
   STRIPE_DOWNSTREAM_REPO,
   STRIPE_SERVICE,
   STRIPE_USER_UPSTREAM_REPO,
@@ -29,18 +27,9 @@ import {
     ]),
     WalletModule,
     AuthModule,
+    StripeClientModule,
   ],
   providers: [
-    {
-      provide: STRIPE,
-      useFactory: (configService: ConfigService) => {
-        const stripeSecretKey = configService.get<string>('STRIPE_SECRET_KEY');
-        return new Stripe(stripeSecretKey, {
-          apiVersion: '2026-01-28.clover',
-        });
-      },
-      inject: [ConfigService],
-    },
     {
       provide: STRIPE_SERVICE,
       useClass: StripeService,

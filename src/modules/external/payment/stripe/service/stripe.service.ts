@@ -7,13 +7,13 @@ import { WALLET_SERVICE } from '@/src/modules/wallet/wallet.constant';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
+import { STRIPE_CLIENT } from '../../../stripe-client/stripe-client.constant';
 import type { StripeDownstreamRepoContract } from '../contract/stripe-downstream.repo.contract';
 import type { StripeUserUpstreamRepoContract } from '../contract/stripe-user-upstream.repo.contract';
 import type { StripeWebhookUpstreamRepoContract } from '../contract/stripe-webhook-upstream.repo.contract';
 import { CreateIntentDTO } from '../dto/create-payment-intent.dto';
 import { StripeLogStatus, StripeOperationType } from '../enum/stripe-log.enum';
 import {
-  STRIPE,
   STRIPE_DOWNSTREAM_REPO,
   STRIPE_USER_UPSTREAM_REPO,
   STRIPE_WEBHOOK_UPSTREAM_REPO,
@@ -32,7 +32,7 @@ export class StripeService {
   private readonly log = new Logger(StripeService.name);
 
   constructor(
-    @Inject(STRIPE) private readonly stripe: Stripe,
+    @Inject(STRIPE_CLIENT) private readonly stripe: Stripe,
     private readonly configService: ConfigService,
     @Inject(WALLET_SERVICE) private readonly walletService: WalletContract,
     @Inject(STRIPE_DOWNSTREAM_REPO)
