@@ -2,7 +2,7 @@ import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { CACHE_KEYS } from '@/src/common/keys/cache.keys';
 import { Inject, Injectable } from '@nestjs/common';
 import { createClient } from 'redis';
-import { CACHE_CLIENT } from '../../infrastructure/cache/cache.constant';
+import { CACHE_CLIENT } from '../../cache/cache.constant';
 import { SystemConfigContract } from '../contract/system-config.contract';
 import type { SystemConfigRepoContract } from '../contract/system-config.repo.contract';
 import { CreateSystemConfigDTO } from '../dto/create-system-config.dto';
