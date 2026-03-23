@@ -5,13 +5,14 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 
+export interface TokenUser {
+  userId: string;
+  country: SupportedCountry;
+}
 export interface TokenPayload {
   key: string;
   id: string;
-  user: {
-    userId: string;
-    country: SupportedCountry;
-  }[];
+  users: TokenUser[];
   adminId: string;
   role: Role;
 }

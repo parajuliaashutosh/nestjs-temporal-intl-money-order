@@ -103,7 +103,7 @@ export class StripeController {
       amount: body.amount,
       idempotencyKey: body.idempotencyKey,
       supportedCurrency: Mapper.countryToCurrencyMap(countryCode),
-      userId: user.userId,
+      userId: user.user.userId,
     };
 
     const resp = await this.stripeService.createPaymentIntent(createIntentDTO);

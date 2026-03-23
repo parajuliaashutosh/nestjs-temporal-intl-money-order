@@ -52,7 +52,7 @@ export class AuthService implements AuthContract {
     const tokenPayload: TokenPayload = {
       key: crypto.randomUUID(),
       id: auth.id,
-      user:
+      users:
         auth.users?.map((user) => ({
           userId: user.id,
           country: user.country,
@@ -77,7 +77,7 @@ export class AuthService implements AuthContract {
     const tokenPayload: TokenPayload = {
       key: crypto.randomUUID(),
       id: auth.id,
-      user:
+      users:
         auth.users?.map((user) => ({
           userId: user.id,
           country: user.country,

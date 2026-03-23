@@ -29,7 +29,7 @@ export class KycVerifiedGuard implements CanActivate {
     this.logger.debug('Request user jwt payload', payload);
 
     try {
-      const userId = payload?.userId;
+      const userId = payload?.user?.userId;
 
       if (payload?.role != Role.USER) return true;
 

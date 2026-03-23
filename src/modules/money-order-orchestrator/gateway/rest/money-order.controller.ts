@@ -71,7 +71,7 @@ export class MoneyOrderController {
       sendingAmount: body.sendingAmount,
       receiverAmount: body.receiverAmount,
       exchangeRate: body.exchangeRate,
-      userId: user.userId,
+      userId: user.user.userId,
       receiverId: body.receiver,
     };
     await this.moneyOrderOrchestratorService.createMoneyOrder(
