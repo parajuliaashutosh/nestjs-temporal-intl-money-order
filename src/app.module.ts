@@ -11,7 +11,10 @@ import { typeOrmConfigAsync } from './config/orm.config';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CacheModule } from './modules/cache/cache.module';
+import { StripeIdentityModule } from './modules/external/identity/stripe-identity/stripe-identity.module';
 import { StripeModule } from './modules/external/payment/stripe/stripe.module';
+import { StripeClientModule } from './modules/external/stripe-client/stripe-client.module';
+import { HealthModule } from './modules/health/health.module';
 import { MoneyOrderOrchestratorModule } from './modules/money-order-orchestrator/money-order-orchestrator.module';
 import { MoneyOrderModule } from './modules/money-order/money-order.module';
 import { ReceiverModule } from './modules/receiver/receiver.module';
@@ -19,8 +22,6 @@ import { RegistrationModule } from './modules/registration/registration.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
 import { TemporalModule } from './modules/temporal/temporal.module';
 import { WalletModule } from './modules/wallet/wallet.module';
-import { StripeClientModule } from './modules/external/stripe-client/stripe-client.module';
-import { StripeIdentityModule } from './modules/external/identity/stripe-identity/stripe-identity.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { StripeIdentityModule } from './modules/external/identity/stripe-identit
     ActivityLogModule,
     WalletModule,
     CacheModule,
+    HealthModule,
     TemporalModule,
     ReceiverModule,
     MoneyOrderModule,

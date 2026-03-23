@@ -25,6 +25,7 @@ export interface EnvConfig {
   TEMPORAL_TASK_QUEUE: string;
 
   WALLET_WEBHOOK_KEY: string;
+  HEALTH_CHECK_WHITELIST_IPS: string;
 
   // Stripe Configuration
   STRIPE_SECRET_KEY: string;
@@ -57,6 +58,7 @@ export const envValidationSchema = Joi.object<EnvConfig>({
   TEMPORAL_TASK_QUEUE: Joi.string().required(),
 
   WALLET_WEBHOOK_KEY: Joi.string().required(),
+  HEALTH_CHECK_WHITELIST_IPS: Joi.string().allow('').optional(),
 
   // Stripe Configuration
   STRIPE_SECRET_KEY: Joi.string().required(),
