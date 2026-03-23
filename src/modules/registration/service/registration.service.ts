@@ -81,6 +81,7 @@ export class RegistrationService implements RegistrationContract {
     await this.userService.verifyUserKYC(id);
   }
 
+  // this is an user id, not auth id
   public async rejectUserKYC(id: string): Promise<void> {
     await this.userService.rejectUserKYC(id);
   }

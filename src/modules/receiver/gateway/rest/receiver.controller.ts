@@ -92,7 +92,7 @@ export class ReceiverController {
       address: data.address,
       bankName: data.bankName,
       bankAccountNumber: data.bankAccountNumber,
-      userId: user.userId,
+      userId: user.user.userId,
     };
     await this.receiverService.create(payload);
 
@@ -180,7 +180,7 @@ export class ReceiverController {
       page: page,
       limit: perPage,
       search: search,
-      userId: user.userId,
+      userId: user.user.userId,
     };
 
     const resp = await this.receiverService.getReceiversByUserId(payload);
