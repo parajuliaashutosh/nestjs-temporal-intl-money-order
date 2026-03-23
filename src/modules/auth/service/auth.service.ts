@@ -56,6 +56,8 @@ export class AuthService implements AuthContract {
         auth.users?.map((user) => ({
           userId: user.id,
           country: user.country,
+          kycStatus: user.kycStatus,
+          version: user.version,
         })) || [],
       adminId: auth.admin?.id,
       role: auth.role,
@@ -81,6 +83,7 @@ export class AuthService implements AuthContract {
         auth.users?.map((user) => ({
           userId: user.id,
           country: user.country,
+          version: user.version,
         })) || [],
       adminId: auth.admin?.id,
       role: auth.role,

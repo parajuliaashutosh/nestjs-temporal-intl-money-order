@@ -12,6 +12,8 @@ export interface UserModel extends BaseModel {
   lastName: string;
   kycStatus: KYCStatus;
   country: SupportedCountry;
+  version: number;
+  invalidatedVersion: number;
   wallet: WalletModel;
   auth: AuthModel;
   moneyOrders?: MoneyOrderModel[];

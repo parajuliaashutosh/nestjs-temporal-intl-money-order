@@ -1,4 +1,5 @@
 // token.service.ts
+import { KYCStatus } from '@/src/common/enum/kyc-status.enum';
 import { Role } from '@/src/common/enum/role.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { Injectable } from '@nestjs/common';
@@ -8,6 +9,8 @@ import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 export interface TokenUser {
   userId: string;
   country: SupportedCountry;
+  kycStatus?: KYCStatus;
+  version: number;
 }
 export interface TokenPayload {
   key: string;

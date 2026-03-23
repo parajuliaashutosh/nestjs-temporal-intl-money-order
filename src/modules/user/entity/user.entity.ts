@@ -9,6 +9,7 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
+  VersionColumn,
 } from 'typeorm';
 import { Auth } from '../../auth/entity/auth.entity';
 import { MoneyOrder } from '../../money-order/entity/money-order.entity';
@@ -43,6 +44,12 @@ export class User extends Base implements UserModel {
     nullable: true,
   })
   country: SupportedCountry;
+
+  @VersionColumn({ name: 'user_token_version', default: 0 })
+  version: number;
+
+  @Column({ name: 'invalidated_token_version', default: -1 })
+  invalidatedVersion: number;
 
   @OneToOne(() => Wallet, (wallet) => wallet.user, {
     cascade: true,
