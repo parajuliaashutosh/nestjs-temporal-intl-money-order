@@ -12,5 +12,7 @@ export interface AuthModel extends BaseModel {
   role: Role;
   password: string;
 
+  tokenVersion: number;
+
   admin?: AdminModel;
 }

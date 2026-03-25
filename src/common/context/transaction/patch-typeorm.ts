@@ -19,7 +19,7 @@ export function initializeTransactionalContext() {
         return transactionalManager;
       }
       // Otherwise return the original manager
-      return this[managerSymbol]!;
+      return this[managerSymbol];
     },
     set(this: RepositoryWithSymbol, manager: EntityManager): void {
       // Store the original manager using our symbol

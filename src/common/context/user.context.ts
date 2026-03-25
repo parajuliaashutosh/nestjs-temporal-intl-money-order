@@ -1,4 +1,7 @@
-import { TokenPayload } from '@/src/modules/auth/service/token/token.service';
+import {
+  TokenPayload,
+  TokenUser,
+} from '@/src/modules/auth/service/token/token.service';
 import { AsyncLocalStorage } from 'async_hooks';
 import { Role } from '../enum/role.enum';
 
@@ -6,8 +9,8 @@ export interface UserContextPayload {
   key: string;
   id: string;
   role: Role;
-  user?: { userId: string; country: string }[];
-  userId?: string;
+  users?: TokenUser[];
+  user?: TokenUser;
   adminId?: string;
   tokenPayload?: TokenPayload;
 }

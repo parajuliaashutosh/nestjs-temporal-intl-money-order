@@ -51,6 +51,9 @@ export class Auth extends Base implements AuthModel {
   @Column({ select: false })
   password: string;
 
+  @Column({ name: 'token_version', default: 0 })
+  tokenVersion: number;
+
   @OneToMany(() => User, (user) => user.auth, {
     onDelete: 'CASCADE',
   })

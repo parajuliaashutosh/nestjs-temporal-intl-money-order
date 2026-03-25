@@ -1,6 +1,7 @@
 import {
   TokenPayload,
   TokenService,
+  TokenUser,
 } from '@/src/modules/auth/service/token/token.service';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import type { Request } from 'express';
@@ -9,7 +10,7 @@ import { SupportedCountry } from '../../enum/supported-country.enum';
 import { AppException } from '../../exception/app.exception';
 
 export interface ReqUserPayload extends TokenPayload {
-  userId?: string;
+  user: TokenUser;
 }
 
 @Injectable()
@@ -32,9 +33,7 @@ export class AuthenticationGuard implements CanActivate {
 
       const userPayload: ReqUserPayload = {
         ...payload,
-        userId:
-          payload.user.find((user) => user.country == countryCode)?.userId ||
-          undefined,
+        user: payload.users.find((user) => user.country == countryCode),
       };
       request.user = userPayload;
 
@@ -42,9 +41,8 @@ export class AuthenticationGuard implements CanActivate {
         key: payload.key,
         id: payload.id,
         role: payload.role,
-        user: payload.user,
-        userId: payload.user.find((user) => user.country == countryCode)
-          ?.userId,
+        users: payload.users,
+        user: userPayload.user,
         adminId: payload.adminId,
         tokenPayload: payload,
       });

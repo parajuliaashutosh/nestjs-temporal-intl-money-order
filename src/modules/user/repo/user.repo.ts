@@ -37,8 +37,10 @@ export class UserRepo implements UserRepoContract {
     id: string,
     status: KYCStatus,
   ): Promise<User | null> {
-    await this.userRepo.update(id, { kycStatus: status });
-    return await this.findById(id);
+    const query = await this.findById(id);
+    query.kycStatus = status;
+    query.invalidatedVersion = query.version;
+    return await this.userRepo.save(query);
   }
 
   public async update(

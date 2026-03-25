@@ -73,12 +73,11 @@ export class RegistrationController {
       country: countryCode,
     };
 
-    const resp = await this.registrationService.registerUser(payload);
+    await this.registrationService.registerUser(payload);
 
     return RestResponse.builder()
       .setSuccess(true)
       .setMessage('User registered successfully')
-      .setData(resp)
       .build();
   }
 

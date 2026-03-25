@@ -41,7 +41,7 @@ export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
       this.logger.log('✅ Temporal client created successfully');
     } catch (err) {
       this.logger.error('❌ Failed to connect to Temporal', err);
-      throw err;
+      // throw err;
     }
   }
 
