@@ -35,46 +35,13 @@ export class MoneyOrderRepo implements MoneyOrderRepoContract {
       .getOne();
   }
 
-  public async findByUserId(userId: string): Promise<MoneyOrder[]> {
+  public async findByIdempotentId(
+    idempotentId: string,
+  ): Promise<MoneyOrder | null> {
     return await this.moneyOrderRepo
       .createQueryBuilder('moneyOrder')
-      .leftJoinAndSelect('moneyOrder.user', 'user')
-      .leftJoinAndSelect('moneyOrder.receiver', 'receiver')
-      .where('user.id = :userId', { userId })
-      .orderBy('moneyOrder.createdAt', 'DESC')
-      .getMany();
-  }
-
-  public async findByReceiverId(receiverId: string): Promise<MoneyOrder[]> {
-    return await this.moneyOrderRepo
-      .createQueryBuilder('moneyOrder')
-      .leftJoinAndSelect('moneyOrder.user', 'user')
-      .leftJoinAndSelect('moneyOrder.receiver', 'receiver')
-      .where('receiver.id = :receiverId', { receiverId })
-      .orderBy('moneyOrder.createdAt', 'DESC')
-      .getMany();
-  }
-
-  public async findByStatus(status: MoneyOrderStatus): Promise<MoneyOrder[]> {
-    return await this.moneyOrderRepo
-      .createQueryBuilder('moneyOrder')
-      .leftJoinAndSelect('moneyOrder.user', 'user')
-      .leftJoinAndSelect('moneyOrder.receiver', 'receiver')
-      .where('moneyOrder.status = :status', { status })
-      .orderBy('moneyOrder.createdAt', 'DESC')
-      .getMany();
-  }
-
-  public async findByDeliveryStatus(
-    deliveryStatus: MoneyOrderDeliveryStatus,
-  ): Promise<MoneyOrder[]> {
-    return await this.moneyOrderRepo
-      .createQueryBuilder('moneyOrder')
-      .leftJoinAndSelect('moneyOrder.user', 'user')
-      .leftJoinAndSelect('moneyOrder.receiver', 'receiver')
-      .where('moneyOrder.deliveryStatus = :deliveryStatus', { deliveryStatus })
-      .orderBy('moneyOrder.createdAt', 'DESC')
-      .getMany();
+      .where('moneyOrder.idempotentId = :idempotentId', { idempotentId })
+      .getOne();
   }
 
   public async updateStatus(
@@ -99,19 +66,5 @@ export class MoneyOrderRepo implements MoneyOrderRepoContract {
   ): Promise<MoneyOrder | null> {
     await this.moneyOrderRepo.update(id, moneyOrder);
     return await this.findById(id);
-  }
-
-  public async delete(id: string): Promise<boolean> {
-    const result = await this.moneyOrderRepo.delete(id);
-    return result.affected > 0;
-  }
-
-  public async findAll(): Promise<MoneyOrder[]> {
-    return await this.moneyOrderRepo
-      .createQueryBuilder('moneyOrder')
-      .leftJoinAndSelect('moneyOrder.user', 'user')
-      .leftJoinAndSelect('moneyOrder.receiver', 'receiver')
-      .orderBy('moneyOrder.createdAt', 'DESC')
-      .getMany();
   }
 }

@@ -9,12 +9,7 @@ export interface MoneyOrderRepoContract {
   create(moneyOrder: Partial<MoneyOrderModel>): Promise<MoneyOrder>;
   save(moneyOrder: MoneyOrder): Promise<MoneyOrder>;
   findById(id: string): Promise<MoneyOrder | null>;
-  findByUserId(userId: string): Promise<MoneyOrder[]>;
-  findByReceiverId(receiverId: string): Promise<MoneyOrder[]>;
-  findByStatus(status: MoneyOrderStatus): Promise<MoneyOrder[]>;
-  findByDeliveryStatus(
-    deliveryStatus: MoneyOrderDeliveryStatus,
-  ): Promise<MoneyOrder[]>;
+  findByIdempotentId(idempotentId: string): Promise<MoneyOrder | null>;
   updateStatus(
     id: string,
     status: MoneyOrderStatus,
@@ -27,6 +22,4 @@ export interface MoneyOrderRepoContract {
     id: string,
     moneyOrder: Partial<MoneyOrderModel>,
   ): Promise<MoneyOrder | null>;
-  delete(id: string): Promise<boolean>;
-  findAll(): Promise<MoneyOrder[]>;
 }

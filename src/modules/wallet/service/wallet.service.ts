@@ -75,7 +75,7 @@ export class WalletService implements WalletContract {
       historyType: WalletHistoryType.TOP_UP,
       amount: amountToAdd.toString(),
       balanceAfter: wallet.balance,
-      idemPotent: data.id,
+      idempotentId: data.id,
     };
 
     await this.walletTransactionService.createTransaction(payload, wallet);
@@ -130,7 +130,7 @@ export class WalletService implements WalletContract {
       historyType: data.historyType,
       amount: data.amount,
       balanceAfter: wallet.balance,
-      idemPotent: data.idempotencyKey,
+      idempotentId: data.idempotencyKey,
     };
 
     await this.walletTransactionService.createTransaction(

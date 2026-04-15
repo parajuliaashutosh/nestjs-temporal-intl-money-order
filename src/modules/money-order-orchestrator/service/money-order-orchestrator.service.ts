@@ -1,5 +1,6 @@
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { CreateMoneyOrderDTO } from '../../money-order/dto/create-money-order.dto';
 import { MONEY_ORDER_FACTORY } from '../../money-order/money-order.constant';
 import { MoneyOrderFactory } from '../../money-order/service/money-order.factory';
@@ -17,6 +18,8 @@ export class MoneyOrderOrchestratorService {
 
     @Inject(WORKFLOW_CLIENT)
     private readonly workflowClient: TemporalClientService,
+
+    private readonly configService: ConfigService,
   ) {}
 
   public async createMoneyOrder(
@@ -27,10 +30,14 @@ export class MoneyOrderOrchestratorService {
       this.moneyOrderFactory.getMoneyOrderService(countryCode);
     const resp = await moneyOrderService.createMoneyOrder(data);
 
+    const taskQueue = this.configService.getOrThrow<string>(
+      'TEMPORAL_TASK_QUEUE',
+    );
+
     const workflow = await this.workflowClient.startWorkflow(
       workflowBYCountry(countryCode),
       [resp.id],
-      'money-order-task-queue',
+      taskQueue,
     );
 
     Logger.log(

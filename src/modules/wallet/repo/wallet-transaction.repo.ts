@@ -19,7 +19,7 @@ export class WalletTransactionRepo implements WalletTransactionRepoContract {
     return await this.walletTransactionRepo
       .createQueryBuilder('walletTransaction')
       .leftJoinAndSelect('walletTransaction.wallet', 'wallet')
-      .where('walletTransaction.idemPotent = :idempotencyKey', {
+      .where('walletTransaction.idempotentId = :idempotencyKey', {
         idempotencyKey,
       })
       .getOne();
@@ -34,7 +34,7 @@ export class WalletTransactionRepo implements WalletTransactionRepoContract {
     txn.historyType = data.historyType;
     txn.amount = BigInt(data.amount).toString();
     txn.balanceAfter = BigInt(data.balanceAfter).toString();
-    txn.idemPotent = data.idemPotent;
+    txn.idempotentId = data.idempotentId;
     txn.wallet = wallet;
 
     return await this.walletTransactionRepo.save(txn);

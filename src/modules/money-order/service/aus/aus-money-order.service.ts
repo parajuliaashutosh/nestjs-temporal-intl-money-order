@@ -19,6 +19,7 @@ import { MONEY_ORDER_REPO } from '../../money-order.constant';
 
 @Injectable()
 export class AusMoneyOrderService implements MoneyOrderContract {
+  private readonly log = new Logger(AusMoneyOrderService.name);
   constructor(
     @Inject(MONEY_ORDER_REPO)
     private readonly moneyOrderRepo: MoneyOrderRepoContract,
@@ -42,6 +43,17 @@ export class AusMoneyOrderService implements MoneyOrderContract {
       throw AppException.badRequest('SYSTEM_CONFIG_NOT_FOUND_FOR_AUS');
     }
 
+    const prevTransaction = await this.moneyOrderRepo.findByIdempotentId(
+      data.idempotentId,
+    );
+
+    if (prevTransaction) {
+      this.log.warn(
+        `Idempotent transaction found for idempotentId ${data.idempotentId}, returning existing transaction with ID ${prevTransaction.id}`,
+      );
+      return prevTransaction;
+    }
+
     const exchangeRate = new Decimal(data.exchangeRate);
     const systemExchangeRate = new Decimal(systemConfig.exchangeRate);
 
@@ -52,7 +64,7 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     const sendingAmount = new Decimal(data.sendingAmount);
     const receiverAmount = new Decimal(data.receiverAmount);
 
-    // 🔴 CORE VALIDATION
+    // CORE VALIDATION
     const calculatedReceiverAmount = sendingAmount.times(exchangeRate);
 
     if (!calculatedReceiverAmount.equals(receiverAmount)) {
@@ -78,6 +90,7 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     moneyOrder.promiseExchangeRate = exchangeRate.toFixed();
     moneyOrder.user = user;
     moneyOrder.receiver = receiver;
+    moneyOrder.idempotentId = data.idempotentId;
     await this.moneyOrderRepo.save(moneyOrder);
 
     return moneyOrder;

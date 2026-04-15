@@ -4,6 +4,8 @@ import { MoneyOrderFactoryContract } from '@/src/modules/money-order/contract/mo
 import { MoneyOrderContract } from '@/src/modules/money-order/contract/money-order.contract';
 import { MONEY_ORDER_FACTORY } from '@/src/modules/money-order/money-order.constant';
 import { NestFactory } from '@nestjs/core';
+import { TemporalClientService } from '../client/temporal-client.service';
+import { WORKFLOW_CLIENT, WORKFLOWS } from '../workflow.constant';
 
 let activitiesInstance: MoneyOrderContract | null;
 
@@ -14,6 +16,16 @@ async function getActivitiesInstance() {
     activitiesInstance = factory.getMoneyOrderService(SupportedCountry.AUS);
   }
   return activitiesInstance;
+}
+
+let workflowClientInstance: TemporalClientService = null;
+
+async function getWorkflowClientInstance() {
+  if (!workflowClientInstance) {
+    const app = await NestFactory.createApplicationContext(AppModule);
+    workflowClientInstance = app.get(WORKFLOW_CLIENT);
+  }
+  return workflowClientInstance;
 }
 
 export async function ausScreenReceiver(
@@ -52,6 +64,22 @@ export async function ausTransferFunds(moneyOrderId: string): Promise<boolean> {
   console.log('========================================');
 
   await activities.transferFunds(moneyOrderId);
+
+  return;
+}
+
+export async function ausPayoutFunds(moneyOrderId: string): Promise<boolean> {
+  const activities = await getWorkflowClientInstance();
+  console.log('========================================');
+  console.log('💸 ACTIVITY: payoutFunds');
+  console.log('   Money Order ID:', moneyOrderId);
+  console.log('========================================');
+
+  await activities.startWorkflow(
+    WORKFLOWS.PAYOUT,
+    [moneyOrderId],
+    process.env.TEMPORAL_TASK_QUEUE,
+  );
 
   return;
 }

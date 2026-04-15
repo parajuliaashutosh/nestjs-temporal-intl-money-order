@@ -33,6 +33,6 @@ import { UsaMoneyOrderService } from './service/usa/usa-money-order.service';
       useClass: MoneyOrderRepo,
     },
   ],
-  exports: [MONEY_ORDER_FACTORY],
+  exports: [MONEY_ORDER_FACTORY, MONEY_ORDER_REPO],
 })
 export class MoneyOrderModule {}
