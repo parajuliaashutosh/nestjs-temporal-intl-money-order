@@ -68,7 +68,7 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
       return prevTransaction;
     }
 
-    // ✅ Use Decimal for precise decimal arithmetic
+    // for precise decimal arithmetic
     const exchangeRate = new Decimal(data.exchangeRate);
     const systemExchangeRate = new Decimal(systemConfig.exchangeRate);
 
@@ -79,14 +79,14 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
     const sendingAmount = new Decimal(data.sendingAmount);
     const receiverAmount = new Decimal(data.receiverAmount);
 
-    // 🔴 CORE VALIDATION
+    // CORE VALIDATION
     const calculatedReceiverAmount = sendingAmount.times(exchangeRate);
 
     if (!calculatedReceiverAmount.equals(receiverAmount)) {
       throw AppException.badRequest('INVALID_RECEIVER_AMOUNT');
     }
 
-    // ✅ Save amounts as strings to avoid JS floating point issues
+    // amounts as strings to avoid JS floating point issues
     const moneyOrder = new MoneyOrder();
     moneyOrder.sendingAmount = sendingAmount.toFixed(); // string
     moneyOrder.receiverAmount = receiverAmount.toFixed();

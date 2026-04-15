@@ -1,11 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { MoneyOrderRepoContract } from '../../money-order/contract/money-order.repo.contract';
 import { MONEY_ORDER_REPO } from '../../money-order/money-order.constant';
+import { PayoutContract } from '../contract/payout.contract';
 import type { PayoutRepoContract } from '../contract/payout.repo.contract';
 import { PAYOUT_REPO } from '../payout.constant';
 
 @Injectable()
-export class PayoutService {
+export class PayoutService implements PayoutContract {
   constructor(
     @Inject(MONEY_ORDER_REPO)
     private readonly moneyOrderRepo: MoneyOrderRepoContract,
@@ -15,7 +16,7 @@ export class PayoutService {
   ) {}
 
   // dummy api call to other service like connect ips to send money to local users
-  async payout(
+  async startPayout(
     moneyOrderId: string,
   ): Promise<{ success: boolean; data: Record<string, any> }> {
     const res = await this.moneyOrderRepo.findById(moneyOrderId);
@@ -46,7 +47,7 @@ export class PayoutService {
       });
 
     try {
-      const apiResp = await this.dummyApiCall({ req });
+      const apiResp = await this.payout({ req });
       // update payout with response
       await this.payoutRepo.update(payoutRecord.id, { response: apiResp });
 
@@ -72,7 +73,7 @@ export class PayoutService {
   }
 
   // This is dummy api call to simulate something like connect ips or other payout service. It randomly fails or succeeds to help test the retry mechanism in the workflow
-  async dummyApiCall(request: Record<string, any>) {
+  async payout(request: Record<string, any>) {
     return await new Promise<Record<string, any>>((resolve, reject) => {
       setTimeout(() => {
         const isSuccess = Math.random() < 0.5; // 50% chance

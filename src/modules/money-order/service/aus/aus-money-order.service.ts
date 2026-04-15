@@ -64,7 +64,7 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     const sendingAmount = new Decimal(data.sendingAmount);
     const receiverAmount = new Decimal(data.receiverAmount);
 
-    // 🔴 CORE VALIDATION
+    // CORE VALIDATION
     const calculatedReceiverAmount = sendingAmount.times(exchangeRate);
 
     if (!calculatedReceiverAmount.equals(receiverAmount)) {
