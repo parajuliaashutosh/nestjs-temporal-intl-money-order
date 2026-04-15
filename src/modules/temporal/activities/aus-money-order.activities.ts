@@ -68,7 +68,7 @@ export async function ausTransferFunds(moneyOrderId: string): Promise<boolean> {
   return;
 }
 
-export async function usaPayoutFunds(moneyOrderId: string): Promise<boolean> {
+export async function ausPayoutFunds(moneyOrderId: string): Promise<boolean> {
   const activities = await getWorkflowClientInstance();
   console.log('========================================');
   console.log('💸 ACTIVITY: payoutFunds');
