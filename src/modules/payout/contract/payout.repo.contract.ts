@@ -5,4 +5,5 @@ export interface PayoutRepoContract {
   save(payout: Payout): Promise<Payout>;
   findById(id: string): Promise<Payout | null>;
   update(id: string, payout: Partial<Payout>): Promise<Payout | null>;
+  findByMoneyOrderId(id: string): Promise<Payout | null>;
 }

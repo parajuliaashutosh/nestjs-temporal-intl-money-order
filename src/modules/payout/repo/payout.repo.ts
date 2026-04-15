@@ -18,7 +18,17 @@ export class PayoutRepo implements PayoutRepoContract {
   }
 
   async findById(id: string): Promise<Payout | null> {
-    return await this.payoutRepo.findOne({ where: { id } });
+    return await this.payoutRepo
+      .createQueryBuilder('payout')
+      .where('payout.id = :id', { id })
+      .getOne();
+  }
+
+  async findByMoneyOrderId(id: string): Promise<Payout | null> {
+    return await this.payoutRepo
+      .createQueryBuilder('payout')
+      .where('payout.moneyOrderId = :id', { id })
+      .getOne();
   }
 
   async update(id: string, payout: Partial<Payout>): Promise<Payout | null> {

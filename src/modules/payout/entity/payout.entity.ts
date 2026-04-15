@@ -3,7 +3,7 @@ import { Column, Entity } from 'typeorm';
 
 @Entity('payout')
 export class Payout extends Base {
-  @Column()
+  @Column({ unique: true })
   moneyOrderId: string;
 
   @Column({ type: 'jsonb' })
@@ -12,8 +12,9 @@ export class Payout extends Base {
   @Column({ type: 'jsonb', nullable: true })
   response: any;
 
-  @Column({ nullable: true })
-  kind: string;
+  // here can be many responses
+  @Column({ type: 'jsonb', nullable: true })
+  errResponses: any;
 
   @Column({ type: 'int', name: 'retry_count', default: 0 })
   retryCount: number;

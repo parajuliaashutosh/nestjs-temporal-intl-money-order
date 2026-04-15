@@ -34,12 +34,14 @@ export class PayoutService {
     };
 
     // persist a payout request record (mark as initial attempt)
-    const payoutRecord = await this.payoutRepo.create({
-      moneyOrderId: res.id,
-      request: req,
-      kind: 'initial',
-      retryCount: 0,
-    });
+    let payoutRecord = await this.payoutRepo.findByMoneyOrderId(res.id);
+
+    if (!payoutRecord)
+      payoutRecord = await this.payoutRepo.create({
+        moneyOrderId: res.id,
+        request: req,
+        retryCount: 0,
+      });
 
     try {
       const apiResp = await this.dummyApiCall({ req });
@@ -48,14 +50,18 @@ export class PayoutService {
 
       return { success: true, data: { moneyOrderId } };
     } catch (err) {
-      // store error response and rethrow
-      const errorMessage = (err as Error)?.message ?? String(err);
       // increment retry count when we record the failure
       const newRetry = (payoutRecord.retryCount ?? 0) + 1;
+
+      const errResponseWithTime = 'errResponse' + Date.now();
+
+      const errResponse = {
+        ...payoutRecord.errResponses,
+        [errResponseWithTime]: err,
+      };
       await this.payoutRepo.update(payoutRecord.id, {
-        response: { success: false, error: errorMessage },
+        errResponses: errResponse,
         retryCount: newRetry,
-        kind: newRetry > 0 ? 'retry' : payoutRecord.kind,
       });
       throw err;
     }
