@@ -1,5 +1,4 @@
-import { UTIL_FUNCTIONS } from '@/src/common/util/common-functions';
-import { proxyActivities } from '@temporalio/workflow';
+import { proxyActivities, sleep } from '@temporalio/workflow';
 import type * as activities from '../activities';
 
 const {
@@ -17,7 +16,7 @@ export async function usaMoneyOrderWorkflow(
   console.log(`[Workflow] Starting for: ${moneyOrderId}`);
 
   await usaScreenReceiver(moneyOrderId);
-  await UTIL_FUNCTIONS.delay(5 * 60 * 1000); // 5 minutes delay
+  await sleep('5 minutes');
   await usaCheckWalletBalance(moneyOrderId);
   await usaTransferFunds(moneyOrderId);
   await usaPayoutFunds(moneyOrderId);
