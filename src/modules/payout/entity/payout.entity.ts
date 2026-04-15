@@ -7,14 +7,14 @@ export class Payout extends Base {
   moneyOrderId: string;
 
   @Column({ type: 'jsonb' })
-  request: any;
+  request: Record<string, any>;
 
   @Column({ type: 'jsonb', nullable: true })
-  response: any;
+  response: Record<string, any> | null;
 
   // here can be many responses
   @Column({ type: 'jsonb', nullable: true })
-  errResponses: any;
+  errResponses: Record<string, any> | null;
 
   @Column({ type: 'int', name: 'retry_count', default: 0 })
   retryCount: number;

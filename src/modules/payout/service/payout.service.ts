@@ -15,10 +15,12 @@ export class PayoutService {
   ) {}
 
   // dummy api call to other service like connect ips to send money to local users
-  async payout(moneyOrderId: string): Promise<{ success: boolean; data: any }> {
+  async payout(
+    moneyOrderId: string,
+  ): Promise<{ success: boolean; data: Record<string, any> }> {
     const res = await this.moneyOrderRepo.findById(moneyOrderId);
     const receiver = res.receiver;
-    const req = {
+    const req: Record<string, any> = {
       idempotent: res?.idempotentId,
       // this is in paisa, cents
       amount: res?.receiverAmount,
@@ -56,9 +58,11 @@ export class PayoutService {
       const errResponseWithTime = 'errResponse' + Date.now();
 
       const errResponse = {
-        ...payoutRecord.errResponses,
+        ...(payoutRecord.errResponses ?? {}),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         [errResponseWithTime]: err,
-      };
+      } as Record<string, any>;
+
       await this.payoutRepo.update(payoutRecord.id, {
         errResponses: errResponse,
         retryCount: newRetry,
@@ -67,15 +71,14 @@ export class PayoutService {
     }
   }
 
-  // This is dummy api call to simulate something like connect ips or any other payout service. It randomly fails or succeeds to help test the retry mechanism in the workflow
-  async dummyApiCall(request: any) {
-    return await new Promise((resolve, reject) => {
+  // This is dummy api call to simulate something like connect ips or other payout service. It randomly fails or succeeds to help test the retry mechanism in the workflow
+  async dummyApiCall(request: Record<string, any>) {
+    return await new Promise<Record<string, any>>((resolve, reject) => {
       setTimeout(() => {
         const isSuccess = Math.random() < 0.5; // 50% chance
 
         if (isSuccess) {
           console.log('Dummy API call SUCCESS:', request);
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           resolve({ success: true, data: request });
         } else {
           console.log('Dummy API call FAILED:', request);
