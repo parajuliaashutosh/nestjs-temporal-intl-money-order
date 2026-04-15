@@ -1,8 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { MoneyOrderRepoContract } from '../../money-order/contract/money-order.repo.contract';
 import { MONEY_ORDER_REPO } from '../../money-order/money-order.constant';
-import type { ReceiverRepoContract } from '../../receiver/contract/receiver.repo.contract';
-import { RECEIVER_REPO } from '../../receiver/receiver.constant';
 import type { PayoutRepoContract } from '../contract/payout.repo.contract';
 import { PAYOUT_REPO } from '../payout.constant';
 
@@ -12,11 +10,10 @@ export class PayoutService {
     @Inject(MONEY_ORDER_REPO)
     private readonly moneyOrderRepo: MoneyOrderRepoContract,
 
-    @Inject(RECEIVER_REPO)
-    private readonly receiverRepo: ReceiverRepoContract,
     @Inject(PAYOUT_REPO)
     private readonly payoutRepo: PayoutRepoContract,
   ) {}
+
   // dummy api call to other service like connect ips to send money to local users
   async payout(moneyOrderId: string): Promise<{ success: boolean; data: any }> {
     const res = await this.moneyOrderRepo.findById(moneyOrderId);
