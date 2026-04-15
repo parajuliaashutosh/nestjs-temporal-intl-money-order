@@ -22,6 +22,7 @@ import { RegistrationModule } from './modules/registration/registration.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
 import { TemporalModule } from './modules/temporal/temporal.module';
 import { WalletModule } from './modules/wallet/wallet.module';
+import { PayoutModule } from './modules/payout/payout.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
     StripeModule,
     StripeClientModule,
     StripeIdentityModule,
+    PayoutModule,
   ],
   controllers: [],
   providers: [
