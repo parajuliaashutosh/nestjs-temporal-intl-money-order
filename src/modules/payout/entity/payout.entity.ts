@@ -1,6 +1,7 @@
 import Base from '@/src/common/entity/base.entity';
-import { Column } from 'typeorm';
+import { Column, Entity } from 'typeorm';
 
+@Entity('payout')
 export class Payout extends Base {
   @Column()
   moneyOrderId: string;
@@ -10,4 +11,10 @@ export class Payout extends Base {
 
   @Column({ type: 'jsonb', nullable: true })
   response: any;
+
+  @Column({ nullable: true })
+  kind: string;
+
+  @Column({ type: 'int', name: 'retry_count', default: 0 })
+  retryCount: number;
 }
