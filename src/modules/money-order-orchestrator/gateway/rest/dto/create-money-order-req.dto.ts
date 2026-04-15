@@ -36,4 +36,10 @@ export class CreateMoneyOrderReqDTO {
   })
   @IsNotBlank()
   receiver: string;
+
+  @ApiProperty({
+    description: 'Unique ID (UUID) for idempotency',
+  })
+  @IsNotBlank()
+  idempotentId: string;
 }

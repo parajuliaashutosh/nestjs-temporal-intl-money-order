@@ -15,4 +15,5 @@ export interface MoneyOrderModel extends BaseModel {
   metadata: Record<string, any> | null;
   user: UserModel;
   receiver: ReceiverModel;
+  idempotentId: string;
 }

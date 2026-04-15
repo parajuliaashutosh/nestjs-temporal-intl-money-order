@@ -1,8 +1,5 @@
 import { IsNotBlank } from '@/src/common/decorator/validator/is-not-blank.decorator';
-import {
-    IsNumber,
-    IsPositive
-} from 'class-validator';
+import { IsNumber, IsPositive } from 'class-validator';
 
 export class CreateMoneyOrderDTO {
   @IsNumber({ maxDecimalPlaces: 0 })
@@ -19,7 +16,10 @@ export class CreateMoneyOrderDTO {
 
   @IsNotBlank()
   userId: string;
-  
+
   @IsNotBlank()
   receiverId: string;
+
+  @IsNotBlank()
+  idempotentId: string;
 }

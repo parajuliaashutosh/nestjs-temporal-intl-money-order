@@ -73,6 +73,7 @@ export class MoneyOrderController {
       exchangeRate: body.exchangeRate,
       userId: user.user.userId,
       receiverId: body.receiver,
+      idempotentId: body.idempotentId,
     };
     await this.moneyOrderOrchestratorService.createMoneyOrder(
       payload,

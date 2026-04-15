@@ -57,6 +57,17 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
       throw AppException.badRequest('SYSTEM_CONFIG_NOT_FOUND_FOR_USA');
     }
 
+    const prevTransaction = await this.moneyOrderRepo.findByIdempotentId(
+      data.idempotentId,
+    );
+
+    if (prevTransaction) {
+      this.log.warn(
+        `Idempotent transaction found for idempotentId ${data.idempotentId}, returning existing transaction with ID ${prevTransaction.id}`,
+      );
+      return prevTransaction;
+    }
+
     // ✅ Use Decimal for precise decimal arithmetic
     const exchangeRate = new Decimal(data.exchangeRate);
     const systemExchangeRate = new Decimal(systemConfig.exchangeRate);
@@ -84,6 +95,7 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
     moneyOrder.status = MoneyOrderStatus.INITIATED;
     moneyOrder.deliveryStatus =
       MoneyOrderDeliveryStatus.DELIVERY_NOT_AUTHORIZED;
+    moneyOrder.idempotentId = data.idempotentId;
 
     moneyOrder.user = await this.userService.getUserById(data.userId);
     moneyOrder.receiver = await this.receiverService.getReceiverByIdAndUserId(
