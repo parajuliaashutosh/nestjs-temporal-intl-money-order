@@ -1,16 +1,14 @@
 import {
   BaseEntity,
-  BeforeInsert,
   CreateDateColumn,
   DeleteDateColumn,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { v7 } from 'uuid';
 import { BaseModel } from '../model/base.model';
 
 abstract class Base extends BaseEntity implements BaseModel {
-  @PrimaryColumn({ type: 'uuid' })
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @CreateDateColumn({ name: 'created_at' })
@@ -21,14 +19,6 @@ abstract class Base extends BaseEntity implements BaseModel {
 
   @DeleteDateColumn({ name: 'deleted_at', select: false })
   deletedAt: Date;
-
-  @BeforeInsert()
-  generateId() {
-    // this.id ??= v7();
-    if (this.id === null || this.id === undefined) {
-      this.id = v7();
-    }
-  }
 
   // @AfterInsert()
   // async logInsert() {

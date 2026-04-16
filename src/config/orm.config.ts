@@ -18,7 +18,8 @@ export default class TypeOrmConfig {
       password: configService.get<string>('DATABASE_PASSWORD'),
       database: configService.get<string>('DATABASE_NAME'),
       entities: [path.join(__dirname, '..', '**', '*.entity.{js,ts}')],
-      synchronize: false,
+      migrations: [path.join(__dirname, '..', 'migrations', '*.{js,ts}')],
+      synchronize: true,
       useUTC: true,
     };
   }

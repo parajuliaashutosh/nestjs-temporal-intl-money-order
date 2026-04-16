@@ -1,9 +1,8 @@
 import Joi from 'joi';
 
 export interface EnvConfig {
-  NODE_ENV: 'DEVELOPMENT' | 'UAT' | 'PRODUCTION';
+  NODE_ENV: 'LOCAL_DEVELOPMENT' | 'DEVELOPMENT' | 'UAT' | 'PRODUCTION';
   PORT: number;
-
   DATABASE_HOST: string;
   DATABASE_PORT: number;
   DATABASE_USERNAME: string;
@@ -24,17 +23,20 @@ export interface EnvConfig {
   TEMPORAL_NAMESPACE: string;
   TEMPORAL_TASK_QUEUE: string;
 
-  WALLET_WEBHOOK_KEY: string;
   HEALTH_CHECK_WHITELIST_IPS: string;
 
   // Stripe Configuration
   STRIPE_SECRET_KEY: string;
   STRIPE_PUBLISHABLE_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
+
+  IP_INFO_API_KEY: string;
 }
 
 export const envValidationSchema = Joi.object<EnvConfig>({
-  NODE_ENV: Joi.string().valid('DEVELOPMENT', 'UAT', 'PRODUCTION').required(),
+  NODE_ENV: Joi.string()
+    .valid('LOCAL_DEVELOPMENT', 'DEVELOPMENT', 'UAT', 'PRODUCTION')
+    .required(),
   PORT: Joi.number().default(3000),
 
   DATABASE_HOST: Joi.string().required(),
@@ -57,11 +59,13 @@ export const envValidationSchema = Joi.object<EnvConfig>({
   TEMPORAL_NAMESPACE: Joi.string().required(),
   TEMPORAL_TASK_QUEUE: Joi.string().required(),
 
-  WALLET_WEBHOOK_KEY: Joi.string().required(),
   HEALTH_CHECK_WHITELIST_IPS: Joi.string().allow('').optional(),
 
   // Stripe Configuration
   STRIPE_SECRET_KEY: Joi.string().required(),
   STRIPE_PUBLISHABLE_KEY: Joi.string().required(),
   STRIPE_WEBHOOK_SECRET: Joi.string().required(),
+
+  // IP INFO API KEY (optional)
+  IP_INFO_API_KEY: Joi.string().required(),
 }).required();

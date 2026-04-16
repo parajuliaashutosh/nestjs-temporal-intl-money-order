@@ -23,6 +23,8 @@ import { SystemConfigModule } from './modules/system-config/system-config.module
 import { TemporalModule } from './modules/temporal/temporal.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { PayoutModule } from './modules/payout/payout.module';
+import { LoginLogModule } from './modules/login-log/login-log.module';
+import { DeviceConfigModule } from './modules/device-config/device-config.module';
 
 @Module({
   imports: [
@@ -50,6 +52,8 @@ import { PayoutModule } from './modules/payout/payout.module';
     StripeClientModule,
     StripeIdentityModule,
     PayoutModule,
+    LoginLogModule,
+    DeviceConfigModule,
   ],
   controllers: [],
   providers: [
