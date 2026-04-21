@@ -2,8 +2,9 @@ import { AppModule } from '@/src/app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import {} from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import { useSwagger } from './swagger.config';
 
 export async function AppConfig() {
   const app = await NestFactory.create(AppModule, {
@@ -42,59 +43,7 @@ export async function AppConfig() {
   );
 
   // Swagger Configuration
-  const config = new DocumentBuilder()
-    .setTitle('International Money Order API')
-    .setDescription(
-      'API documentation for the International Money Order system using NestJS and Temporal. Since I do not have frontend ready, I have made the documentation public.',
-    )
-    .setVersion('1.0')
-    .addTag('auth', 'Authentication endpoints')
-    .addTag('registration', 'User and admin registration endpoints')
-    .addTag('money-order', 'Money order management endpoints')
-    .addTag('wallet', 'Wallet management endpoints')
-    .addTag('receiver', 'Receiver management endpoints')
-    .addTag('system-config', 'System configuration endpoints')
-    .addTag('stripe', 'Stripe payment integration endpoints')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth',
-    )
-    .addCookieAuth('accessToken', {
-      type: 'apiKey',
-      in: 'cookie',
-      name: 'accessToken',
-    })
-    .addCookieAuth('refreshToken', {
-      type: 'apiKey',
-      in: 'cookie',
-      name: 'refreshToken',
-    })
-    .addApiKey(
-      {
-        type: 'apiKey',
-        name: 'x-country-code',
-        in: 'header',
-        description: 'Country code header (e.g., US, GB, IN)',
-      },
-      'x-country-code',
-    )
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
-      tagsSorter: 'alpha',
-      operationsSorter: 'alpha',
-    },
-  });
+  useSwagger(app);
 
   return app;
 }
