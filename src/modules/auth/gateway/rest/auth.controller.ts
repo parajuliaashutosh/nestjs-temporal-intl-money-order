@@ -1,3 +1,4 @@
+import { Endpoint } from '@/src/common/decorator/swagger/endpoint.decorator';
 import { AppException } from '@/src/common/exception/app.exception';
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
 import { UTIL_FUNCTIONS } from '@/src/common/util/common-functions';
@@ -13,12 +14,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  ApiCookieAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { AUTH_SERVICE } from '../../auth.constant';
 import type { AuthContract } from '../../contract/auth.contract';
@@ -35,29 +31,20 @@ export class AuthController {
 
   @Post('/login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
+  @Endpoint({
     summary: 'User login',
     description:
       'Authenticate user with email and password. Returns access and refresh tokens as HTTP-only cookies.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Login successful. Tokens set in cookies.',
-    schema: {
-      example: {
-        success: true,
-        message: 'Login successful',
-        data: null,
+    apiResponses: [
+      {
+        status: 400,
+        description: 'Bad request - Invalid credentials',
       },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request - Invalid credentials',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Invalid email or password',
+      {
+        status: 401,
+        description: 'Unauthorized - Invalid email or password',
+      },
+    ],
   })
   async login(
     @Body() data: LoginReqDTO,
@@ -120,30 +107,20 @@ export class AuthController {
 
   @Post('/refresh-token')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
+  @Endpoint({
     summary: 'Refresh access token',
     description:
-      'Generate new access and refresh tokens using the refresh token from cookies.',
-  })
-  @ApiCookieAuth('refreshToken')
-  @ApiResponse({
-    status: 200,
-    description: 'Token refreshed successfully. New tokens set in cookies.',
-    schema: {
-      example: {
-        success: true,
-        message: 'Token refreshed successfully',
-        data: null,
+      'Refresh the access token using the refresh token stored in HTTP-only cookies. Returns new access and refresh tokens as HTTP-only cookies.',
+    apiResponses: [
+      {
+        status: 400,
+        description: 'Bad request - Refresh token not found in cookies',
       },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request - Refresh token not found in cookies',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Invalid or expired refresh token',
+      {
+        status: 401,
+        description: 'Unauthorized - Invalid or expired refresh token',
+      },
+    ],
   })
   async refreshToken(
     @Req() req: Request,
