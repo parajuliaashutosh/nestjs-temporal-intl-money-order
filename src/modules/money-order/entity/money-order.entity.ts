@@ -27,7 +27,7 @@ export class MoneyOrder extends Base implements MoneyOrderModel {
   })
   promiseExchangeRate: string;
 
-  @Column({ name: 'idempotent_id', unique: true })
+  @Column({ name: 'idempotent_id', unique: true, nullable: true })
   idempotentId: string;
 
   @Column({

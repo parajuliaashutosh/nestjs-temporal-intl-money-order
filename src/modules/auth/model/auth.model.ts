@@ -3,6 +3,7 @@ import { PhoneVerificationStatus } from '@/src/common/enum/phone-verification-st
 import { Role } from '@/src/common/enum/role.enum';
 import { BaseModel } from '@/src/common/model/base.model';
 import { AdminModel } from '../../admin/model/admin.model';
+import { LoginLogModel } from '../../login-log/model/login-log.model';
 
 export interface AuthModel extends BaseModel {
   email: string;
@@ -15,4 +16,5 @@ export interface AuthModel extends BaseModel {
   tokenVersion: number;
 
   admin?: AdminModel;
+  loginLogs?: LoginLogModel[];
 }

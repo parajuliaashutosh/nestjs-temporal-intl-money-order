@@ -94,7 +94,6 @@ describe('SystemConfigController', () => {
   describe('POST /system-config — route metadata', () => {
     it('should require SUDO_ADMIN, SUPER_ADMIN, and ADMIN roles', () => {
       const roles = Reflect.getMetadata(ROLES_KEY, controller.register);
-      console.log('🚀 ~ roles:', roles);
 
       expect(roles).toBeDefined();
       expect(roles).toContain(Role.SUDO_ADMIN);
