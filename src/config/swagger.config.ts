@@ -41,7 +41,7 @@ export function useSwagger(app: INestApplication) {
         type: 'apiKey',
         name: 'x-country-code',
         in: 'header',
-        description: 'Country code header (e.g., US, GB, IN)',
+        description: 'Country code header (e.g., USA, AUS)',
       },
       'x-country-code',
     )
