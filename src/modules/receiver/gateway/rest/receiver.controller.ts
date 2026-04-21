@@ -1,8 +1,6 @@
-import { Authenticate } from '@/src/common/decorator/authenticate/rest/authenticate.decorator';
-import { Authorize } from '@/src/common/decorator/authenticate/rest/authorize.decorator';
-import { KycVerified } from '@/src/common/decorator/authenticate/rest/kyc-verified/kyc-verified.decorator';
 import { User } from '@/src/common/decorator/authenticate/rest/user.decorator';
 import { CountryCode } from '@/src/common/decorator/header/country-code.decorator';
+import { RestEndpoint } from '@/src/common/decorator/rest-endpoint/rest-endpoint.decorator';
 import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-code.pipe';
 import { Role } from '@/src/common/enum/role.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
@@ -21,13 +19,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiQuery,
-  ApiResponse,
-  ApiSecurity,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import type { ReceiverContract } from '../../contract/receiver.contract';
 import { CreateReceiverDTO } from '../../dto/create-receiver.dto';
 import { GetReceiverDTO } from '../../dto/get-receiver.dto';
@@ -45,38 +37,13 @@ export class ReceiverController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Authenticate()
-  @Authorize([Role.USER])
-  @KycVerified()
-  @ApiOperation({
+  @RestEndpoint({
     summary: 'Create a new receiver',
     description:
-      'Register a new money order receiver. Requires authentication and USER role. Country code must be provided in x-country-code header.',
-  })
-  @ApiSecurity('JWT-auth')
-  @ApiSecurity('x-country-code')
-  @ApiResponse({
-    status: 201,
-    description: 'Receiver created successfully',
-    schema: {
-      example: {
-        success: true,
-        message: 'Receiver created successfully',
-        data: null,
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request - Invalid input data',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Authentication required',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - USER role required',
+      'Create a new receiver for the authenticated user. Requires authentication, USER role, and KYC verification.',
+    authenticated: true,
+    roles: [Role.USER],
+    kycVerified: true,
   })
   async register(
     @CountryCode(CountryCodePipe) _: SupportedCountry,
@@ -104,71 +71,20 @@ export class ReceiverController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Authenticate()
-  @Authorize([Role.USER])
-  @ApiOperation({
-    summary: 'Get receivers list',
+  @RestEndpoint({
+    summary: 'Get receivers for the authenticated user',
     description:
-      'Get paginated list of receivers for the authenticated user. Requires authentication and USER role.',
-  })
-  @ApiSecurity('JWT-auth')
-  @ApiSecurity('x-country-code')
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    description: 'Page number',
-    example: 1,
-  })
-  @ApiQuery({
-    name: 'perPage',
-    required: false,
-    type: Number,
-    description: 'Items per page',
-    example: 10,
-  })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    type: String,
-    description: 'Search query for receiver name or email',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Receivers fetched successfully',
-    schema: {
-      example: {
-        success: true,
-        message: 'Receiver fetched successfully',
-        data: {
-          data: [
-            {
-              id: 'receiver-uuid',
-              firstName: 'Jane',
-              lastName: 'Doe',
-              email: 'jane@example.com',
-              phoneNumber: '+1234567890',
-              bankName: 'Example Bank',
-              bankAccountNumber: '1234567890',
-            },
-          ],
-          pagination: {
-            currentPage: 1,
-            perPage: 10,
-            total: 50,
-            totalPages: 5,
-          },
-        },
+      'Fetch a paginated list of receivers associated with the authenticated user. Supports optional search query. Requires authentication, USER role, and KYC verification.',
+    authenticated: true,
+    roles: [Role.USER],
+    kycVerified: true,
+    apiResponses: [
+      {
+        status: HttpStatus.OK,
+        description: 'Receivers fetched successfully',
+        type: () => RestResponse<PaginatedData<Receiver>>,
       },
-    },
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Authentication required',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - USER role required',
+    ],
   })
   async getReceiver(
     @User() user: ReqUserPayload,

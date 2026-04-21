@@ -6,15 +6,13 @@ import { applyDecorators } from '@nestjs/common';
 import {
   ApiOperation,
   ApiOperationOptions,
+  ApiParam,
+  ApiParamOptions,
   ApiResponse,
   ApiResponseOptions,
   ApiSecurity,
   ApiTags,
 } from '@nestjs/swagger';
-
-export enum ApiCustomExtension {
-  History = 'x-history',
-}
 
 export enum ApiTag {
   Deprecated = 'deprecated',
@@ -28,29 +26,25 @@ export interface HistoryBuilder {
 export type EndpointOptions = ApiOperationOptions & {
   history?: HistoryBuilder;
   apiResponses?: ApiResponseOptions[];
+  apiParams?: ApiParamOptions[];
   authenticated?: boolean;
   roles?: Role[];
   kycVerified?: boolean;
 };
 
-export const Endpoint = ({
+export const RestEndpoint = ({
   history,
   apiResponses,
   authenticated,
   roles,
   kycVerified,
+  apiParams,
   ...options
 }: EndpointOptions) => {
   const decorators: Array<
     ClassDecorator | MethodDecorator | PropertyDecorator
   > = [];
   const extensions = history?.getExtensions() ?? {};
-
-  if (!extensions[ApiCustomExtension.History]) {
-    console.log(
-      `Missing history for endpoint: ${options.summary ?? 'unknown'}`,
-    );
-  }
 
   if (history?.isDeprecated()) {
     options.deprecated = true;
@@ -96,6 +90,10 @@ export const Endpoint = ({
         description: 'Forbidden - KYC should be verified',
       }),
     );
+  }
+
+  for (const param of apiParams ?? []) {
+    decorators.push(ApiParam(param));
   }
 
   decorators.push(ApiOperation({ ...options, ...extensions }));

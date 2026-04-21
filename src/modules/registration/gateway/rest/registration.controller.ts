@@ -1,6 +1,5 @@
-import { Authenticate } from '@/src/common/decorator/authenticate/rest/authenticate.decorator';
-import { Authorize } from '@/src/common/decorator/authenticate/rest/authorize.decorator';
 import { CountryCode } from '@/src/common/decorator/header/country-code.decorator';
+import { RestEndpoint } from '@/src/common/decorator/rest-endpoint/rest-endpoint.decorator';
 import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-code.pipe';
 import { Role } from '@/src/common/enum/role.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
@@ -8,7 +7,6 @@ import { RestResponse } from '@/src/common/response-type/rest/rest-response';
 import { Body, Controller, Inject, Param, Patch, Post } from '@nestjs/common';
 import {
   ApiOperation,
-  ApiParam,
   ApiResponse,
   ApiSecurity,
   ApiTags,
@@ -82,36 +80,12 @@ export class RegistrationController {
   }
 
   @Post('/register-admin')
-  @Authenticate()
-  @Authorize([Role.SUDO_ADMIN, Role.SUPER_ADMIN])
-  @ApiOperation({
+  @RestEndpoint({
     summary: 'Register a new admin',
     description:
-      'Register a new admin user. Requires SUDO_ADMIN or SUPER_ADMIN role.',
-  })
-  @ApiSecurity('JWT-auth')
-  @ApiResponse({
-    status: 201,
-    description: 'Admin registered successfully',
-    schema: {
-      example: {
-        success: true,
-        message: 'Admin registered successfully',
-        data: {
-          id: 'uuid',
-          email: 'admin@example.com',
-          role: 'ADMIN',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Authentication required',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - Insufficient permissions',
+      'Register a new admin with personal details. Requires SUPER_ADMIN role.',
+    authenticated: true,
+    roles: [Role.SUPER_ADMIN],
   })
   async registerAdmin(@Body() data: RegisterAdminDTO) {
     const resp = await this.registrationService.registerAdmin(data);
@@ -123,29 +97,18 @@ export class RegistrationController {
   }
 
   @Patch('/verify-user-kyc/:id')
-  @ApiOperation({
+  @RestEndpoint({
     summary: 'Verify user KYC',
-    description: 'Approve user KYC verification by ID',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'User ID',
-    example: 'uuid-here',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'User verified successfully',
-    schema: {
-      example: {
-        success: true,
-        message: 'User verified successfully',
-        data: null,
+    description: 'Verify user KYC by ID. Requires ADMIN or SUPER_ADMIN role.',
+    authenticated: true,
+    roles: [Role.ADMIN, Role.SUPER_ADMIN],
+    apiParams: [
+      {
+        name: 'id',
+        description: 'User ID',
+        example: 'uuid-here',
       },
-    },
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'User not found',
+    ],
   })
   async verifyUser(@Param('id') id: string) {
     await this.registrationService.verifyUserKYC(id);
@@ -156,29 +119,18 @@ export class RegistrationController {
   }
 
   @Patch('/reject-user-kyc/:id')
-  @ApiOperation({
+  @RestEndpoint({
     summary: 'Reject user KYC',
-    description: 'Reject user KYC verification by ID',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'User ID',
-    example: 'uuid-here',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'User rejected successfully',
-    schema: {
-      example: {
-        success: true,
-        message: 'User rejected successfully',
-        data: null,
+    description: 'Reject user KYC by ID. Requires ADMIN or SUPER_ADMIN role.',
+    authenticated: true,
+    roles: [Role.ADMIN, Role.SUPER_ADMIN],
+    apiParams: [
+      {
+        name: 'id',
+        description: 'User ID',
+        example: 'uuid-here',
       },
-    },
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'User not found',
+    ],
   })
   async rejectUserKYC(@Param('id') id: string) {
     await this.registrationService.rejectUserKYC(id);

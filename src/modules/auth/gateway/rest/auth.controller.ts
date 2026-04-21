@@ -1,4 +1,4 @@
-import { Endpoint } from '@/src/common/decorator/swagger/endpoint.decorator';
+import { RestEndpoint } from '@/src/common/decorator/rest-endpoint/rest-endpoint.decorator';
 import { AppException } from '@/src/common/exception/app.exception';
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
 import { UTIL_FUNCTIONS } from '@/src/common/util/common-functions';
@@ -31,7 +31,7 @@ export class AuthController {
 
   @Post('/login')
   @HttpCode(HttpStatus.OK)
-  @Endpoint({
+  @RestEndpoint({
     summary: 'User login',
     description:
       'Authenticate user with email and password. Returns access and refresh tokens as HTTP-only cookies.',
@@ -107,7 +107,7 @@ export class AuthController {
 
   @Post('/refresh-token')
   @HttpCode(HttpStatus.OK)
-  @Endpoint({
+  @RestEndpoint({
     summary: 'Refresh access token',
     description:
       'Refresh the access token using the refresh token stored in HTTP-only cookies. Returns new access and refresh tokens as HTTP-only cookies.',
