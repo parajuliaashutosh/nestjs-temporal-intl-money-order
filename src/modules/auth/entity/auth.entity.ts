@@ -11,6 +11,8 @@ import {
   OneToOne,
 } from 'typeorm';
 import { Admin } from '../../admin/entity/admin.entity';
+import { DeviceConfig } from '../../device-config/entity/device-config.entity';
+import { LoginLog } from '../../login-log/entity/login-log.entity';
 import { User } from '../../user/entity/user.entity';
 import { AuthModel } from '../model/auth.model';
 
@@ -58,6 +60,16 @@ export class Auth extends Base implements AuthModel {
     onDelete: 'CASCADE',
   })
   users: User[];
+
+  @OneToMany(() => LoginLog, (loginLog) => loginLog.auth, {
+    onDelete: 'CASCADE',
+  })
+  loginLogs: LoginLog[];
+
+  @OneToMany(() => DeviceConfig, (deviceConfig) => deviceConfig.auth, {
+    cascade: true,
+  })
+  deviceConfig: DeviceConfig[];
 
   @OneToOne(() => Admin, (admin) => admin.auth, {
     onDelete: 'CASCADE',

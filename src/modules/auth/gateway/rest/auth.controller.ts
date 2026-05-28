@@ -1,5 +1,7 @@
 import { AppException } from '@/src/common/exception/app.exception';
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
+import { UTIL_FUNCTIONS } from '@/src/common/util/common-functions';
+import { UserDeviceDataDTO } from '@/src/modules/login-log/dto/user-device-data.dto';
 import {
   Body,
   Controller,
@@ -60,13 +62,37 @@ export class AuthController {
   async login(
     @Body() data: LoginReqDTO,
     @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
   ) {
-    const { accessToken, refreshToken } = await this.authService.login(data);
+    const xForwardedFor =
+      req.headers['x-real-ip'] || req.headers['x-forwarded-for'];
+
+    let clientIp: string;
+
+    if (typeof xForwardedFor === 'string')
+      clientIp = xForwardedFor.split(',')[0]; // Get the first IP address
+    else clientIp = req.connection.remoteAddress ?? 'unknown'; // Fallback to remoteAddress
+
+    // clientIp = '103.163.182.223';
+    const deviceId =
+      (req.cookies.deviceId as string) || UTIL_FUNCTIONS.createV7UUID();
+
+    const userAgent = req.headers['user-agent'];
+
+    const deviceData: UserDeviceDataDTO = {
+      clientIp,
+      deviceId,
+      userAgent,
+    };
+    const { accessToken, refreshToken } = await this.authService.login(
+      data,
+      deviceData,
+    );
 
     // Set access token as HTTP-only cookie
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'PRODUCTION', // Only send over HTTPS in production
+      secure: this.configService.get('NODE_ENV') === 'LOCAL_DEVELOPMENT', // Only send over HTTPS in production
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000, // 15 minutes in milliseconds
     });
@@ -74,9 +100,16 @@ export class AuthController {
     // Set refresh token as HTTP-only cookie
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'PRODUCTION', // Only send over HTTPS in production
+      secure: this.configService.get('NODE_ENV') === 'LOCAL_DEVELOPMENT', // Only send over HTTPS in production
       sameSite: 'strict',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+    });
+
+    res.cookie('deviceId', deviceId, {
+      httpOnly: true,
+      secure: this.configService.get('NODE_ENV') === 'LOCAL_DEVELOPMENT', // Only send over HTTPS in production
+      sameSite: 'strict',
+      maxAge: 100 * 365 * 24 * 60 * 60 * 1000, // 100 year in milliseconds
     });
 
     return RestResponse.builder()

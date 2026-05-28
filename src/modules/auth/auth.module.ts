@@ -3,6 +3,7 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { LoginLogModule } from '../login-log/login-log.module';
 import { AUTH_REPO, AUTH_SERVICE } from './auth.constant';
 import { Auth } from './entity/auth.entity';
 import { AuthController } from './gateway/rest/auth.controller';
@@ -30,6 +31,7 @@ import { TokenService } from './service/token/token.service';
       },
       inject: [ConfigService],
     }),
+    LoginLogModule,
   ],
   providers: [
     {

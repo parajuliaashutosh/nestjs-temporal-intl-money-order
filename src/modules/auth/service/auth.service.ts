@@ -1,6 +1,9 @@
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { AppException } from '@/src/common/exception/app.exception';
 import { Inject, Injectable } from '@nestjs/common';
+import type { LoginLogContract } from '../../login-log/contract/login-log.contract';
+import { UserDeviceDataDTO } from '../../login-log/dto/user-device-data.dto';
+import { LOGIN_LOG_SERVICE } from '../../login-log/login-log.constant';
 import { AUTH_REPO } from '../auth.constant';
 import { AuthContract } from '../contract/auth.contract';
 import type { AuthRepoContract } from '../contract/auth.repo.contract';
@@ -17,6 +20,9 @@ export class AuthService implements AuthContract {
     private readonly authRepo: AuthRepoContract,
     private readonly tokenService: TokenService,
     private readonly hashService: HashingService,
+
+    @Inject(LOGIN_LOG_SERVICE)
+    private readonly loginLogService: LoginLogContract,
   ) {}
 
   public async create(data: CreateAuthDTO): Promise<Auth> {
@@ -31,6 +37,7 @@ export class AuthService implements AuthContract {
 
   public async login(
     data: LoginDTO,
+    userDeviceData: UserDeviceDataDTO,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const auth = await this.authRepo.findByEmailOrPhoneForAuthentication(
       data.username,
@@ -48,6 +55,8 @@ export class AuthService implements AuthContract {
     if (!isPasswordValid) {
       throw AppException.badRequest('INVALID_CREDENTIALS');
     }
+
+    await this.loginLogService.createLoginLog(userDeviceData, auth);
 
     const tokenPayload: TokenPayload = {
       key: crypto.randomUUID(),
