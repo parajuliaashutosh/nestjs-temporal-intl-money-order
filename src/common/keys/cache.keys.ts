@@ -1,6 +1,8 @@
+const CACHE_KEY_PREFIX = 'money-order-cache';
+
 export const CACHE_KEYS = {
   systemConfigByCountry: (countryCode: string) =>
-    `system-config:${countryCode}`,
+    `${CACHE_KEY_PREFIX}:system-config:${countryCode}`,
   userInvalidatedVersion: (userId: string) =>
-    `user:${userId}:invalidated-version`,
+    `${CACHE_KEY_PREFIX}:user:${userId}:invalidated-version`,
 };
