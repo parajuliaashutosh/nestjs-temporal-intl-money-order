@@ -14,8 +14,8 @@ export class CreateSystemConfigReqDTO {
 
   @ApiProperty({
     description: 'Exchange rate (positive number)',
-    example: 1.0,
-    minimum: 140,
+    example: 140.0,
+    minimum: 90,
     maximum: 160,
   })
   @IsNumber()
