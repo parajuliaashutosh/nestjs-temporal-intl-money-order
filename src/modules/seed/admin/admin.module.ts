@@ -3,9 +3,9 @@ import { AuthModule } from '@/src/modules/auth/auth.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CacheModule } from '../../cache/cache.module';
 import { RegistrationModule } from '../../registration/registration.module';
 import { AdminSeederService } from './service/admin.service';
-// import { AdminSeederService } from './service/admin.service';
 
 @Module({
   imports: [
@@ -15,8 +15,9 @@ import { AdminSeederService } from './service/admin.service';
     RegistrationModule,
     TypeOrmModule.forRootAsync(typeOrmConfigAsync),
     AuthModule,
+    CacheModule,
   ],
   providers: [AdminSeederService],
-  exports: [AdminSeederService]
+  exports: [AdminSeederService],
 })
 export class AdminSeederModule {}
