@@ -1,4 +1,10 @@
-import { Global, Inject, Module, OnModuleDestroy } from '@nestjs/common';
+import {
+  Global,
+  Inject,
+  Logger,
+  Module,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { createClient } from 'redis';
 import { CACHE_CLIENT } from './cache.constant';
@@ -11,14 +17,21 @@ import { CACHE_CLIENT } from './cache.constant';
       provide: CACHE_CLIENT,
       useFactory: async (configService: ConfigService) => {
         const client = createClient({
-          url: configService.getOrThrow<string>('REDIS_URL'),
+          socket: {
+            host: configService.getOrThrow<string>('REDIS_HOST'),
+            port: configService.getOrThrow<number>('REDIS_PORT'),
+          },
+          username: configService.getOrThrow<string>('REDIS_USERNAME'),
+          password: configService.getOrThrow<string>('REDIS_PASSWORD'),
+          database: configService.getOrThrow<number>('REDIS_DB'),
         });
 
         client.on('error', (err) => {
-          console.error('Redis Client Error', err);
+          Logger.error('Redis Client Error', err);
         });
 
         await client.connect();
+        Logger.log('Connected to Redis');
         return client;
       },
       inject: [ConfigService],
@@ -27,8 +40,9 @@ import { CACHE_CLIENT } from './cache.constant';
   exports: [CACHE_CLIENT],
 })
 export class CacheModule implements OnModuleDestroy {
-    constructor(
-    @Inject(CACHE_CLIENT) private readonly client: ReturnType<typeof createClient>,
+  constructor(
+    @Inject(CACHE_CLIENT)
+    private readonly client: ReturnType<typeof createClient>,
   ) {}
 
   async onModuleDestroy() {

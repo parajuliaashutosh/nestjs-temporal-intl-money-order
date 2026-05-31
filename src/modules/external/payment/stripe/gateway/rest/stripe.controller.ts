@@ -1,8 +1,6 @@
-import { Authenticate } from '@/src/common/decorator/authenticate/rest/authenticate.decorator';
-import { Authorize } from '@/src/common/decorator/authenticate/rest/authorize.decorator';
-import { KycVerified } from '@/src/common/decorator/authenticate/rest/kyc-verified/kyc-verified.decorator';
 import { User } from '@/src/common/decorator/authenticate/rest/user.decorator';
 import { CountryCode } from '@/src/common/decorator/header/country-code.decorator';
+import { RestEndpoint } from '@/src/common/decorator/rest-endpoint/rest-endpoint.decorator';
 import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-code.pipe';
 import { Role } from '@/src/common/enum/role.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
@@ -22,14 +20,7 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
-import {
-  ApiBody,
-  ApiHeader,
-  ApiOperation,
-  ApiResponse,
-  ApiSecurity,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { CreateIntentDTO } from '../../dto/create-payment-intent.dto';
 import { StripeService } from '../../service/stripe.service';
@@ -47,48 +38,13 @@ export class StripeController {
 
   @Post('/create-intent')
   @HttpCode(HttpStatus.CREATED)
-  @Authenticate()
-  @Authorize([Role.USER])
-  @KycVerified()
-  @ApiOperation({
-    summary: 'Create a payment intent',
+  @RestEndpoint({
+    summary: 'Create a Stripe payment intent',
     description:
-      'Creates a Stripe payment intent for wallet top-up. Returns a client secret that must be used by the frontend to complete the payment using Stripe.js or Stripe Elements.',
-  })
-  @ApiSecurity('JWT-auth')
-  @ApiSecurity('x-country-code')
-  @ApiResponse({
-    status: 201,
-    description: 'Payment intent created successfully',
-    schema: {
-      example: {
-        success: true,
-        message: 'Payment intent created successfully',
-        data: {
-          clientSecret: 'pi_1234567890_secret_abcdef',
-          paymentIntentId: 'pi_1234567890',
-          amount: 1000,
-          currency: 'usd',
-          status: 'requires_payment_method',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request - Invalid amount or missing required fields',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Authentication required',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - USER role required',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error - Stripe API error',
+      'Creates a Stripe payment intent for the authenticated user. Requires USER role and KYC verification. Country code must be provided in x-country-code header.',
+    authenticated: true,
+    roles: [Role.USER],
+    kycVerified: true,
   })
   async createIntent(
     @CountryCode(CountryCodePipe) countryCode: SupportedCountry,
@@ -117,44 +73,10 @@ export class StripeController {
 
   @Post('/webhook')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Stripe webhook endpoint',
+  @RestEndpoint({
+    summary: 'Handle Stripe webhook events',
     description:
-      'Handles incoming Stripe webhook events. This endpoint is called by Stripe when payment events occur (e.g., payment succeeded, payment failed). The endpoint verifies the webhook signature before processing.',
-  })
-  @ApiHeader({
-    name: 'stripe-signature',
-    description: 'Stripe webhook signature for request verification',
-    required: true,
-  })
-  @ApiBody({
-    description: 'Raw Stripe webhook event payload',
-    schema: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', example: 'evt_1234567890' },
-        type: { type: 'string', example: 'payment_intent.succeeded' },
-        data: {
-          type: 'object',
-          properties: {
-            object: { type: 'object' },
-          },
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Webhook processed successfully',
-    schema: {
-      example: {
-        received: true,
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request - Invalid webhook signature or malformed payload',
+      'Endpoint to receive and handle Stripe webhook events. This endpoint is used by Stripe to send event notifications. It verifies the Stripe signature and processes the event accordingly.',
   })
   async handleWebhook(
     @Req() req: RawBodyRequest<Request>,
