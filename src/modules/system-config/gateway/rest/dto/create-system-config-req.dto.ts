@@ -1,4 +1,3 @@
-import { IsNotBlank } from '@/src/common/decorator/validator/is-not-blank.decorator';
 import { SupportedCurrency } from '@/src/common/enum/supported-currency.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsNumber, IsPositive } from 'class-validator';
@@ -16,9 +15,9 @@ export class CreateSystemConfigReqDTO {
   @ApiProperty({
     description: 'Exchange rate (positive number)',
     example: 1.0,
-    minimum: 0.01,
+    minimum: 140,
+    maximum: 160,
   })
-  @IsNotBlank()
   @IsNumber()
   @IsPositive({ message: 'Exchange rate must be a positive number' })
   exchangeRate: number;
