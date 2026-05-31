@@ -1,5 +1,5 @@
 # ---- Builder ----
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -7,7 +7,7 @@ COPY . .
 RUN npm run build
 
 # ---- Production ----
-FROM node:20-alpine AS production
+FROM node:20-slim AS production
 WORKDIR /app
 
 # Only copy what's needed
@@ -24,7 +24,7 @@ RUN npm ci --only=production --ignore-scripts && \
     find node_modules -name "tests" -type d -exec rm -rf {} + 2>/dev/null; \
     find node_modules -name "__tests__" -type d -exec rm -rf {} + 2>/dev/null; true
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 USER appuser
 
 CMD ["node", "dist/main"]
