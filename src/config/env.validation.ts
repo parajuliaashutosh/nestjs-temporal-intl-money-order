@@ -73,6 +73,5 @@ export const envValidationSchema = Joi.object<EnvConfig>({
   STRIPE_PUBLISHABLE_KEY: Joi.string().required(),
   STRIPE_WEBHOOK_SECRET: Joi.string().required(),
 
-  // IP INFO API KEY (optional)
   IP_INFO_API_KEY: Joi.string().required(),
 }).required();
