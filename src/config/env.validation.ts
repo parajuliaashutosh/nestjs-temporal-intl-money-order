@@ -17,8 +17,11 @@ export interface EnvConfig {
   API_KEY: string;
   ALLOWED_ORIGINS: string;
 
-  REDIS_URL: string;
-
+  REDIS_HOST: string;
+  REDIS_PORT: number;
+  REDIS_USERNAME: string;
+  REDIS_PASSWORD: string;
+  REDIS_DB: number;
   TEMPORAL_ADDRESS: string;
   TEMPORAL_NAMESPACE: string;
   TEMPORAL_TASK_QUEUE: string;
@@ -53,7 +56,11 @@ export const envValidationSchema = Joi.object<EnvConfig>({
   API_KEY: Joi.string().required(),
   ALLOWED_ORIGINS: Joi.string().required(),
 
-  REDIS_URL: Joi.string().required(),
+  REDIS_HOST: Joi.string().required(),
+  REDIS_PORT: Joi.number().required(),
+  REDIS_USERNAME: Joi.string().required(),
+  REDIS_PASSWORD: Joi.string().required(),
+  REDIS_DB: Joi.number().required(),
 
   TEMPORAL_ADDRESS: Joi.string().required(),
   TEMPORAL_NAMESPACE: Joi.string().required(),
