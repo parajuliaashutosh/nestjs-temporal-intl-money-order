@@ -1,14 +1,20 @@
+import { User } from '@/src/common/decorator/authenticate/rest/user.decorator';
 import { RestEndpoint } from '@/src/common/decorator/rest-endpoint/rest-endpoint.decorator';
+import { Role } from '@/src/common/enum/role.enum';
 import { AppException } from '@/src/common/exception/app.exception';
+import type { ReqUserPayload } from '@/src/common/guard/rest/authentication.guard';
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
 import { UTIL_FUNCTIONS } from '@/src/common/util/common-functions';
+import type { LoginLogContract } from '@/src/modules/login-log/contract/login-log.contract';
 import { UserDeviceDataDTO } from '@/src/modules/login-log/dto/user-device-data.dto';
+import { LOGIN_LOG_SERVICE } from '@/src/modules/login-log/login-log.constant';
 import {
   Body,
   Controller,
   HttpCode,
   HttpStatus,
   Inject,
+  Param,
   Post,
   Req,
   Res,
@@ -26,6 +32,8 @@ export class AuthController {
   constructor(
     @Inject(AUTH_SERVICE)
     private readonly authService: AuthContract,
+    @Inject(LOGIN_LOG_SERVICE)
+    private readonly loginLogService: LoginLogContract,
     private readonly configService: ConfigService,
   ) {}
 
@@ -64,7 +72,7 @@ export class AuthController {
     const deviceId =
       (req.cookies.deviceId as string) || UTIL_FUNCTIONS.createV7UUID();
 
-    const userAgent = req.headers['user-agent'];
+    const userAgent = req.headers['user-agent'] ?? 'unknown';
 
     const deviceData: UserDeviceDataDTO = {
       clientIp,
@@ -150,5 +158,64 @@ export class AuthController {
       sameSite: 'strict',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
     });
+  }
+
+  @Post('/logout')
+  @HttpCode(HttpStatus.OK)
+  @RestEndpoint({
+    summary: 'User logout',
+    description: 'Logout current session and clear auth cookies.',
+    authenticated: true,
+    roles: [Role.USER],
+  })
+  async logout(
+    @User() user: ReqUserPayload,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.loginLogService.markLogout(user.id, user.id);
+
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+
+    return RestResponse.builder()
+      .setSuccess(true)
+      .setMessage('Logout successful')
+      .build();
+  }
+
+  @Post('/logout/:id')
+  @HttpCode(HttpStatus.OK)
+  @RestEndpoint({
+    summary: 'Logout a session by login log id',
+    description:
+      'Logout a specific session by login log id and clear auth cookies if it matches current session.',
+    authenticated: true,
+    roles: [Role.USER],
+    apiParams: [
+      {
+        name: 'id',
+        description: 'Login log ID',
+        example: 'uuid-here',
+      },
+    ],
+  })
+  async logoutById(
+    @User() user: ReqUserPayload,
+    @Res({ passthrough: true }) res: Response,
+    @Param('id') loginLogId: string,
+  ) {
+    if (!loginLogId) throw AppException.badRequest('LOGIN_LOG_ID_REQUIRED');
+
+    await this.loginLogService.markLogout(loginLogId, user.id);
+
+    if (user.id === loginLogId) {
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+    }
+
+    return RestResponse.builder()
+      .setSuccess(true)
+      .setMessage('Logout successful')
+      .build();
   }
 }

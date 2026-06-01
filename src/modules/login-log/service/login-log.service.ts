@@ -1,8 +1,10 @@
+import { DataAndCount } from '@/src/common/response-type/pagination/data-and-count';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Auth } from '../../auth/entity/auth.entity';
 import { LoginLogContract } from '../contract/login-log.contract';
 import type { LoginLogRepoContract } from '../contract/login-log.repo.contract';
+import { GetLoginLogDTO } from '../dto/get-login-log.dto';
 import { UserDeviceDataDTO } from '../dto/user-device-data.dto';
 import {
   DeviceInfo,
@@ -10,6 +12,7 @@ import {
   IpInfoLocationData,
   LOGIN_LOG_REPO,
 } from '../login-log.constant';
+import { LoginLog } from '../entity/login-log.entity';
 import { LoginLogModel } from '../model/login-log.model';
 
 @Injectable()
@@ -23,7 +26,7 @@ export class LoginLogService implements LoginLogContract {
   public async createLoginLog(
     data: UserDeviceDataDTO,
     auth: Auth,
-  ): Promise<void> {
+  ): Promise<LoginLog> {
     const deviceInfo = this.detectDevice(data.userAgent);
     const ipInfo = await this.findInfoByIp(data.clientIp);
 
@@ -42,9 +45,38 @@ export class LoginLogService implements LoginLogContract {
       deviceId: data.deviceId,
       location: ipInfo?.location,
 
-      rawUserAgent: data.userAgent,
+      rawUserAgent: data.userAgent ?? 'unknown',
     };
-    await this.loginLogRepo.create(entity);
+    return await this.loginLogRepo.create(entity);
+  }
+
+  public async getLoginLogsByAuthId(
+    data: GetLoginLogDTO,
+  ): Promise<DataAndCount<LoginLog[]>> {
+    const offset = (data.page - 1) * data.limit;
+    const result = await this.loginLogRepo.findByAuthId(
+      data.authId,
+      data.search,
+      data.limit,
+      offset,
+    );
+
+    return DataAndCount.builder<LoginLog[]>()
+      .setData(result.data)
+      .setCount(result.count)
+      .build();
+  }
+
+  public async markLogout(loginLogId: string, authId: string): Promise<void> {
+    const loginLog = await this.loginLogRepo.findByIdAndAuthId(
+      loginLogId,
+      authId,
+    );
+    if (!loginLog) return;
+
+    if (!loginLog.logoutAt) {
+      await this.loginLogRepo.update(loginLogId, { logoutAt: new Date() });
+    }
   }
 
   private detectDevice(ua: string): DeviceInfo {
