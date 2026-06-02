@@ -190,7 +190,6 @@ export class AuthController {
     description:
       'Logout a specific session by login log id and clear auth cookies if it matches current session.',
     authenticated: true,
-    roles: [Role.USER],
     apiParams: [
       {
         name: 'id',
