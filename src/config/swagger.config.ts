@@ -45,6 +45,7 @@ export function useSwagger(app: INestApplication) {
       },
       'x-country-code',
     )
+    .addSecurityRequirements('x-country-code')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
