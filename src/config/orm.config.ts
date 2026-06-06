@@ -10,6 +10,8 @@ import { AppDataSource } from '../common/provider/datasource.provider';
 
 export default class TypeOrmConfig {
   static getOrmConfig(configService: ConfigService): TypeOrmModuleOptions {
+    const isLocal =
+      configService.get<string>('NODE_ENV') === 'LOCAL_DEVELOPMENT';
     return {
       type: 'postgres',
       host: configService.get<string>('DATABASE_HOST') || 'localhost',
@@ -19,7 +21,9 @@ export default class TypeOrmConfig {
       database: configService.get<string>('DATABASE_NAME'),
       entities: [path.join(__dirname, '..', '**', '*.entity.{js,ts}')],
       migrations: [path.join(__dirname, '..', 'migrations', '*.{js,ts}')],
-      synchronize: true,
+      migrationsTableName: 'migrations',
+      migrationsRun: !isLocal,
+      synchronize: isLocal,
       useUTC: true,
     };
   }
