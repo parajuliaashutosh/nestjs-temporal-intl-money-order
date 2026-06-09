@@ -5,7 +5,7 @@ export function useSwagger(app: INestApplication) {
   const config = new DocumentBuilder()
     .setTitle('International Money Order API')
     .setDescription(
-      'API documentation for the International Money Order system using NestJS and Temporal. Since I do not have frontend ready, I have made the documentation public.',
+      'API documentation for the International Money Order system using NestJS and Temporal. Since I do not have frontend ready, so I have made the documentation public.',
     )
     .setVersion('1.0')
     .addTag('auth', 'Authentication endpoints')
