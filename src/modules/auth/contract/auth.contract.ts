@@ -14,6 +14,7 @@ export interface AuthContract {
     refreshToken: string,
   ): Promise<{ accessToken: string; refreshToken: string }>;
   getAuthById(id: string): Promise<Auth | null>;
+  getProfile(id: string): Promise<Auth>;
   getAuthByEmail(email: string): Promise<Auth | null>;
   getAuthByPhone(phone: string): Promise<Auth | null>;
   getAuthByUserIdAndCountry(

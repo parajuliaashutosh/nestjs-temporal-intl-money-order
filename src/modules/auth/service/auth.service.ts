@@ -107,6 +107,14 @@ export class AuthService implements AuthContract {
     return this.authRepo.findById(id);
   }
 
+  public async getProfile(id: string): Promise<Auth> {
+    const auth = await this.authRepo.findById(id);
+    if (!auth) {
+      throw AppException.badRequest('AUTH_NOT_FOUND');
+    }
+    return auth;
+  }
+
   public async getAuthByEmail(email: string): Promise<Auth | null> {
     return await this.authRepo.getAuthByEmail(email);
   }
