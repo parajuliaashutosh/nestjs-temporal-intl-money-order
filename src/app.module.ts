@@ -3,6 +3,7 @@ import { UserModule } from '@/src/modules/user/user.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppExceptionFilter } from './common/exception/app.exception.middleware';
 import { ValidationExceptionFilter } from './common/exception/validation.exception.middleware';
@@ -34,6 +35,7 @@ import { DeviceConfigModule } from './modules/device-config/device-config.module
       envFilePath: `.env`,
     }),
     TypeOrmModule.forRootAsync(typeOrmConfigAsync),
+    ScheduleModule.forRoot(),
     AuthModule,
     UserModule,
     ReceiverModule,
