@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoginLog } from './entity/login-log.entity';
 import { LOGIN_LOG_REPO, LOGIN_LOG_SERVICE } from './login-log.constant';
+import { LoginLogController } from './gateway/rest/login-log.controller';
 import { LoginLogRepo } from './repo/login-log.repo';
 import { LoginLogService } from './service/login-log.service';
 
@@ -17,6 +18,7 @@ import { LoginLogService } from './service/login-log.service';
       useClass: LoginLogRepo,
     },
   ],
+  controllers: [LoginLogController],
   exports: [LOGIN_LOG_SERVICE],
 })
 export class LoginLogModule {}

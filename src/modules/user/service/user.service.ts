@@ -1,6 +1,7 @@
 import { KYCStatus } from '@/src/common/enum/kyc-status.enum';
 import { AppException } from '@/src/common/exception/app.exception';
 import { CACHE_KEYS } from '@/src/common/keys/cache.keys';
+import { DataAndCount } from '@/src/common/response-type/pagination/data-and-count';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient } from 'redis';
@@ -9,6 +10,7 @@ import { CACHE_CLIENT } from '../../cache/cache.constant';
 import { UserContract } from '../contract/user.contract';
 import type { UserRepoContract } from '../contract/user.repo.contract';
 import { CreateUserDTO } from '../dto/create-user.dto';
+import { FilterUsersDTO } from '../dto/filter-users.dto';
 import { User } from '../entity/user.entity';
 import { USER_REPO } from '../user.constant';
 
@@ -65,5 +67,11 @@ export class UserService implements UserContract {
 
   public async getUserById(id: string): Promise<User | null> {
     return await this.userRepo.findById(id);
+  }
+
+  public async filterUsers(
+    filter: FilterUsersDTO,
+  ): Promise<DataAndCount<User[]>> {
+    return await this.userRepo.filter(filter);
   }
 }

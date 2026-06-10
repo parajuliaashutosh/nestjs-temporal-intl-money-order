@@ -56,10 +56,13 @@ export class AuthService implements AuthContract {
       throw AppException.badRequest('INVALID_CREDENTIALS');
     }
 
-    await this.loginLogService.createLoginLog(userDeviceData, auth);
+    const loginLog = await this.loginLogService.createLoginLog(
+      userDeviceData,
+      auth,
+    );
 
     const tokenPayload: TokenPayload = {
-      key: crypto.randomUUID(),
+      key: loginLog.id,
       id: auth.id,
       users:
         auth.users?.map((user) => ({
@@ -86,7 +89,7 @@ export class AuthService implements AuthContract {
     }
 
     const tokenPayload: TokenPayload = {
-      key: crypto.randomUUID(),
+      key: check.id,
       id: auth.id,
       users:
         auth.users?.map((user) => ({
@@ -102,6 +105,14 @@ export class AuthService implements AuthContract {
 
   public async getAuthById(id: string): Promise<Auth | null> {
     return this.authRepo.findById(id);
+  }
+
+  public async getProfile(id: string): Promise<Auth> {
+    const auth = await this.authRepo.findById(id);
+    if (!auth) {
+      throw AppException.badRequest('AUTH_NOT_FOUND');
+    }
+    return auth;
   }
 
   public async getAuthByEmail(email: string): Promise<Auth | null> {
