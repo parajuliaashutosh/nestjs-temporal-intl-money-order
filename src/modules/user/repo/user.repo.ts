@@ -1,9 +1,11 @@
 import { KYCStatus } from '@/src/common/enum/kyc-status.enum';
+import { DataAndCount } from '@/src/common/response-type/pagination/data-and-count';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { Auth } from '../../auth/entity/auth.entity';
 import type { UserRepoContract } from '../contract/user.repo.contract';
+import { FilterUsersDTO } from '../dto/filter-users.dto';
 import { User } from '../entity/user.entity';
 import { UserModel } from '../model/user.model';
 
@@ -22,6 +24,60 @@ export class UserRepo implements UserRepoContract {
       .leftJoinAndSelect('user.wallet', 'wallet')
       .where('user.id = :id', { id })
       .getOne();
+  }
+
+  public async filter(
+    filter: FilterUsersDTO,
+  ): Promise<DataAndCount<User[]>> {
+    const query = this.userRepo
+      .createQueryBuilder('user')
+      .leftJoin('user.auth', 'auth')
+      // minimal projection for list views — full detail lives on findById
+      .select([
+        'user.id',
+        'user.firstName',
+        'user.lastName',
+        'user.kycStatus',
+        'user.country',
+        'user.createdAt',
+        'auth.id',
+        'auth.email',
+        'auth.phone',
+      ]);
+
+    if (filter.authId)
+      query.andWhere('auth.id = :authId', { authId: filter.authId });
+
+    if (filter.kycStatus)
+      query.andWhere('user.kyc_status = :kycStatus', {
+        kycStatus: filter.kycStatus,
+      });
+
+    if (filter.country)
+      query.andWhere('user.country_code = :country', {
+        country: filter.country,
+      });
+
+    if (filter.search) {
+      const search = `%${filter.search}%`;
+      query.andWhere(
+        new Brackets((qb) => {
+          qb.where('user.firstName ILIKE :search', { search })
+            .orWhere('user.middleName ILIKE :search', { search })
+            .orWhere('user.lastName ILIKE :search', { search })
+            .orWhere('auth.email ILIKE :search', { search })
+            .orWhere('auth.phone_number ILIKE :search', { search });
+        }),
+      );
+    }
+
+    const [data, count] = await query
+      .orderBy('user.created_at', 'DESC')
+      .skip(filter.skip)
+      .take(filter.limit)
+      .getManyAndCount();
+
+    return DataAndCount.builder<User[]>().setData(data).setCount(count).build();
   }
 
   public async findByAuth(auth: Auth): Promise<User | null> {

@@ -11,6 +11,7 @@ import { LOGIN_LOG_SERVICE } from '@/src/modules/login-log/login-log.constant';
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Inject,
@@ -110,6 +111,55 @@ export class AuthController {
     return RestResponse.builder()
       .setSuccess(true)
       .setMessage('Login successful')
+      .build();
+  }
+
+  @Get('/is-authorize')
+  @HttpCode(HttpStatus.OK)
+  @RestEndpoint({
+    summary: 'Check authorization',
+    description:
+      'Validate the current session. Returns the authenticated user payload if the access token is valid.',
+    authenticated: true,
+  })
+  isAuthorize(@User() user: ReqUserPayload) {
+    return RestResponse.builder()
+      .setSuccess(true)
+      .setMessage('Authorized')
+      .setData({
+        id: user.id,
+        role: user.role,
+        adminId: user.adminId,
+        user: user.user,
+        users: user.users,
+      })
+      .build();
+  }
+
+  @Get('/profile')
+  @HttpCode(HttpStatus.OK)
+  @RestEndpoint({
+    summary: 'Get authenticated profile',
+    description:
+      'Returns the authenticated account profile from the auth side: email, phone, role, verification statuses and linked user/admin records.',
+    authenticated: true,
+  })
+  async getProfile(@User() user: ReqUserPayload) {
+    const auth = await this.authService.getProfile(user.id);
+
+    return RestResponse.builder()
+      .setSuccess(true)
+      .setMessage('Profile fetched successfully')
+      .setData({
+        id: auth.id,
+        email: auth.email,
+        phone: auth.phone,
+        role: auth.role,
+        emailVerificationStatus: auth.emailVerificationStatus,
+        phoneVerificationStatus: auth.phoneVerificationStatus,
+        users: auth.users,
+        admin: auth.admin,
+      })
       .build();
   }
 

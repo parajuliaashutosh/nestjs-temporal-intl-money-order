@@ -6,12 +6,10 @@ import { PaginatedData } from '@/src/common/response-type/pagination/paginated-d
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
 import {
   Controller,
-  DefaultValuePipe,
   Get,
   HttpCode,
   HttpStatus,
   Inject,
-  ParseIntPipe,
   Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -19,6 +17,7 @@ import type { LoginLogContract } from '../../contract/login-log.contract';
 import { GetLoginLogDTO } from '../../dto/get-login-log.dto';
 import { LoginLog } from '../../entity/login-log.entity';
 import { LOGIN_LOG_SERVICE } from '../../login-log.constant';
+import { GetLoginLogsReqDTO } from './dto/get-login-logs-req.dto';
 
 @ApiTags('login-log')
 @Controller('login-log')
@@ -46,23 +45,21 @@ export class LoginLogController {
   })
   async getLoginLogs(
     @User() user: ReqUserPayload,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('perPage', new DefaultValuePipe(10), ParseIntPipe) perPage: number,
-    @Query('search') search?: string,
+    @Query() query: GetLoginLogsReqDTO,
   ) {
     const payload: GetLoginLogDTO = {
       authId: user.id,
-      page,
-      limit: perPage,
-      search,
+      page: query.page,
+      limit: query.limit,
+      search: query.search,
     };
 
     const resp = await this.loginLogService.getLoginLogsByAuthId(payload);
 
     const paginatedData = PaginatedData.builder<LoginLog[]>()
       .setData(resp.data)
-      .setCurrentPage(page)
-      .setPerPage(perPage)
+      .setCurrentPage(query.page)
+      .setPerPage(query.limit)
       .setTotal(resp.count)
       .build();
 
