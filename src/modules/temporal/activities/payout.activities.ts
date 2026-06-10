@@ -1,13 +1,12 @@
-import { AppModule } from '@/src/app.module';
-import { NestFactory } from '@nestjs/core';
 import { PayoutContract } from '../../payout/contract/payout.contract';
 import { PAYOUT_SERVICE } from '../../payout/payout.constant';
+import { getAppContext } from './shared-app-context';
 
 let activitiesInstance: PayoutContract | null;
 
 async function getActivitiesInstance() {
   if (!activitiesInstance) {
-    const app = await NestFactory.createApplicationContext(AppModule);
+    const app = await getAppContext();
     activitiesInstance = app.get(PAYOUT_SERVICE);
   }
   return activitiesInstance;

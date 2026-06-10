@@ -88,7 +88,7 @@ export class AuthController {
     // Set access token as HTTP-only cookie
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'LOCAL_DEVELOPMENT', // Only send over HTTPS in production
+      secure: this.configService.get('NODE_ENV') != 'LOCAL_DEVELOPMENT',
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000, // 15 minutes in milliseconds
     });
@@ -96,14 +96,14 @@ export class AuthController {
     // Set refresh token as HTTP-only cookie
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'LOCAL_DEVELOPMENT', // Only send over HTTPS in production
+      secure: this.configService.get('NODE_ENV') != 'LOCAL_DEVELOPMENT',
       sameSite: 'strict',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
     });
 
     res.cookie('deviceId', deviceId, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'LOCAL_DEVELOPMENT', // Only send over HTTPS in production
+      secure: this.configService.get('NODE_ENV') != 'LOCAL_DEVELOPMENT',
       sameSite: 'strict',
       maxAge: 100 * 365 * 24 * 60 * 60 * 1000, // 100 year in milliseconds
     });
@@ -196,7 +196,7 @@ export class AuthController {
     // Set access token as HTTP-only cookie
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'PRODUCTION', // Only send over HTTPS in production
+      secure: this.configService.get('NODE_ENV') != 'LOCAL_DEVELOPMENT',
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000, // 15 minutes in milliseconds
     });
@@ -204,7 +204,7 @@ export class AuthController {
     // Set refresh token as HTTP-only cookie
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'PRODUCTION', // Only send over HTTPS in production
+      secure: this.configService.get('NODE_ENV') != 'LOCAL_DEVELOPMENT',
       sameSite: 'strict',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
     });
