@@ -1,4 +1,5 @@
 import { AppModule } from '@/src/app.module';
+import { LoggerMiddleware } from '@/src/common/middleware/logger.middleware';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -31,6 +32,7 @@ export async function AppConfig() {
   });
 
   app.use(cookieParser());
+  app.use(new LoggerMiddleware().use.bind(new LoggerMiddleware()));
   app.setGlobalPrefix('api/v1');
 
   app.useGlobalPipes(
