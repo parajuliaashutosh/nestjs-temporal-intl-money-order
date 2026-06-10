@@ -1,43 +1,34 @@
-import { AppModule } from '@/src/app.module';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { MoneyOrderFactoryContract } from '@/src/modules/money-order/contract/money-order-factory.contract';
 import { MoneyOrderContract } from '@/src/modules/money-order/contract/money-order.contract';
 import { MONEY_ORDER_FACTORY } from '@/src/modules/money-order/money-order.constant';
-import { NestFactory } from '@nestjs/core';
 import { TemporalClientService } from '../client/temporal-client.service';
 import { WORKFLOW_CLIENT, WORKFLOWS } from '../workflow.constant';
+import { getAppContext } from './shared-app-context';
 
-let activitiesInstance: MoneyOrderContract | null;
+let moneyOrderService: MoneyOrderContract | null = null;
+let workflowClient: TemporalClientService | null = null;
 
-async function getActivitiesInstance() {
-  if (!activitiesInstance) {
-    const app = await NestFactory.createApplicationContext(AppModule);
+async function getInstances() {
+  if (!moneyOrderService || !workflowClient) {
+    const app = await getAppContext();
     const factory: MoneyOrderFactoryContract = app.get(MONEY_ORDER_FACTORY);
-    activitiesInstance = factory.getMoneyOrderService(SupportedCountry.USA);
+    moneyOrderService = factory.getMoneyOrderService(SupportedCountry.USA);
+    workflowClient = app.get(WORKFLOW_CLIENT);
   }
-  return activitiesInstance;
-}
-
-let workflowClientInstance: TemporalClientService = null;
-
-async function getWorkflowClientInstance() {
-  if (!workflowClientInstance) {
-    const app = await NestFactory.createApplicationContext(AppModule);
-    workflowClientInstance = app.get(WORKFLOW_CLIENT);
-  }
-  return workflowClientInstance;
+  return { moneyOrderService, workflowClient };
 }
 
 export async function usaScreenReceiver(
   moneyOrderId: string,
 ): Promise<boolean> {
-  const activities = await getActivitiesInstance();
+  const { moneyOrderService } = await getInstances();
   console.log('========================================');
   console.log('🔍 ACTIVITY: screenReceiver');
   console.log('   Money Order ID:', moneyOrderId);
   console.log('========================================');
 
-  await activities.screenReceiver(moneyOrderId);
+  await moneyOrderService.screenReceiver(moneyOrderId);
 
   return;
 }
@@ -45,37 +36,37 @@ export async function usaScreenReceiver(
 export async function usaCheckWalletBalance(
   moneyOrderId: string,
 ): Promise<boolean> {
-  const activities = await getActivitiesInstance();
+  const { moneyOrderService } = await getInstances();
   console.log('========================================');
   console.log('💰 ACTIVITY: checkWalletBalance');
   console.log('   Money Order ID:', moneyOrderId);
   console.log('========================================');
 
-  await activities.checkWalletBalance(moneyOrderId);
+  await moneyOrderService.checkWalletBalance(moneyOrderId);
 
   return;
 }
 
 export async function usaTransferFunds(moneyOrderId: string): Promise<boolean> {
-  const activities = await getActivitiesInstance();
+  const { moneyOrderService } = await getInstances();
   console.log('========================================');
   console.log('💸 ACTIVITY: transferFunds');
   console.log('   Money Order ID:', moneyOrderId);
   console.log('========================================');
 
-  await activities.transferFunds(moneyOrderId);
+  await moneyOrderService.transferFunds(moneyOrderId);
 
   return;
 }
 
 export async function usaPayoutFunds(moneyOrderId: string): Promise<boolean> {
-  const activities = await getWorkflowClientInstance();
+  const { workflowClient } = await getInstances();
   console.log('========================================');
   console.log('💸 ACTIVITY: payoutFunds');
   console.log('   Money Order ID:', moneyOrderId);
   console.log('========================================');
 
-  await activities.startWorkflow(
+  await workflowClient.startWorkflow(
     WORKFLOWS.PAYOUT,
     [moneyOrderId],
     process.env.TEMPORAL_TASK_QUEUE,
