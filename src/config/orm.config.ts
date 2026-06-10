@@ -21,8 +21,8 @@ export default class TypeOrmConfig {
       database: configService.get<string>('DATABASE_NAME'),
       entities: [path.join(__dirname, '..', '**', '*.entity.{js,ts}')],
       migrations: [path.join(__dirname, '..', 'migrations', '*.{js,ts}')],
-      migrationsTableName: 'migrations',
-      migrationsRun: !isLocal,
+      migrationsTableName: '_migrations',
+      migrationsRun: false,
       synchronize: isLocal,
       useUTC: true,
     };
