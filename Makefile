@@ -1,6 +1,6 @@
 REGISTRY = registry.aashutoshparajuli.com.np
 IMAGE   = money-order/backend
-TAG      = 0.1.5
+TAG      = 2.0.1
 
 FULL_IMAGE = $(REGISTRY)/$(IMAGE):$(TAG)
 
