@@ -12,6 +12,9 @@ push:
 
 deploy: build push
 
+migrate:
+	node dist/migration-runner.js
+
 clean:
 	docker image rm -f $(FULL_IMAGE) $(LATEST_IMAGE) || true
 
@@ -21,4 +24,4 @@ print:
 	@echo "Tag      : $(TAG)"
 	@echo "Full     : $(FULL_IMAGE)"
 
-.PHONY: build push deploy clean print
+.PHONY: build push deploy clean print migrate
