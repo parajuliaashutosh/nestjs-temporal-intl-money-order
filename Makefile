@@ -1,6 +1,6 @@
 REGISTRY = registry.aashutoshparajuli.com.np
 IMAGE   = money-order/backend
-TAG      = 0.1.5
+TAG      = 2.0.1
 
 FULL_IMAGE = $(REGISTRY)/$(IMAGE):$(TAG)
 
@@ -12,6 +12,9 @@ push:
 
 deploy: build push
 
+migrate:
+	node dist/migration-runner.js
+
 clean:
 	docker image rm -f $(FULL_IMAGE) $(LATEST_IMAGE) || true
 
@@ -21,4 +24,4 @@ print:
 	@echo "Tag      : $(TAG)"
 	@echo "Full     : $(FULL_IMAGE)"
 
-.PHONY: build push deploy clean print
+.PHONY: build push deploy clean print migrate
