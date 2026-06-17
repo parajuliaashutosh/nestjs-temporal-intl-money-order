@@ -4,13 +4,10 @@ import { RestEndpoint } from '@/src/common/decorator/rest-endpoint/rest-endpoint
 import { CountryCodePipe } from '@/src/common/decorator/validator/pipe/country-code.pipe';
 import { Role } from '@/src/common/enum/role.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
-import { AppException } from '@/src/common/exception/app.exception';
 import type { ReqUserPayload } from '@/src/common/guard/rest/authentication.guard';
 import { PaginatedData } from '@/src/common/response-type/pagination/paginated-data';
 import { RestResponse } from '@/src/common/response-type/rest/rest-response';
-import type { MoneyOrderRepoContract } from '@/src/modules/money-order/contract/money-order.repo.contract';
 import { CreateMoneyOrderDTO } from '@/src/modules/money-order/dto/create-money-order.dto';
-import { MONEY_ORDER_REPO } from '@/src/modules/money-order/money-order.constant';
 import {
   Body,
   Controller,
@@ -34,8 +31,6 @@ export class MoneyOrderController {
   constructor(
     @Inject(MONEY_ORDER_ORCHESTRATOR_SERVICE)
     private readonly moneyOrderOrchestratorService: MoneyOrderOrchestratorService,
-    @Inject(MONEY_ORDER_REPO)
-    private readonly moneyOrderRepo: MoneyOrderRepoContract,
   ) {}
 
   @Post('/')
@@ -75,20 +70,22 @@ export class MoneyOrderController {
   @RestEndpoint({
     summary: 'Filter money orders',
     description:
-      'Paginated list of money orders for the country in the x-country-code header, filtered by user, status and delivery status. Never merges across countries. Requires an admin role.',
+      'Paginated list of money orders for the country in the x-country-code header, filtered by user, status and delivery status. Never merges across countries. Admins can filter across all users; a USER role caller is always scoped to their own orders.',
     authenticated: true,
-    roles: ADMIN_ROLES,
+    roles: [...ADMIN_ROLES, Role.USER],
   })
   async filterMoneyOrders(
     @CountryCode(CountryCodePipe) countryCode: SupportedCountry,
+    @User() user: ReqUserPayload,
     @Query() query: FilterMoneyOrdersReqDTO,
   ) {
-    const { data, count } = await this.moneyOrderRepo.filter({
+    const isUser = user.role === Role.USER;
+    const { data, count } = await this.moneyOrderOrchestratorService.filterMoneyOrders({
       country: countryCode,
       page: query.page,
       limit: query.limit,
       skip: query.skip,
-      userId: query.userId,
+      userId: isUser ? user.user.userId : query.userId,
       status: query.status,
       deliveryStatus: query.deliveryStatus,
     });
@@ -118,7 +115,7 @@ export class MoneyOrderController {
   async getAnalytics(
     @CountryCode(CountryCodePipe) countryCode: SupportedCountry,
   ) {
-    const analytics = await this.moneyOrderRepo.getAnalytics(countryCode);
+    const analytics = await this.moneyOrderOrchestratorService.getAnalytics(countryCode);
 
     return RestResponse.builder()
       .setSuccess(true)
@@ -142,10 +139,7 @@ export class MoneyOrderController {
     @CountryCode(CountryCodePipe) countryCode: SupportedCountry,
     @Param('id') id: string,
   ) {
-    const moneyOrder = await this.moneyOrderRepo.findById(id);
-    // never expose an order that belongs to another country
-    if (!moneyOrder || moneyOrder.user?.country !== countryCode)
-      throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
+    const moneyOrder = await this.moneyOrderOrchestratorService.getMoneyOrderById(id, countryCode);
 
     return RestResponse.builder()
       .setSuccess(true)
