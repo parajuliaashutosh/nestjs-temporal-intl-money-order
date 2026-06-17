@@ -9,5 +9,6 @@ export interface LoginLogContract {
   getLoginLogsByAuthId(
     data: GetLoginLogDTO,
   ): Promise<DataAndCount<LoginLog[]>>;
-  markLogout(loginLogId: string, authId: string): Promise<void>;
+  markLogout(loginLogId: string, authId: string, remark?: string): Promise<void>;
+  getLoginLogBySessionKey(loginLogId: string): Promise<LoginLog | null>;
 }

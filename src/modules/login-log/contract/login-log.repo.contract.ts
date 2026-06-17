@@ -10,6 +10,7 @@ export interface LoginLogRepoContract {
     limit?: number,
     offset?: number,
   ): Promise<DataAndCount<LoginLog[]>>;
+  findById(id: string): Promise<LoginLog | null>;
   findByIdAndAuthId(id: string, authId: string): Promise<LoginLog | null>;
   update(id: string, loginLog: Partial<LoginLogModel>): Promise<void>;
 }

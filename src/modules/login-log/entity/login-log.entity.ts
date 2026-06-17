@@ -45,6 +45,9 @@ export class LoginLog extends Base implements LoginLogModel {
   @Column({ name: 'raw_user_agent' })
   rawUserAgent: string;
 
+  @Column({ name: 'remark', nullable: true })
+  remark: string;
+
   @ManyToOne(() => Auth, (auth) => auth.loginLogs, {
     onDelete: 'CASCADE',
   })

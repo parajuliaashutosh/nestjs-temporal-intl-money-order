@@ -190,8 +190,10 @@ export class AuthController {
     if (!refreshToken)
       throw AppException.badRequest('Refresh token not found in cookies');
 
+    const userAgent = req.headers['user-agent'] ?? 'unknown';
+
     const { accessToken, refreshToken: newRefreshToken } =
-      await this.authService.refreshToken(refreshToken);
+      await this.authService.refreshToken(refreshToken, userAgent);
 
     // Set access token as HTTP-only cookie
     res.cookie('accessToken', accessToken, {
@@ -222,7 +224,7 @@ export class AuthController {
     @User() user: ReqUserPayload,
     @Res({ passthrough: true }) res: Response,
   ) {
-    await this.loginLogService.markLogout(user.id, user.id);
+    await this.loginLogService.markLogout(user.key, user.id, 'LOGOUT');
 
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
@@ -255,9 +257,14 @@ export class AuthController {
   ) {
     if (!loginLogId) throw AppException.badRequest('LOGIN_LOG_ID_REQUIRED');
 
-    await this.loginLogService.markLogout(loginLogId, user.id);
+    const isSelf = user.key === loginLogId;
+    const remark = isSelf
+      ? 'LOGOUT'
+      : `LOGOUT_BY_ANOTHER_SESSION:${user.key}`;
 
-    if (user.id === loginLogId) {
+    await this.loginLogService.markLogout(loginLogId, user.id, remark);
+
+    if (isSelf) {
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
     }

@@ -80,8 +80,26 @@ export class AuthService implements AuthContract {
 
   public async refreshToken(
     refreshToken: string,
+    userAgent: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const check = this.tokenService.verifyRefreshToken(refreshToken);
+
+    const loginLog = await this.loginLogService.getLoginLogBySessionKey(
+      check.key,
+    );
+
+    if (!loginLog) {
+      throw AppException.badRequest('SESSION_NOT_FOUND');
+    }
+
+    if (loginLog.rawUserAgent !== userAgent) {
+      await this.loginLogService.markLogout(
+        check.key,
+        check.id,
+        'SYSTEM_DENIED_REFRESH:USER_AGENT_MISMATCH',
+      );
+      throw AppException.unauthorized('REFRESH_DENIED_USER_AGENT_MISMATCH');
+    }
 
     const auth = await this.getAuthById(check.id);
     if (!auth) {
@@ -89,7 +107,7 @@ export class AuthService implements AuthContract {
     }
 
     const tokenPayload: TokenPayload = {
-      key: check.id,
+      key: check.key,
       id: auth.id,
       users:
         auth.users?.map((user) => ({

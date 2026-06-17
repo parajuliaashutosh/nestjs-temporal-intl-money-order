@@ -67,7 +67,11 @@ export class LoginLogService implements LoginLogContract {
       .build();
   }
 
-  public async markLogout(loginLogId: string, authId: string): Promise<void> {
+  public async markLogout(
+    loginLogId: string,
+    authId: string,
+    remark?: string,
+  ): Promise<void> {
     const loginLog = await this.loginLogRepo.findByIdAndAuthId(
       loginLogId,
       authId,
@@ -75,8 +79,17 @@ export class LoginLogService implements LoginLogContract {
     if (!loginLog) return;
 
     if (!loginLog.logoutAt) {
-      await this.loginLogRepo.update(loginLogId, { logoutAt: new Date() });
+      await this.loginLogRepo.update(loginLogId, {
+        logoutAt: new Date(),
+        ...(remark && { remark }),
+      });
     }
+  }
+
+  public async getLoginLogBySessionKey(
+    loginLogId: string,
+  ): Promise<LoginLog | null> {
+    return this.loginLogRepo.findById(loginLogId);
   }
 
   private detectDevice(ua: string): DeviceInfo {
