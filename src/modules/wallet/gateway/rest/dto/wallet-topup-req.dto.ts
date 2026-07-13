@@ -1,13 +1,13 @@
 import { IsNotBlank } from '@/src/common/decorator/validator/is-not-blank.decorator';
+import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsPositive, IsUUID } from 'class-validator';
+import { IsEnum, IsNumber, IsPositive, IsUUID } from 'class-validator';
 
 export class WalletTopUpReqDTO {
   @ApiProperty({
-    description: 'Webhook transaction ID',
+    description: 'Unique transaction ID',
     example: 'webhook-txn-12345',
   })
-  // webhook id
   @IsNotBlank()
   id: string;
 
@@ -18,6 +18,13 @@ export class WalletTopUpReqDTO {
   })
   @IsUUID('all', { message: 'Invalid user ID format' })
   userId: string;
+
+  @ApiProperty({
+    description: 'Country - determines the wallet currency',
+    enum: SupportedCountry,
+  })
+  @IsEnum(SupportedCountry, { message: 'Invalid country format' })
+  country: SupportedCountry;
 
   @ApiProperty({
     description: 'Top-up amount in cents',

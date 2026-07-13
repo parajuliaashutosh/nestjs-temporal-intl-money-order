@@ -34,6 +34,9 @@ export interface EnvConfig {
   STRIPE_WEBHOOK_SECRET: string;
 
   IP_INFO_API_KEY: string;
+
+  // Dev-only wallet top-up webhook simulator (see WalletController#devTopUp)
+  WALLET_DEV_TOPUP_SIGNING_SECRET?: string;
 }
 
 export const envValidationSchema = Joi.object<EnvConfig>({
@@ -74,4 +77,7 @@ export const envValidationSchema = Joi.object<EnvConfig>({
   STRIPE_WEBHOOK_SECRET: Joi.string().required(),
 
   IP_INFO_API_KEY: Joi.string().required(),
+
+  // Only read outside of production - see NonProductionGuard / DevWebhookSignatureGuard
+  WALLET_DEV_TOPUP_SIGNING_SECRET: Joi.string().allow('').optional(),
 }).required();
