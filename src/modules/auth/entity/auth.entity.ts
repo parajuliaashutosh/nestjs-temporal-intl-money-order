@@ -1,7 +1,7 @@
 import { EmailVerificationStatus } from '@/src/common/enum/email-verification-status.enum';
 import { PhoneVerificationStatus } from '@/src/common/enum/phone-verification-status';
 import { Role } from '@/src/common/enum/role.enum';
-import Base from 'src/common/entity/base.entity';
+import Base from '@/src/common/entity/base.entity';
 import {
   Column,
   Entity,

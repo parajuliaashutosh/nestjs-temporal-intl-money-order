@@ -1,5 +1,5 @@
-import Base from 'src/common/entity/base.entity';
-import { Auth } from 'src/modules/auth/entity/auth.entity';
+import Base from '@/src/common/entity/base.entity';
+import { Auth } from '@/src/modules/auth/entity/auth.entity';
 import { Column, Entity, OneToOne } from 'typeorm';
 import { AdminModel } from '../model/admin.model';
 
