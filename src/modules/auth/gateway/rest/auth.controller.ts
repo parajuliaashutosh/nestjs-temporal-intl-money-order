@@ -16,6 +16,7 @@ import {
   HttpStatus,
   Inject,
   Param,
+  Patch,
   Post,
   Req,
   Res,
@@ -26,6 +27,7 @@ import type { Request, Response } from 'express';
 import { AUTH_SERVICE } from '../../auth.constant';
 import type { AuthContract } from '../../contract/auth.contract';
 import { LoginReqDTO } from './dto/login-req.dto';
+import { UpdatePasswordReqDTO } from './dto/update-password-req.dto';
 
 @ApiTags('auth')
 @Controller('/auth')
@@ -160,6 +162,56 @@ export class AuthController {
         users: auth.users,
         admin: auth.admin,
       })
+      .build();
+  }
+
+  @Patch('/password')
+  @HttpCode(HttpStatus.OK)
+  @RestEndpoint({
+    summary: 'Update password',
+    description:
+      'Update the password of the authenticated account. The new password cannot match any of the last 3 passwords used by the account.',
+    authenticated: true,
+    apiResponses: [
+      {
+        status: 400,
+        description:
+          'Bad request - Invalid current password or the new password was recently used',
+      },
+    ],
+  })
+  async updatePassword(
+    @User() user: ReqUserPayload,
+    @Body() data: UpdatePasswordReqDTO,
+  ) {
+    await this.authService.updatePassword(user.id, data);
+
+    return RestResponse.builder()
+      .setSuccess(true)
+      .setMessage('Password updated successfully')
+      .build();
+  }
+
+  @Get('/password-history')
+  @HttpCode(HttpStatus.OK)
+  @RestEndpoint({
+    summary: 'Get password change history',
+    description:
+      'Returns when the authenticated account changed its password. Password values are never returned.',
+    authenticated: true,
+  })
+  async getPasswordHistory(@User() user: ReqUserPayload) {
+    const histories = await this.authService.getPasswordHistory(user.id);
+
+    return RestResponse.builder()
+      .setSuccess(true)
+      .setMessage('Password history fetched successfully')
+      .setData(
+        histories.map((history) => ({
+          id: history.id,
+          changedAt: history.createdAt,
+        })),
+      )
       .build();
   }
 

@@ -4,6 +4,7 @@ import { Role } from '@/src/common/enum/role.enum';
 import { BaseModel } from '@/src/common/model/base.model';
 import { AdminModel } from '../../admin/model/admin.model';
 import { LoginLogModel } from '../../login-log/model/login-log.model';
+import { PasswordHistoryModel } from './password-history.model';
 
 export interface AuthModel extends BaseModel {
   email: string;
@@ -17,4 +18,5 @@ export interface AuthModel extends BaseModel {
 
   admin?: AdminModel;
   loginLogs?: LoginLogModel[];
+  passwordHistories?: PasswordHistoryModel[];
 }
