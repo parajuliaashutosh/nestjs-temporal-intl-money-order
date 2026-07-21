@@ -1,15 +1,18 @@
+import { Transactional } from '@/src/common/decorator/orm/transactional.decorator';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { AppException } from '@/src/common/exception/app.exception';
 import { Inject, Injectable } from '@nestjs/common';
 import type { LoginLogContract } from '../../login-log/contract/login-log.contract';
 import { UserDeviceDataDTO } from '../../login-log/dto/user-device-data.dto';
 import { LOGIN_LOG_SERVICE } from '../../login-log/login-log.constant';
-import { AUTH_REPO } from '../auth.constant';
+import { AUTH_REPO, PASSWORD_HISTORY_LIMIT } from '../auth.constant';
 import { AuthContract } from '../contract/auth.contract';
 import type { AuthRepoContract } from '../contract/auth.repo.contract';
 import { CreateAuthDTO } from '../dto/create-auth.dto';
 import { LoginDTO } from '../dto/login.dto';
+import { UpdatePasswordDTO } from '../dto/update-password.dto';
 import { Auth } from '../entity/auth.entity';
+import { PasswordHistory } from '../entity/password-history.entity';
 import { HashingService } from './password-hash/password-hash.service';
 import { TokenPayload, TokenService } from './token/token.service';
 
@@ -32,7 +35,11 @@ export class AuthService implements AuthContract {
     auth.phone = data.phone;
     auth.role = data.role;
 
-    return await this.authRepo.create(auth);
+    const created = await this.authRepo.create(auth);
+
+    await this.authRepo.createPasswordHistory(created.id, auth.password);
+
+    return created;
   }
 
   public async login(
@@ -131,6 +138,55 @@ export class AuthService implements AuthContract {
       throw AppException.badRequest('AUTH_NOT_FOUND');
     }
     return auth;
+  }
+
+  @Transactional()
+  public async updatePassword(
+    id: string,
+    data: UpdatePasswordDTO,
+  ): Promise<void> {
+    const auth = await this.authRepo.findByIdForAuthentication(id);
+
+    if (!auth) {
+      throw AppException.badRequest('AUTH_NOT_FOUND');
+    }
+
+    const isCurrentPasswordValid = await this.hashService.compare(
+      data.currentPassword,
+      auth.password,
+    );
+
+    if (!isCurrentPasswordValid) {
+      throw AppException.badRequest('INVALID_CURRENT_PASSWORD');
+    }
+
+    const recentPasswords = await this.authRepo.getRecentPasswordHistories(
+      id,
+      PASSWORD_HISTORY_LIMIT,
+    );
+
+    // The current password is always part of the check, even if the account
+    // predates password history.
+    const usedHashes = new Set([
+      auth.password,
+      ...recentPasswords.map((history) => history.password),
+    ]);
+
+    for (const hash of usedHashes) {
+      const isReused = await this.hashService.compare(data.newPassword, hash);
+      if (isReused) {
+        throw AppException.badRequest('PASSWORD_RECENTLY_USED');
+      }
+    }
+
+    const hashedPassword = await this.hashService.hash(data.newPassword);
+
+    await this.authRepo.updatePassword(id, hashedPassword);
+    await this.authRepo.createPasswordHistory(id, hashedPassword);
+  }
+
+  public async getPasswordHistory(id: string): Promise<PasswordHistory[]> {
+    return await this.authRepo.getPasswordHistories(id);
   }
 
   public async getAuthByEmail(email: string): Promise<Auth | null> {
