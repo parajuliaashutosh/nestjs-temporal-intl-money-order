@@ -49,12 +49,12 @@ export class UserRepo implements UserRepoContract {
       query.andWhere('auth.id = :authId', { authId: filter.authId });
 
     if (filter.kycStatus)
-      query.andWhere('user.kyc_status = :kycStatus', {
+      query.andWhere('user.kycStatus = :kycStatus', {
         kycStatus: filter.kycStatus,
       });
 
     if (filter.country)
-      query.andWhere('user.country_code = :country', {
+      query.andWhere('user.country = :country', {
         country: filter.country,
       });
 
@@ -66,13 +66,13 @@ export class UserRepo implements UserRepoContract {
             .orWhere('user.middleName ILIKE :search', { search })
             .orWhere('user.lastName ILIKE :search', { search })
             .orWhere('auth.email ILIKE :search', { search })
-            .orWhere('auth.phone_number ILIKE :search', { search });
+            .orWhere('auth.phone ILIKE :search', { search });
         }),
       );
     }
 
     const [data, count] = await query
-      .orderBy('user.created_at', 'DESC')
+      .orderBy('user.createdAt', 'DESC')
       .skip(filter.skip)
       .take(filter.limit)
       .getManyAndCount();

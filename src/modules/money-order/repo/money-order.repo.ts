@@ -93,12 +93,12 @@ export class MoneyOrderRepo implements MoneyOrderRepoContract {
       query.andWhere('moneyOrder.status = :status', { status: filter.status });
 
     if (filter.deliveryStatus)
-      query.andWhere('moneyOrder.delivery_status = :deliveryStatus', {
+      query.andWhere('moneyOrder.deliveryStatus = :deliveryStatus', {
         deliveryStatus: filter.deliveryStatus,
       });
 
     const [data, count] = await query
-      .orderBy('moneyOrder.created_at', 'DESC')
+      .orderBy('moneyOrder.createdAt', 'DESC')
       .skip(filter.skip)
       .take(filter.limit)
       .getManyAndCount();
