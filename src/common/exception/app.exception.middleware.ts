@@ -50,6 +50,9 @@ export class AppExceptionFilter implements ExceptionFilter {
         case AppExceptionStatus.CONFLICT:
           status = HttpStatus.CONFLICT;
           break;
+        case AppExceptionStatus.BAD_REQUEST:
+          status = HttpStatus.BAD_REQUEST;
+          break;
         default:
           status = HttpStatus.INTERNAL_SERVER_ERROR;
       }
