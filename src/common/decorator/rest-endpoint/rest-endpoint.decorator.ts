@@ -1,10 +1,18 @@
 import { Authenticate } from '@/src/common/decorator/authenticate/rest/authenticate.decorator';
-import { Authorize } from '@/src/common/decorator/authenticate/rest/authorize.decorator';
+import {
+  Authorize,
+  ROLES_KEY,
+} from '@/src/common/decorator/authenticate/rest/authorize.decorator';
 import { KycVerified } from '@/src/common/decorator/authenticate/rest/kyc-verified/kyc-verified.decorator';
 import { Role } from '@/src/common/enum/role.enum';
 import { DevWebhookSignatureGuard } from '@/src/common/guard/rest/dev-webhook-signature.guard';
 import { NonProductionGuard } from '@/src/common/guard/rest/non-production.guard';
-import { applyDecorators, CanActivate, UseGuards } from '@nestjs/common';
+import {
+  applyDecorators,
+  CanActivate,
+  SetMetadata,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiHeader,
   ApiOperation,
@@ -66,6 +74,9 @@ export const RestEndpoint = ({
 
   if (kycVerified) {
     decorators.push(KycVerified());
+    if ((roles?.length ?? 0) > 0) {
+      decorators.push(SetMetadata(ROLES_KEY, roles ?? []));
+    }
   } else if ((roles?.length ?? 0) > 0) {
     decorators.push(Authorize(roles ?? []));
   } else if (needsAuth) {
