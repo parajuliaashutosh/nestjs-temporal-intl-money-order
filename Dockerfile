@@ -1,21 +1,21 @@
 # ---- Builder ----
-FROM oven/bun:1-slim AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
-COPY package.json package-lock.json* bun.lock* ./
-RUN bun install
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
-RUN bun run build
+RUN npm run build
 
 # ---- Production ----
-FROM oven/bun:1-slim AS production
+FROM node:22-slim AS production
 WORKDIR /app
 
 # Only copy what's needed
 COPY --from=builder /app/dist ./dist
-COPY package.json ./
+COPY package.json package-lock.json ./
 
-# Install only production deps directly in final image
-RUN bun install --production --ignore-scripts && \
+# Install only production deps
+RUN npm ci --omit=dev --ignore-scripts && \
     # Remove unnecessary files from node_modules
     find node_modules -name "*.md" -delete && \
     find node_modules -name "*.ts" -not -name "*.d.ts" -delete && \
@@ -26,4 +26,4 @@ RUN bun install --production --ignore-scripts && \
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 USER appuser
 
-CMD ["bun", "dist/main.js"]
+CMD ["node", "dist/main"]
