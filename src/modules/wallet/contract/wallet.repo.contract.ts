@@ -9,11 +9,6 @@ export interface WalletRepoContract {
     userId: string,
     currency: SupportedCurrency,
   ): Promise<Wallet | null>;
-  findByUserIdAndCurrencyWithLock(
-    userId: string,
-    currency: SupportedCurrency,
-  ): Promise<Wallet | null>;
-  findByIdWithLock(id: string): Promise<Wallet | null>;
   update(id: string, wallet: Partial<WalletModel>): Promise<Wallet | null>;
   save(wallet: Wallet): Promise<Wallet>;
   delete(id: string): Promise<boolean>;

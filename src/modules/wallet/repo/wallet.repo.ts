@@ -36,28 +36,6 @@ export class WalletRepo implements WalletRepoContract {
       .getOne();
   }
 
-  public async findByUserIdAndCurrencyWithLock(
-    userId: string,
-    currency: SupportedCurrency,
-  ): Promise<Wallet | null> {
-    return await this.walletRepo
-      .createQueryBuilder('wallet')
-      .leftJoinAndSelect('wallet.user', 'user')
-      .setLock('pessimistic_write')
-      .where('user.id = :userId', { userId })
-      .andWhere('wallet.currency = :currency', { currency })
-      .getOne();
-  }
-
-  public async findByIdWithLock(id: string): Promise<Wallet | null> {
-    return await this.walletRepo
-      .createQueryBuilder('wallet')
-      .leftJoinAndSelect('wallet.user', 'user')
-      .setLock('pessimistic_write')
-      .where('wallet.id = :id', { id })
-      .getOne();
-  }
-
   public async update(
     id: string,
     wallet: Partial<WalletModel>,

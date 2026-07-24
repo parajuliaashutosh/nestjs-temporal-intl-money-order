@@ -1,6 +1,6 @@
 import { IsNotBlank } from '@/src/common/decorator/validator/is-not-blank.decorator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsPositive } from 'class-validator';
+import { IsOptional } from 'class-validator';
 
 export class CreateReceiverReqDTO {
   @ApiProperty({
@@ -57,7 +57,5 @@ export class CreateReceiverReqDTO {
     example: '1234567890',
   })
   @IsNotBlank()
-  @IsNumber()
-  @IsPositive()
   bankAccountNumber: string;
 }

@@ -12,6 +12,7 @@ import { MoneyOrderModel } from '../model/money-order.model';
 export interface MoneyOrderRepoContract {
   create(moneyOrder: Partial<MoneyOrderModel>): Promise<MoneyOrder>;
   save(moneyOrder: MoneyOrder): Promise<MoneyOrder>;
+  saveIdempotently(moneyOrder: MoneyOrder): Promise<MoneyOrder>;
   findById(id: string): Promise<MoneyOrder | null>;
   findByIdempotentId(idempotentId: string): Promise<MoneyOrder | null>;
   filter(
