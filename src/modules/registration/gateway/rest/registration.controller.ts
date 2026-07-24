@@ -83,9 +83,9 @@ export class RegistrationController {
   @RestEndpoint({
     summary: 'Register a new admin',
     description:
-      'Register a new admin with personal details. Requires SUPER_ADMIN role.',
+      'Register a new admin with personal details. Requires SUPER_ADMIN or SUDO_ADMIN role.',
     authenticated: true,
-    roles: [Role.SUPER_ADMIN],
+    roles: [Role.SUPER_ADMIN, Role.SUDO_ADMIN],
   })
   async registerAdmin(@Body() data: RegisterAdminDTO) {
     const resp = await this.registrationService.registerAdmin(data);
@@ -99,9 +99,10 @@ export class RegistrationController {
   @Patch('/verify-user-kyc/:id')
   @RestEndpoint({
     summary: 'Verify user KYC',
-    description: 'Verify user KYC by ID. Requires ADMIN or SUPER_ADMIN role.',
+    description:
+      'Verify user KYC by ID. Requires ADMIN, SUPER_ADMIN, or SUDO_ADMIN role.',
     authenticated: true,
-    roles: [Role.ADMIN, Role.SUPER_ADMIN],
+    roles: [Role.ADMIN, Role.SUPER_ADMIN, Role.SUDO_ADMIN],
     apiParams: [
       {
         name: 'id',
@@ -121,9 +122,10 @@ export class RegistrationController {
   @Patch('/reject-user-kyc/:id')
   @RestEndpoint({
     summary: 'Reject user KYC',
-    description: 'Reject user KYC by ID. Requires ADMIN or SUPER_ADMIN role.',
+    description:
+      'Reject user KYC by ID. Requires ADMIN, SUPER_ADMIN, or SUDO_ADMIN role.',
     authenticated: true,
-    roles: [Role.ADMIN, Role.SUPER_ADMIN],
+    roles: [Role.ADMIN, Role.SUPER_ADMIN, Role.SUDO_ADMIN],
     apiParams: [
       {
         name: 'id',

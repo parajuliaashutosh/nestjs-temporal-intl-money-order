@@ -1,5 +1,5 @@
 import { IsNotBlank } from "@/src/common/decorator/validator/is-not-blank.decorator";
-import { IsNumber, IsOptional, IsPositive } from "class-validator";
+import { IsOptional } from "class-validator";
 
 export class CreateReceiverDTO {
 
@@ -25,8 +25,6 @@ export class CreateReceiverDTO {
     bankName: string;
 
     @IsNotBlank()
-    @IsNumber()
-    @IsPositive()
     bankAccountNumber: string;
 
     @IsNotBlank()
