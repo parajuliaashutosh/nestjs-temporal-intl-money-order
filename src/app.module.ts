@@ -9,7 +9,6 @@ import { AppExceptionFilter } from './common/exception/app.exception.middleware'
 import { ValidationExceptionFilter } from './common/exception/validation.exception.middleware';
 import { envValidationSchema } from './config/env.validation';
 import { typeOrmConfigAsync } from './config/orm.config';
-import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CacheModule } from './modules/cache/cache.module';
 import { StripeIdentityModule } from './modules/external/identity/stripe-identity/stripe-identity.module';
@@ -42,7 +41,6 @@ import { DeviceConfigModule } from './modules/device-config/device-config.module
     AdminModule,
     RegistrationModule,
     SystemConfigModule,
-    ActivityLogModule,
     WalletModule,
     CacheModule,
     HealthModule,
