@@ -1,15 +1,7 @@
-import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { MoneyOrderStatus } from '@/src/common/enum/money-order-status.enum';
+import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { ViewColumn, ViewEntity } from 'typeorm';
 
-/**
- * Materialized view that pre-aggregates money orders at a
- * (day, country, status) grain. Every analytics figure the API serves
- * (today-by-nation, status breakdown, inflow trend, historic series) is
- * derived from this view so the read path never scans the raw table.
- *
- * Refreshed hourly — see MoneyOrderAnalyticsRefreshJob.
- */
 @ViewEntity({
   name: 'money_order_analytics',
   materialized: true,
