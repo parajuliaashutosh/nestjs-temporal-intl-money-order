@@ -1,8 +1,12 @@
+import { UserContextStorage } from '@/src/common/context/user.context';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
+import { SystemConfigLogAction } from '@/src/common/enum/system-config-log-action.enum';
 import { CACHE_KEYS } from '@/src/common/keys/cache.keys';
 import { Inject, Injectable } from '@nestjs/common';
 import { createClient } from 'redis';
 import { CACHE_CLIENT } from '../../cache/cache.constant';
+import type { SystemConfigLogContract } from '../../system-config-log/contract/system-config-log.contract';
+import { SYSTEM_CONFIG_LOG_SERVICE } from '../../system-config-log/system-config-log.constant';
 import { SystemConfigContract } from '../contract/system-config.contract';
 import type { SystemConfigRepoContract } from '../contract/system-config.repo.contract';
 import { CreateSystemConfigDTO } from '../dto/create-system-config.dto';
@@ -15,6 +19,9 @@ export class SystemConfigService implements SystemConfigContract {
     @Inject(SYSTEM_CONFIG_REPO)
     private readonly systemConfigRepo: SystemConfigRepoContract,
 
+    @Inject(SYSTEM_CONFIG_LOG_SERVICE)
+    private readonly systemConfigLogService: SystemConfigLogContract,
+
     @Inject(CACHE_CLIENT)
     private readonly cache: ReturnType<typeof createClient>,
   ) {}
@@ -22,10 +29,26 @@ export class SystemConfigService implements SystemConfigContract {
   public async createOrUpdateSystemConfig(
     data: CreateSystemConfigDTO,
   ): Promise<SystemConfig> {
+    const existing = await this.systemConfigRepo.findByCountryCode(
+      data.countryCode,
+    );
+
     const result = await this.systemConfigRepo.upsert(data);
 
     // invalidate cache
     await this.invalidateSystemConfigCache(data.countryCode);
+
+    await this.systemConfigLogService.log({
+      systemConfigId: result.id,
+      previousValue: existing
+        ? { currency: existing.currency, exchangeRate: existing.exchangeRate }
+        : null,
+      newValue: { currency: result.currency, exchangeRate: result.exchangeRate },
+      action: existing
+        ? SystemConfigLogAction.UPDATE
+        : SystemConfigLogAction.CREATE,
+      changedByAuthId: UserContextStorage.get()?.payload.id,
+    });
 
     return result;
   }
