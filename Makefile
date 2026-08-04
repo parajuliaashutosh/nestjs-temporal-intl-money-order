@@ -1,11 +1,11 @@
 REGISTRY = registry.aashutoshparajuli.com.np
 IMAGE   = money-order/backend
-TAG      = 2.0.6
+TAG      = 3.0.1
 
 FULL_IMAGE = $(REGISTRY)/$(IMAGE):$(TAG)
 
 build:
-	docker build -t $(FULL_IMAGE) .
+	docker build --no-cache -t $(FULL_IMAGE) .
 
 push:
 	docker push $(FULL_IMAGE)
