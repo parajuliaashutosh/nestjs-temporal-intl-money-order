@@ -1,3 +1,4 @@
+import { UserContextStorage } from '@/src/common/context/user.context';
 import { KYCStatus } from '@/src/common/enum/kyc-status.enum';
 import { AppException } from '@/src/common/exception/app.exception';
 import { CACHE_KEYS } from '@/src/common/keys/cache.keys';
@@ -7,6 +8,8 @@ import { ConfigService } from '@nestjs/config';
 import { createClient } from 'redis';
 import { Auth } from '../../auth/entity/auth.entity';
 import { CACHE_CLIENT } from '../../cache/cache.constant';
+import type { KycApprovalLogContract } from '../../kyc-approval-log/contract/kyc-approval-log.contract';
+import { KYC_APPROVAL_LOG_SERVICE } from '../../kyc-approval-log/kyc-approval-log.constant';
 import { UserContract } from '../contract/user.contract';
 import type { UserRepoContract } from '../contract/user.repo.contract';
 import { CreateUserDTO } from '../dto/create-user.dto';
@@ -21,6 +24,9 @@ export class UserService implements UserContract {
 
     @Inject(USER_REPO)
     private readonly userRepo: UserRepoContract,
+
+    @Inject(KYC_APPROVAL_LOG_SERVICE)
+    private readonly kycApprovalLogService: KycApprovalLogContract,
 
     @Inject(CACHE_CLIENT)
     private readonly cacheClient: ReturnType<typeof createClient>,
@@ -44,6 +50,13 @@ export class UserService implements UserContract {
 
     const resp = await this.userRepo.updateKYCStatus(id, KYCStatus.VERIFIED);
 
+    await this.kycApprovalLogService.log({
+      userId: id,
+      previousStatus: user.kycStatus,
+      newStatus: KYCStatus.VERIFIED,
+      reviewedByAuthId: UserContextStorage.get()?.payload.id,
+    });
+
     // caching the invalidated version for the user,
     const cacheKey = CACHE_KEYS.userInvalidatedVersion(id);
     await this.cacheClient.set(cacheKey, resp.invalidatedVersion.toString(), {
@@ -57,6 +70,13 @@ export class UserService implements UserContract {
     if (!user) throw AppException.badRequest('USER_NOT_FOUND');
 
     const resp = await this.userRepo.updateKYCStatus(id, KYCStatus.REJECTED);
+
+    await this.kycApprovalLogService.log({
+      userId: id,
+      previousStatus: user.kycStatus,
+      newStatus: KYCStatus.REJECTED,
+      reviewedByAuthId: UserContextStorage.get()?.payload.id,
+    });
 
     // caching the invalidated version for the user,
     const cacheKey = CACHE_KEYS.userInvalidatedVersion(id);
