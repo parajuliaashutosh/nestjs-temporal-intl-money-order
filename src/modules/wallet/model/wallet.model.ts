@@ -7,4 +7,5 @@ export interface WalletModel extends BaseModel {
   balance: string;
   currency: SupportedCurrency;
   user: UserModel;
+  version?: number;
 }

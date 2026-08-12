@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
+import { SystemConfigLogModule } from '../system-config-log/system-config-log.module';
 import { SystemConfig } from './entity/system-config.entity';
 import { SystemConfigController } from './gateway/rest/system-config.controller';
 import { SystemConfigRepo } from './repo/system-config.repo';
@@ -11,7 +12,11 @@ import {
 } from './system-config.constant';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([SystemConfig]), AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([SystemConfig]),
+    AuthModule,
+    SystemConfigLogModule,
+  ],
   providers: [
     {
       provide: SYSTEM_CONFIG_SERVICE,

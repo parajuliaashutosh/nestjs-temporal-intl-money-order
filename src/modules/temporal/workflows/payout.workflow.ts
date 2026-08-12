@@ -5,12 +5,26 @@ const { processPayout } = proxyActivities<typeof activities>({
   startToCloseTimeout: '5 minute',
 });
 
-export async function ausMoneyOrderWorkflow(
+export interface PayoutWorkflowResult {
+  moneyOrderId: string;
+  payoutSucceeded: boolean;
+  payoutData: Record<string, any>;
+  completedAt: string;
+}
+
+export async function payoutWorkflow(
   moneyOrderId: string,
-): Promise<void> {
+): Promise<PayoutWorkflowResult> {
   console.log(`[Workflow] Starting for payout process: ${moneyOrderId}`);
 
-  await processPayout(moneyOrderId);
+  const { success, data } = await processPayout(moneyOrderId);
 
   console.log(`[Workflow] Completed for payout process: ${moneyOrderId}`);
+
+  return {
+    moneyOrderId,
+    payoutSucceeded: success,
+    payoutData: data,
+    completedAt: new Date().toISOString(),
+  };
 }

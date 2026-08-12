@@ -6,7 +6,7 @@ import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { DataAndCount } from '@/src/common/response-type/pagination/data-and-count';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import type { MoneyOrderRepoContract } from '../contract/money-order.repo.contract';
 import { FilterMoneyOrdersDTO } from '../dto/filter-money-orders.dto';
 import {
@@ -40,10 +40,24 @@ export class MoneyOrderRepo implements MoneyOrderRepoContract {
     return await this.moneyOrderRepo.save(moneyOrder);
   }
 
+  public async saveIdempotently(moneyOrder: MoneyOrder): Promise<MoneyOrder> {
+    try {
+      return await this.moneyOrderRepo.save(moneyOrder);
+    } catch (err) {
+      if (err instanceof QueryFailedError && moneyOrder.idempotentId) {
+        const existing = await this.findByIdempotentId(moneyOrder.idempotentId);
+        if (existing) return existing;
+      }
+
+      throw err;
+    }
+  }
+
   public async findById(id: string): Promise<MoneyOrder | null> {
     return await this.moneyOrderRepo
       .createQueryBuilder('moneyOrder')
       .leftJoinAndSelect('moneyOrder.user', 'user')
+      .leftJoinAndSelect('user.wallet', 'wallet')
       .leftJoinAndSelect('moneyOrder.receiver', 'receiver')
       .where('moneyOrder.id = :id', { id })
       .getOne();
@@ -65,7 +79,6 @@ export class MoneyOrderRepo implements MoneyOrderRepoContract {
       .createQueryBuilder('moneyOrder')
       .leftJoin('moneyOrder.user', 'user')
       .leftJoin('moneyOrder.receiver', 'receiver')
-      // minimal projection for list views — full detail lives on findById
       .select([
         'moneyOrder.id',
         'moneyOrder.sendingAmount',
@@ -81,7 +94,6 @@ export class MoneyOrderRepo implements MoneyOrderRepoContract {
         'receiver.firstName',
         'receiver.lastName',
       ])
-      // always scope to a single country
       .where('user.country = :country', { country: filter.country });
 
     if (filter.userId)
