@@ -7,7 +7,11 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Client, Connection } from '@temporalio/client';
+import {
+  Client,
+  Connection,
+  WorkflowExecutionAlreadyStartedError,
+} from '@temporalio/client';
 import { WorkflowValue } from '../workflow.constant';
 
 @Injectable()
@@ -71,15 +75,31 @@ export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
         'Service maintenance in progress. Please try again later.',
       );
     }
-    const workflowId = `${UTIL_FUNCTIONS.toKebabCase(WorkflowValue)}-${args?.[0]}-${Date.now()}`;
+    // one order (if this is not done we get deterministic error)
+    // better way to handle is versioning
+    const workflowId = this.buildWorkflowId(WorkflowValue, args?.[0]);
 
-    const handle = await this.client.workflow.start(WorkflowValue, {
-      args,
-      taskQueue,
-      workflowId,
-    });
+    try {
+      const handle = await this.client.workflow.start(WorkflowValue, {
+        args,
+        taskQueue,
+        workflowId,
+      });
 
-    this.logger.log(`🚀 Workflow started: ${handle.workflowId}`);
-    return handle;
+      this.logger.log(`🚀 Workflow started: ${handle.workflowId}`);
+      return handle;
+    } catch (err) {
+      if (err instanceof WorkflowExecutionAlreadyStartedError) {
+        this.logger.warn(
+          `Workflow ${workflowId} already running, reusing existing execution`,
+        );
+        return this.client.workflow.getHandle(workflowId);
+      }
+      throw err;
+    }
+  }
+
+  buildWorkflowId(workflowType: WorkflowValue, moneyOrderId: string): string {
+    return `${UTIL_FUNCTIONS.toKebabCase(workflowType)}-${moneyOrderId}`;
   }
 }

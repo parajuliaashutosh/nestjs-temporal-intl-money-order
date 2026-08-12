@@ -7,12 +7,14 @@ import {
 } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { createClient } from 'redis';
+import { DistributedLockService } from '../../common/lock/distributed-lock.service';
 import { CACHE_CLIENT } from './cache.constant';
 
 @Global()
 @Module({
   imports: [ConfigModule],
   providers: [
+    DistributedLockService,
     {
       provide: CACHE_CLIENT,
       useFactory: async (configService: ConfigService) => {
@@ -37,7 +39,7 @@ import { CACHE_CLIENT } from './cache.constant';
       inject: [ConfigService],
     },
   ],
-  exports: [CACHE_CLIENT],
+  exports: [CACHE_CLIENT, DistributedLockService],
 })
 export class CacheModule implements OnModuleDestroy {
   constructor(

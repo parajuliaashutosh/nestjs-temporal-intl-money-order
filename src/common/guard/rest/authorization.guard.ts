@@ -1,8 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { ROLES_KEY } from '../../decorator/authenticate/rest/authorize.decorator';
@@ -18,13 +14,13 @@ export class AuthorizationGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (!requiredRoles || requiredRoles.length === 0) return true; //if no roles are specified then pass through the guard
+    if (!requiredRoles || requiredRoles.length === 0) return true;
     const { user } = context.switchToHttp().getRequest<Request>();
 
-    if (!user) throw AppException.forbidden("NOT_AUTHORIZED");
+    if (!user) throw AppException.forbidden('NOT_AUTHORIZED');
 
-    if (!requiredRoles.some((role) => user.role?.includes(role)))
-      throw AppException.forbidden("NOT_PERMITTED");
+    if (!requiredRoles.includes(user.role))
+      throw AppException.forbidden('NOT_PERMITTED');
     return true;
   }
 }

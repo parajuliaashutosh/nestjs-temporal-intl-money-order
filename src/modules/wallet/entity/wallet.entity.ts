@@ -1,6 +1,6 @@
 import Base from '@/src/common/entity/base.entity';
 import { SupportedCurrency } from '@/src/common/enum/supported-currency.enum';
-import { Column, Entity, OneToOne } from 'typeorm';
+import { Column, Entity, OneToOne, VersionColumn } from 'typeorm';
 import { User } from '../../user/entity/user.entity';
 import { WalletModel } from '../model/wallet.model';
 
@@ -18,4 +18,7 @@ export class Wallet extends Base implements WalletModel {
 
   @OneToOne(() => User, (user) => user.wallet, { onDelete: 'CASCADE' })
   user: User;
+
+  @VersionColumn()
+  version: number;
 }

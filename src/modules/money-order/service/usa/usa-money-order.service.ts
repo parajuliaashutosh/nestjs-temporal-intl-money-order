@@ -1,4 +1,3 @@
-import { Transactional } from '@/src/common/decorator/orm/transactional.decorator';
 import {
   MoneyOrderDeliveryStatus,
   MoneyOrderStatus,
@@ -86,6 +85,19 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
       throw AppException.badRequest('INVALID_RECEIVER_AMOUNT');
     }
 
+    const user = await this.userService.getUserById(data.userId);
+    if (!user) {
+      throw AppException.badRequest('USER_NOT_FOUND');
+    }
+
+    const receiver = await this.receiverService.getReceiverByIdAndUserId(
+      data.receiverId,
+      data.userId,
+    );
+    if (!receiver) {
+      throw AppException.badRequest('RECEIVER_NOT_FOUND_FOR_USER');
+    }
+
     // amounts as strings to avoid JS floating point issues
     const moneyOrder = new MoneyOrder();
     moneyOrder.sendingAmount = sendingAmount.toFixed(); // string
@@ -97,13 +109,10 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
       MoneyOrderDeliveryStatus.DELIVERY_NOT_AUTHORIZED;
     moneyOrder.idempotentId = data.idempotentId;
 
-    moneyOrder.user = await this.userService.getUserById(data.userId);
-    moneyOrder.receiver = await this.receiverService.getReceiverByIdAndUserId(
-      data.receiverId,
-      data.userId,
-    );
+    moneyOrder.user = user;
+    moneyOrder.receiver = receiver;
 
-    return await this.moneyOrderRepo.save(moneyOrder);
+    return await this.moneyOrderRepo.saveIdempotently(moneyOrder);
   }
 
   public async screenReceiver(moneyOrderId: string): Promise<boolean> {
@@ -172,7 +181,6 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
     }
   }
 
-  @Transactional()
   public async transferFunds(moneyOrderId: string): Promise<boolean> {
     this.log.log('========================================');
     this.log.log('💸 ACTIVITY: transferFunds');
@@ -184,25 +192,12 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
       throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
     }
 
-    const walletBalance = new Decimal(moneyOrder.user.wallet.balance);
     const sendingAmount = new Decimal(moneyOrder.sendingAmount);
 
-    if (!walletBalance.greaterThanOrEqualTo(sendingAmount)) {
-      throw AppException.badRequest('INSUFFICIENT_WALLET_BALANCE');
-    }
-
-    // Deduct sending amount from wallet
-    const newBalance = walletBalance.minus(sendingAmount);
-    moneyOrder.user.wallet.balance = newBalance.toFixed();
-
-    moneyOrder.status = MoneyOrderStatus.COMPLETED;
-    moneyOrder.metadata = {
-      ...(moneyOrder.metadata ?? {}),
-      fundsTransferredAt: `Funds transferred - ${new Date().toISOString()}`,
-    };
-
-    await this.moneyOrderRepo.save(moneyOrder);
-
+    // Authoritative, optimistically-locked, idempotent debit. Deliberately
+    // not wrapped in this method's own transaction — updateBalance owns its
+    // own retry-on-conflict transaction boundary, which needs to be the
+    // outermost one so each retry gets a fresh (non-aborted) transaction.
     const payload: WalletUpdateBalanceDTO = {
       walletId: moneyOrder.user.wallet.id,
       amount: sendingAmount.toFixed(),
@@ -211,6 +206,13 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
       idempotencyKey: moneyOrder.id,
     };
     await this.walletService.updateBalance(payload);
+
+    moneyOrder.status = MoneyOrderStatus.COMPLETED;
+    moneyOrder.metadata = {
+      ...(moneyOrder.metadata ?? {}),
+      fundsTransferredAt: `Funds transferred - ${new Date().toISOString()}`,
+    };
+    await this.moneyOrderRepo.save(moneyOrder);
 
     return true;
   }

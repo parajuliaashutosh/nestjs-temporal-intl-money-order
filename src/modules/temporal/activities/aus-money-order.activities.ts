@@ -28,9 +28,7 @@ export async function ausScreenReceiver(
   console.log('   Money Order ID:', moneyOrderId);
   console.log('========================================');
 
-  await moneyOrderService.screenReceiver(moneyOrderId);
-
-  return;
+  return await moneyOrderService.screenReceiver(moneyOrderId);
 }
 
 export async function ausCheckWalletBalance(
@@ -42,9 +40,7 @@ export async function ausCheckWalletBalance(
   console.log('   Money Order ID:', moneyOrderId);
   console.log('========================================');
 
-  await moneyOrderService.checkWalletBalance(moneyOrderId);
-
-  return;
+  return await moneyOrderService.checkWalletBalance(moneyOrderId);
 }
 
 export async function ausTransferFunds(moneyOrderId: string): Promise<boolean> {
@@ -54,23 +50,23 @@ export async function ausTransferFunds(moneyOrderId: string): Promise<boolean> {
   console.log('   Money Order ID:', moneyOrderId);
   console.log('========================================');
 
-  await moneyOrderService.transferFunds(moneyOrderId);
-
-  return;
+  return await moneyOrderService.transferFunds(moneyOrderId);
 }
 
-export async function ausPayoutFunds(moneyOrderId: string): Promise<boolean> {
+export async function ausPayoutFunds(
+  moneyOrderId: string,
+): Promise<{ payoutWorkflowId: string }> {
   const { workflowClient } = await getInstances();
   console.log('========================================');
   console.log('💸 ACTIVITY: payoutFunds');
   console.log('   Money Order ID:', moneyOrderId);
   console.log('========================================');
 
-  await workflowClient.startWorkflow(
+  const handle = await workflowClient.startWorkflow(
     WORKFLOWS.PAYOUT,
     [moneyOrderId],
     process.env.TEMPORAL_TASK_QUEUE,
   );
 
-  return;
+  return { payoutWorkflowId: handle.workflowId };
 }
