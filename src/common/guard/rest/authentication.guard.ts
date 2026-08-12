@@ -8,6 +8,7 @@ import type { Request } from 'express';
 import { UserContext, UserContextStorage } from '../../context/user.context';
 import { SupportedCountry } from '../../enum/supported-country.enum';
 import { AppException } from '../../exception/app.exception';
+import { HEADER_COUNTRY_CODE_KEY } from '../../util/constant';
 
 export interface ReqUserPayload extends TokenPayload {
   user: TokenUser;
@@ -19,11 +20,20 @@ export class AuthenticationGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
-    const countryCode = request.headers['x-country-code'] as SupportedCountry;
+    const rawCountryCode = request.headers['x-country-code'] as string;
 
-    if (!countryCode) {
+    if (!rawCountryCode) {
       throw AppException.badRequest('MISSING_COUNTRY_HEADER');
     }
+
+    const countryCode = rawCountryCode.toUpperCase() as SupportedCountry;
+
+    if (!Object.values(SupportedCountry).includes(countryCode)) {
+      throw AppException.badRequest(
+        `Invalid ${HEADER_COUNTRY_CODE_KEY}. Allowed values: ${Object.values(SupportedCountry).join(', ')}`,
+      );
+    }
+
     const token = this.extractTokenFromHeader(request);
     if (!token) {
       throw AppException.unauthorized('NOT_AUTHORIZED');
