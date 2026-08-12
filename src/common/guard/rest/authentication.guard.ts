@@ -6,6 +6,7 @@ import {
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import type { Request } from 'express';
 import { UserContext, UserContextStorage } from '../../context/user.context';
+import { Role } from '../../enum/role.enum';
 import { SupportedCountry } from '../../enum/supported-country.enum';
 import { AppException } from '../../exception/app.exception';
 import { HEADER_COUNTRY_CODE_KEY } from '../../util/constant';
@@ -38,28 +39,41 @@ export class AuthenticationGuard implements CanActivate {
     if (!token) {
       throw AppException.unauthorized('NOT_AUTHORIZED');
     }
+
+    let payload: TokenPayload;
     try {
-      const payload = this.jwtService.verifyAccessToken(token);
-
-      const userPayload: ReqUserPayload = {
-        ...payload,
-        user: payload.users.find((user) => user.country == countryCode),
-      };
-      request.user = userPayload;
-
-      const userContext = new UserContext({
-        key: payload.key,
-        id: payload.id,
-        role: payload.role,
-        users: payload.users,
-        user: userPayload.user,
-        adminId: payload.adminId,
-        tokenPayload: payload,
-      });
-      UserContextStorage.run(userContext, () => true);
+      payload = this.jwtService.verifyAccessToken(token);
     } catch {
       throw AppException.unauthorized('INVALID_TOKEN');
     }
+
+    const linkedUser = payload.users.find(
+      (user) => user.country == countryCode,
+    );
+
+    // USER-role tokens must have an account linked to the requested
+    // country; admins aren't in payload.users at all, so they're exempt.
+    if (payload.role === Role.USER && !linkedUser) {
+      throw AppException.unauthorized('NO_LINKED_ACCOUNT_FOR_COUNTRY');
+    }
+
+    const userPayload: ReqUserPayload = {
+      ...payload,
+      user: linkedUser,
+    };
+    request.user = userPayload;
+
+    const userContext = new UserContext({
+      key: payload.key,
+      id: payload.id,
+      role: payload.role,
+      users: payload.users,
+      user: userPayload.user,
+      adminId: payload.adminId,
+      tokenPayload: payload,
+    });
+    UserContextStorage.run(userContext, () => true);
+
     return true;
   }
 
