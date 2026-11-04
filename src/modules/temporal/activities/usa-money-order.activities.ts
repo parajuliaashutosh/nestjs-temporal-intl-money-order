@@ -23,11 +23,6 @@ export async function usaScreenReceiver(
   moneyOrderId: string,
 ): Promise<boolean> {
   const { moneyOrderService } = await getInstances();
-  console.log('========================================');
-  console.log('🔍 ACTIVITY: screenReceiver');
-  console.log('   Money Order ID:', moneyOrderId);
-  console.log('========================================');
-
   return await moneyOrderService.screenReceiver(moneyOrderId);
 }
 
@@ -35,21 +30,11 @@ export async function usaCheckWalletBalance(
   moneyOrderId: string,
 ): Promise<boolean> {
   const { moneyOrderService } = await getInstances();
-  console.log('========================================');
-  console.log('💰 ACTIVITY: checkWalletBalance');
-  console.log('   Money Order ID:', moneyOrderId);
-  console.log('========================================');
-
   return await moneyOrderService.checkWalletBalance(moneyOrderId);
 }
 
 export async function usaTransferFunds(moneyOrderId: string): Promise<boolean> {
   const { moneyOrderService } = await getInstances();
-  console.log('========================================');
-  console.log('💸 ACTIVITY: transferFunds');
-  console.log('   Money Order ID:', moneyOrderId);
-  console.log('========================================');
-
   return await moneyOrderService.transferFunds(moneyOrderId);
 }
 
@@ -57,11 +42,6 @@ export async function usaPayoutFunds(
   moneyOrderId: string,
 ): Promise<{ payoutWorkflowId: string }> {
   const { workflowClient } = await getInstances();
-  console.log('========================================');
-  console.log('💸 ACTIVITY: payoutFunds');
-  console.log('   Money Order ID:', moneyOrderId);
-  console.log('========================================');
-
   const handle = await workflowClient.startWorkflow(
     WORKFLOWS.PAYOUT,
     [moneyOrderId],

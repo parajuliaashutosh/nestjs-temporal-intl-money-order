@@ -42,9 +42,9 @@ export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
         namespace: this.configService.getOrThrow<string>('TEMPORAL_NAMESPACE'),
       });
 
-      this.logger.log('✅ Temporal client created successfully');
+      this.logger.log('Temporal client connected');
     } catch (err) {
-      this.logger.error('❌ Failed to connect to Temporal', err);
+      this.logger.error('Failed to connect to Temporal', err);
       // throw err;
     }
   }
@@ -52,7 +52,7 @@ export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
   private async stopWorker() {
     if (this.client) {
       await this.client.options.connection.close();
-      this.logger.log('✅ Temporal client stopped');
+      this.logger.log('Temporal client closed');
     }
   }
 
@@ -61,15 +61,6 @@ export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
     args: any[],
     taskQueue: string,
   ) {
-    this.logger.log(
-      '🚀 ~ TemporalClientService ~ startWorkflow ~ taskQueue:',
-      taskQueue,
-    );
-    this.logger.log('🚀 ~ TemporalClientService ~ startWorkflow ~ args:', args);
-    this.logger.log(
-      '🚀 ~ TemporalClientService ~ startWorkflow ~ workflowKey:',
-      WorkflowValue,
-    );
     if (!this.client) {
       throw AppException.internalServerError(
         'Service maintenance in progress. Please try again later.',
@@ -86,7 +77,9 @@ export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
         workflowId,
       });
 
-      this.logger.log(`🚀 Workflow started: ${handle.workflowId}`);
+      this.logger.log(
+        `Started ${WorkflowValue} as ${handle.workflowId} on ${taskQueue}`,
+      );
       return handle;
     } catch (err) {
       if (err instanceof WorkflowExecutionAlreadyStartedError) {
