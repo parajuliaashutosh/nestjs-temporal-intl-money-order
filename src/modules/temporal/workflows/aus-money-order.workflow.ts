@@ -1,5 +1,6 @@
-import { proxyActivities } from '@temporalio/workflow';
+import { log, patched, proxyActivities } from '@temporalio/workflow';
 import type * as activities from '../activities';
+import { HALT_ON_FAILED_CHECK_PATCH } from './patches';
 
 const {
   ausScreenReceiver,
@@ -13,12 +14,29 @@ const {
 export async function ausMoneyOrderWorkflow(
   moneyOrderId: string,
 ): Promise<void> {
-  console.log(`[Workflow] Starting for: ${moneyOrderId}`);
+  log.info(`Money order ${moneyOrderId} started`);
 
-  await ausScreenReceiver(moneyOrderId);
-  await ausCheckWalletBalance(moneyOrderId);
-  await ausTransferFunds(moneyOrderId);
+  const haltOnFailedCheck = patched(HALT_ON_FAILED_CHECK_PATCH);
+
+  const screened = await ausScreenReceiver(moneyOrderId);
+  if (haltOnFailedCheck && !screened) {
+    log.info(`Money order ${moneyOrderId} halted: screening failed`);
+    return;
+  }
+
+  const hasBalance = await ausCheckWalletBalance(moneyOrderId);
+  if (haltOnFailedCheck && !hasBalance) {
+    log.info(`Money order ${moneyOrderId} halted: insufficient balance`);
+    return;
+  }
+
+  const transferred = await ausTransferFunds(moneyOrderId);
+  if (haltOnFailedCheck && !transferred) {
+    log.info(`Money order ${moneyOrderId} halted: transfer refused`);
+    return;
+  }
+
   await ausPayoutFunds(moneyOrderId);
 
-  console.log(`[Workflow] Completed for: ${moneyOrderId}`);
+  log.info(`Money order ${moneyOrderId} handed off to payout`);
 }
