@@ -3,4 +3,5 @@ export interface PayoutContract {
     moneyOrderId: string,
   ): Promise<{ success: boolean; data: Record<string, any> }>;
   payout(request: Record<string, any>): Promise<Record<string, any>>;
+  completeMoneyOrder(moneyOrderId: string): Promise<boolean>;
 }
