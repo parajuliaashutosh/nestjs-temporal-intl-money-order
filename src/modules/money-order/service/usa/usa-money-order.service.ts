@@ -1,12 +1,5 @@
-import {
-  MoneyOrderDeliveryStatus,
-  MoneyOrderStatus,
-} from '@/src/common/enum/money-order-status.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
-import {
-  WalletHistoryType,
-  WalletTxnDirection,
-} from '@/src/common/enum/wallet.enum';
+import { Transactional } from '@/src/common/decorator/orm/transactional.decorator';
 import { AppException } from '@/src/common/exception/app.exception';
 import type { ReceiverContract } from '@/src/modules/receiver/contract/receiver.contract';
 import { RECEIVER_SERVICE } from '@/src/modules/receiver/receiver.constant';
@@ -15,7 +8,6 @@ import { SYSTEM_CONFIG_SERVICE } from '@/src/modules/system-config/system-config
 import type { UserContract } from '@/src/modules/user/contract/user.contract';
 import { USER_SERVICE } from '@/src/modules/user/user.constant';
 import type { WalletContract } from '@/src/modules/wallet/contract/wallet.contract';
-import { WalletUpdateBalanceDTO } from '@/src/modules/wallet/dto/wallet-update-balance.dto';
 import { WALLET_SERVICE } from '@/src/modules/wallet/wallet.constant';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import Decimal from 'decimal.js';
@@ -24,6 +16,10 @@ import type { MoneyOrderRepoContract } from '../../contract/money-order.repo.con
 import { CreateMoneyOrderDTO } from '../../dto/create-money-order.dto';
 import { MoneyOrder } from '../../entity/money-order.entity';
 import { MONEY_ORDER_REPO } from '../../money-order.constant';
+import {
+  MoneyOrderEvent,
+  MoneyOrderStateMachine,
+} from '../../state/money-order.state-machine';
 
 @Injectable()
 export class UsaMoneyOrderService implements MoneyOrderContract {
@@ -104,9 +100,7 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
     moneyOrder.receiverAmount = receiverAmount.toFixed();
     moneyOrder.promiseExchangeRate = exchangeRate.toFixed();
 
-    moneyOrder.status = MoneyOrderStatus.INITIATED;
-    moneyOrder.deliveryStatus =
-      MoneyOrderDeliveryStatus.DELIVERY_NOT_AUTHORIZED;
+    Object.assign(moneyOrder, MoneyOrderStateMachine.initial());
     moneyOrder.idempotentId = data.idempotentId;
 
     moneyOrder.user = user;
@@ -116,11 +110,6 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
   }
 
   public async screenReceiver(moneyOrderId: string): Promise<boolean> {
-    this.log.log('========================================');
-    this.log.log('🔍 ACTIVITY: screenReceiver');
-    this.log.log('   Money Order ID:', moneyOrderId);
-    this.log.log('========================================');
-
     const moneyOrder = await this.moneyOrderRepo.findById(moneyOrderId);
 
     if (!moneyOrder) {
@@ -128,7 +117,9 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
     }
 
     const passed = Math.random() > 0.4;
-    this.log.log(`✅ Result: ${passed ? 'PASSED' : 'FAILED'}`);
+    this.log.log(
+      `Screening for money order ${moneyOrderId} ${passed ? 'passed' : 'failed'}`,
+    );
 
     if (passed) {
       moneyOrder.metadata = {
@@ -138,7 +129,10 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
       await this.moneyOrderRepo.save(moneyOrder);
       return true;
     } else {
-      moneyOrder.status = MoneyOrderStatus.ON_HOLD;
+      MoneyOrderStateMachine.apply(
+        moneyOrder,
+        MoneyOrderEvent.SCREENING_FAILED,
+      );
       moneyOrder.metadata = {
         ...(moneyOrder.metadata ?? {}),
         screeningFailureReason: `Receiver failed the screening process - ${new Date().toISOString()}`,
@@ -149,10 +143,6 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
   }
 
   public async checkWalletBalance(moneyOrderId: string): Promise<boolean> {
-    this.log.log('========================================');
-    this.log.log('💰 ACTIVITY: checkWalletBalance');
-    this.log.log('========================================');
-
     const moneyOrder = await this.moneyOrderRepo.findById(moneyOrderId);
 
     if (!moneyOrder) {
@@ -164,14 +154,17 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
 
     if (walletBalance.greaterThanOrEqualTo(sendingAmount)) {
       this.log.log(
-        `✅ Sufficient wallet balance: ${walletBalance.toFixed()} cents`,
+        `Money order ${moneyOrderId}: wallet balance ${walletBalance.toFixed()} covers ${sendingAmount.toFixed()}`,
       );
       return true;
     } else {
-      this.log.log(
-        `❌ Insufficient wallet balance: ${walletBalance.toFixed()} cents`,
+      this.log.warn(
+        `Money order ${moneyOrderId}: wallet balance ${walletBalance.toFixed()} is below ${sendingAmount.toFixed()}`,
       );
-      moneyOrder.status = MoneyOrderStatus.ON_HOLD;
+      MoneyOrderStateMachine.apply(
+        moneyOrder,
+        MoneyOrderEvent.INSUFFICIENT_BALANCE,
+      );
       moneyOrder.metadata = {
         ...(moneyOrder.metadata ?? {}),
         insufficientWalletBalanceAt: `Insufficient wallet balance - ${new Date().toISOString()}`,
@@ -181,33 +174,49 @@ export class UsaMoneyOrderService implements MoneyOrderContract {
     }
   }
 
+  @Transactional()
   public async transferFunds(moneyOrderId: string): Promise<boolean> {
-    this.log.log('========================================');
-    this.log.log('💸 ACTIVITY: transferFunds');
-    this.log.log('========================================');
-
     const moneyOrder = await this.moneyOrderRepo.findById(moneyOrderId);
 
     if (!moneyOrder) {
       throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
     }
 
-    const sendingAmount = new Decimal(moneyOrder.sendingAmount);
+    if (
+      !MoneyOrderStateMachine.can(moneyOrder, MoneyOrderEvent.FUNDS_DEBITED)
+    ) {
+      this.log.warn(
+        `Skipping transfer for ${moneyOrderId}: status is ${moneyOrder.status}`,
+      );
+      return false;
+    }
 
-    // Authoritative, optimistically-locked, idempotent debit. Deliberately
-    // not wrapped in this method's own transaction — updateBalance owns its
-    // own retry-on-conflict transaction boundary, which needs to be the
-    // outermost one so each retry gets a fresh (non-aborted) transaction.
-    const payload: WalletUpdateBalanceDTO = {
-      walletId: moneyOrder.user.wallet.id,
-      amount: sendingAmount.toFixed(),
-      direction: WalletTxnDirection.DEBIT,
-      historyType: WalletHistoryType.ORDER_PAYMENT,
-      idempotencyKey: moneyOrder.id,
-    };
-    await this.walletService.updateBalance(payload);
+    try {
+      await this.walletService.chargeForMoneyOrder({
+        walletId: moneyOrder.user.wallet.id,
+        amount: moneyOrder.sendingAmount,
+        moneyOrderId: moneyOrder.id,
+      });
+    } catch (err) {
+      if (
+        err instanceof AppException &&
+        err.message === 'INSUFFICIENT_WALLET_BALANCE'
+      ) {
+        MoneyOrderStateMachine.apply(
+          moneyOrder,
+          MoneyOrderEvent.INSUFFICIENT_BALANCE,
+        );
+        moneyOrder.metadata = {
+          ...(moneyOrder.metadata ?? {}),
+          insufficientWalletBalanceAt: `Insufficient wallet balance at transfer - ${new Date().toISOString()}`,
+        };
+        await this.moneyOrderRepo.save(moneyOrder);
+        return false;
+      }
+      throw err;
+    }
 
-    moneyOrder.status = MoneyOrderStatus.COMPLETED;
+    MoneyOrderStateMachine.apply(moneyOrder, MoneyOrderEvent.FUNDS_DEBITED);
     moneyOrder.metadata = {
       ...(moneyOrder.metadata ?? {}),
       fundsTransferredAt: `Funds transferred - ${new Date().toISOString()}`,

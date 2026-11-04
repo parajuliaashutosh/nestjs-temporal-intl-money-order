@@ -1,7 +1,4 @@
-import {
-  MoneyOrderDeliveryStatus,
-  MoneyOrderStatus,
-} from '@/src/common/enum/money-order-status.enum';
+import { MoneyOrderStatus } from '@/src/common/enum/money-order-status.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { DataAndCount } from '@/src/common/response-type/pagination/data-and-count';
 import { Injectable } from '@nestjs/common';
@@ -271,22 +268,6 @@ export class MoneyOrderRepo implements MoneyOrderRepoContract {
   public async refreshAnalytics(): Promise<void> {
     const view = this.analyticsRepo.metadata.tableName;
     await this.analyticsRepo.query(`REFRESH MATERIALIZED VIEW ${view}`);
-  }
-
-  public async updateStatus(
-    id: string,
-    status: MoneyOrderStatus,
-  ): Promise<MoneyOrder | null> {
-    await this.moneyOrderRepo.update(id, { status });
-    return await this.findById(id);
-  }
-
-  public async updateDeliveryStatus(
-    id: string,
-    deliveryStatus: MoneyOrderDeliveryStatus,
-  ): Promise<MoneyOrder | null> {
-    await this.moneyOrderRepo.update(id, { deliveryStatus });
-    return await this.findById(id);
   }
 
   public async update(
