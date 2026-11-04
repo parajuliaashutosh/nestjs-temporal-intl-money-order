@@ -1,5 +1,9 @@
 import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
-import { NextFunction, Request, Response } from 'express';
+import type {
+  AppRequest as Request,
+  AppResponse as Response,
+  NextFn as NextFunction,
+} from '../types/http.types';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
