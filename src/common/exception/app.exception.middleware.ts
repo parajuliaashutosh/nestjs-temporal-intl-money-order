@@ -5,7 +5,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { Response } from 'express';
+import type { AppResponse as Response } from '@/src/common/types/http.types';
 import { RestResponse } from '../response-type/rest/rest-response';
 import { AppException } from './app.exception';
 import { AppExceptionStatus } from './app.expection.defination';
