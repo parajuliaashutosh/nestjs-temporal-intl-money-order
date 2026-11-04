@@ -23,7 +23,10 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiTags } from '@nestjs/swagger';
-import type { Request, Response } from 'express';
+import type {
+  AppRequest as Request,
+  AppResponse as Response,
+} from '@/src/common/types/http.types';
 import { AUTH_SERVICE } from '../../auth.constant';
 import type { AuthContract } from '../../contract/auth.contract';
 import { LoginReqDTO } from './dto/login-req.dto';
@@ -69,11 +72,11 @@ export class AuthController {
 
     if (typeof xForwardedFor === 'string')
       clientIp = xForwardedFor.split(',')[0]; // Get the first IP address
-    else clientIp = req.connection.remoteAddress ?? 'unknown'; // Fallback to remoteAddress
+    else clientIp = req.socket.remoteAddress ?? 'unknown'; // Fallback to remoteAddress
 
     // clientIp = '103.163.182.223';
     const deviceId =
-      (req.cookies.deviceId as string) || UTIL_FUNCTIONS.createV7UUID();
+      req.cookies.deviceId || UTIL_FUNCTIONS.createV7UUID();
 
     const userAgent = req.headers['user-agent'] ?? 'unknown';
 
@@ -236,8 +239,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const cookies = (req.cookies ?? {}) as Record<string, string | undefined>;
-    const refreshToken = cookies.refreshToken;
+    const refreshToken = req.cookies?.refreshToken;
 
     if (!refreshToken)
       throw AppException.badRequest('Refresh token not found in cookies');
