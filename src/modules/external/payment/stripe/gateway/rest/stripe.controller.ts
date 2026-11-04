@@ -21,7 +21,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import type { Request } from 'express';
+import type { AppRequest as Request } from '@/src/common/types/http.types';
 import { CreateIntentDTO } from '../../dto/create-payment-intent.dto';
 import { StripeService } from '../../service/stripe.service';
 import { STRIPE_SERVICE } from '../../stripe.constant';
