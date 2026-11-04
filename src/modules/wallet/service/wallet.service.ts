@@ -48,6 +48,10 @@ export class WalletService implements WalletContract {
       throw AppException.badRequest('USER_NOT_FOUND');
     }
 
+    if (user.country !== data.country) {
+      throw AppException.badRequest('TOP_UP_COUNTRY_MISMATCH');
+    }
+
     const legacy = await this.walletTransactionService.checkIdemPotencyKey(
       data.id,
     );
