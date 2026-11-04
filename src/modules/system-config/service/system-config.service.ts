@@ -1,3 +1,4 @@
+import { RequestCoalescer } from '@/src/common/coalescing/request-coalescer.service';
 import { UserContextStorage } from '@/src/common/context/user.context';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
 import { SystemConfigLogAction } from '@/src/common/enum/system-config-log-action.enum';
@@ -24,6 +25,8 @@ export class SystemConfigService implements SystemConfigContract {
 
     @Inject(CACHE_CLIENT)
     private readonly cache: ReturnType<typeof createClient>,
+
+    private readonly coalescer: RequestCoalescer,
   ) {}
 
   public async createOrUpdateSystemConfig(
@@ -43,7 +46,10 @@ export class SystemConfigService implements SystemConfigContract {
       previousValue: existing
         ? { currency: existing.currency, exchangeRate: existing.exchangeRate }
         : null,
-      newValue: { currency: result.currency, exchangeRate: result.exchangeRate },
+      newValue: {
+        currency: result.currency,
+        exchangeRate: result.exchangeRate,
+      },
       action: existing
         ? SystemConfigLogAction.UPDATE
         : SystemConfigLogAction.CREATE,
@@ -57,6 +63,7 @@ export class SystemConfigService implements SystemConfigContract {
     countryCode: string,
   ): Promise<void> {
     const cacheKey = CACHE_KEYS.systemConfigByCountry(countryCode);
+    this.coalescer.invalidate(cacheKey);
     await this.cache.del(cacheKey);
   }
 
@@ -66,18 +73,19 @@ export class SystemConfigService implements SystemConfigContract {
     const cacheKey = CACHE_KEYS.systemConfigByCountry(countryCode);
 
     // write back cache
-
     const cached: string | null = (await this.cache.get(cacheKey)) as string;
     if (cached) {
       return JSON.parse(cached) as SystemConfig;
     }
 
-    const config = await this.systemConfigRepo.findByCountryCode(countryCode);
+    return this.coalescer.run(cacheKey, async (isCurrent) => {
+      const config = await this.systemConfigRepo.findByCountryCode(countryCode);
 
-    if (config) {
-      await this.cache.set(cacheKey, JSON.stringify(config));
-    }
+      if (config && isCurrent()) {
+        await this.cache.set(cacheKey, JSON.stringify(config));
+      }
 
-    return config;
+      return config;
+    });
   }
 }
