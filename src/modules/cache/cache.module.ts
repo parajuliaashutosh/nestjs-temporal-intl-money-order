@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { createClient } from 'redis';
+import { RequestCoalescer } from '../../common/coalescing/request-coalescer.service';
 import { DistributedLockService } from '../../common/lock/distributed-lock.service';
 import { CACHE_CLIENT } from './cache.constant';
 
@@ -15,6 +16,7 @@ import { CACHE_CLIENT } from './cache.constant';
   imports: [ConfigModule],
   providers: [
     DistributedLockService,
+    RequestCoalescer,
     {
       provide: CACHE_CLIENT,
       useFactory: async (configService: ConfigService) => {
@@ -39,7 +41,7 @@ import { CACHE_CLIENT } from './cache.constant';
       inject: [ConfigService],
     },
   ],
-  exports: [CACHE_CLIENT, DistributedLockService],
+  exports: [CACHE_CLIENT, DistributedLockService, RequestCoalescer],
 })
 export class CacheModule implements OnModuleDestroy {
   constructor(
