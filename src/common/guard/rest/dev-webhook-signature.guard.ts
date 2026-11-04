@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHmac, timingSafeEqual } from 'crypto';
-import type { Request } from 'express';
+import type { AppRequest as Request } from '@/src/common/types/http.types';
 
 /**
  * Verifies a `x-dev-signature: sha256=<hex hmac>` header against the raw

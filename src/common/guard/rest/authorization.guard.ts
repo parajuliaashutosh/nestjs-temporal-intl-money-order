@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Request } from 'express';
+import type { AppRequest as Request } from '@/src/common/types/http.types';
 import { ROLES_KEY } from '../../decorator/authenticate/rest/authorize.decorator';
 import { Role } from '../../enum/role.enum';
 import { AppException } from '../../exception/app.exception';

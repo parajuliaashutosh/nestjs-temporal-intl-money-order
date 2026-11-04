@@ -12,7 +12,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import type { Request } from 'express';
+import type { AppRequest as Request } from '@/src/common/types/http.types';
 import { createClient } from 'redis';
 
 @Injectable()

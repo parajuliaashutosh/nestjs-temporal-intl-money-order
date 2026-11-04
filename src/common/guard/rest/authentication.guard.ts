@@ -4,7 +4,7 @@ import {
   TokenUser,
 } from '@/src/modules/auth/service/token/token.service';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import type { Request } from 'express';
+import type { AppRequest as Request } from '@/src/common/types/http.types';
 import { UserContext, UserContextStorage } from '../../context/user.context';
 import { Role } from '../../enum/role.enum';
 import { SupportedCountry } from '../../enum/supported-country.enum';

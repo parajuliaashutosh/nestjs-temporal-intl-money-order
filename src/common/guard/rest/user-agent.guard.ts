@@ -5,7 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Request } from 'express';
+import type { AppRequest as Request } from '@/src/common/types/http.types';
 
 @Injectable()
 export class UserAgentGuard implements CanActivate {
