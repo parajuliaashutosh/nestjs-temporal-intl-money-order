@@ -4,11 +4,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuthRepoContract } from '../contract/auth.repo.contract';
 import { Auth } from '../entity/auth.entity';
+import { PasswordHistory } from '../entity/password-history.entity';
 import { AuthModel } from '../model/auth.model';
 
 @Injectable()
 export class AuthRepo implements AuthRepoContract {
-  constructor(@InjectRepository(Auth) private authRepo: Repository<Auth>) {}
+  constructor(
+    @InjectRepository(Auth) private authRepo: Repository<Auth>,
+    @InjectRepository(PasswordHistory)
+    private passwordHistoryRepo: Repository<PasswordHistory>,
+  ) {}
 
   public async create(auth: Partial<AuthModel>): Promise<Auth> {
     const resp = await this.authRepo.save(auth);
@@ -26,6 +31,14 @@ export class AuthRepo implements AuthRepoContract {
       .leftJoinAndSelect('auth.users', 'users')
       .leftJoinAndSelect('auth.admin', 'admin')
       .where('auth.email = :username OR auth.phone = :username', { username })
+      .getOne();
+  }
+
+  public async findByIdForAuthentication(id: string): Promise<Auth | null> {
+    return this.authRepo
+      .createQueryBuilder('auth')
+      .addSelect('auth.password')
+      .where('auth.id = :id', { id })
       .getOne();
   }
 
@@ -50,6 +63,46 @@ export class AuthRepo implements AuthRepoContract {
       .createQueryBuilder('auth')
       .where('auth.phone = :phone', { phone })
       .getOne();
+  }
+
+  public async updatePassword(
+    id: string,
+    hashedPassword: string,
+  ): Promise<void> {
+    await this.authRepo.update({ id }, { password: hashedPassword });
+  }
+
+  public async createPasswordHistory(
+    authId: string,
+    hashedPassword: string,
+  ): Promise<PasswordHistory> {
+    return await this.passwordHistoryRepo.save({
+      password: hashedPassword,
+      auth: { id: authId },
+    });
+  }
+
+  public async getRecentPasswordHistories(
+    authId: string,
+    limit: number,
+  ): Promise<PasswordHistory[]> {
+    return await this.passwordHistoryRepo
+      .createQueryBuilder('passwordHistory')
+      .addSelect('passwordHistory.password')
+      .where('passwordHistory.auth_id = :authId', { authId })
+      .orderBy('passwordHistory.created_at', 'DESC')
+      .take(limit)
+      .getMany();
+  }
+
+  public async getPasswordHistories(
+    authId: string,
+  ): Promise<PasswordHistory[]> {
+    return await this.passwordHistoryRepo
+      .createQueryBuilder('passwordHistory')
+      .where('passwordHistory.auth_id = :authId', { authId })
+      .orderBy('passwordHistory.created_at', 'DESC')
+      .getMany();
   }
 
   public async getAuthByUserIdAndCountry(

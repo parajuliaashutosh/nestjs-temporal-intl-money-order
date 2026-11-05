@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { Request } from 'express';
+import type { AppRequest as Request } from '@/src/common/types/http.types';
 import { HEADER_COUNTRY_CODE_KEY } from '../../util/constant';
 
 export const CountryCode = createParamDecorator(

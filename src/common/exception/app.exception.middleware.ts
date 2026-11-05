@@ -5,7 +5,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { Response } from 'express';
+import type { AppResponse as Response } from '@/src/common/types/http.types';
 import { RestResponse } from '../response-type/rest/rest-response';
 import { AppException } from './app.exception';
 import { AppExceptionStatus } from './app.expection.defination';
@@ -49,6 +49,9 @@ export class AppExceptionFilter implements ExceptionFilter {
           break;
         case AppExceptionStatus.CONFLICT:
           status = HttpStatus.CONFLICT;
+          break;
+        case AppExceptionStatus.BAD_REQUEST:
+          status = HttpStatus.BAD_REQUEST;
           break;
         default:
           status = HttpStatus.INTERNAL_SERVER_ERROR;

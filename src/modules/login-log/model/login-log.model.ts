@@ -17,4 +17,5 @@ export interface LoginLogModel extends BaseModel {
   auth: AuthModel;
 
   rawUserAgent?: string;
+  remark?: string;
 }

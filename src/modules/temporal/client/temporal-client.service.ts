@@ -7,7 +7,11 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Client, Connection } from '@temporalio/client';
+import {
+  Client,
+  Connection,
+  WorkflowExecutionAlreadyStartedError,
+} from '@temporalio/client';
 import { WorkflowValue } from '../workflow.constant';
 
 @Injectable()
@@ -38,9 +42,9 @@ export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
         namespace: this.configService.getOrThrow<string>('TEMPORAL_NAMESPACE'),
       });
 
-      this.logger.log('✅ Temporal client created successfully');
+      this.logger.log('Temporal client connected');
     } catch (err) {
-      this.logger.error('❌ Failed to connect to Temporal', err);
+      this.logger.error('Failed to connect to Temporal', err);
       // throw err;
     }
   }
@@ -48,7 +52,7 @@ export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
   private async stopWorker() {
     if (this.client) {
       await this.client.options.connection.close();
-      this.logger.log('✅ Temporal client stopped');
+      this.logger.log('Temporal client closed');
     }
   }
 
@@ -57,29 +61,38 @@ export class TemporalClientService implements OnModuleInit, OnModuleDestroy {
     args: any[],
     taskQueue: string,
   ) {
-    this.logger.log(
-      '🚀 ~ TemporalClientService ~ startWorkflow ~ taskQueue:',
-      taskQueue,
-    );
-    this.logger.log('🚀 ~ TemporalClientService ~ startWorkflow ~ args:', args);
-    this.logger.log(
-      '🚀 ~ TemporalClientService ~ startWorkflow ~ workflowKey:',
-      WorkflowValue,
-    );
     if (!this.client) {
       throw AppException.internalServerError(
         'Service maintenance in progress. Please try again later.',
       );
     }
-    const workflowId = `${UTIL_FUNCTIONS.toKebabCase(WorkflowValue)}-${args?.[0]}-${Date.now()}`;
+    // one order (if this is not done we get deterministic error)
+    // better way to handle is versioning
+    const workflowId = this.buildWorkflowId(WorkflowValue, args?.[0]);
 
-    const handle = await this.client.workflow.start(WorkflowValue, {
-      args,
-      taskQueue,
-      workflowId,
-    });
+    try {
+      const handle = await this.client.workflow.start(WorkflowValue, {
+        args,
+        taskQueue,
+        workflowId,
+      });
 
-    this.logger.log(`🚀 Workflow started: ${handle.workflowId}`);
-    return handle;
+      this.logger.log(
+        `Started ${WorkflowValue} as ${handle.workflowId} on ${taskQueue}`,
+      );
+      return handle;
+    } catch (err) {
+      if (err instanceof WorkflowExecutionAlreadyStartedError) {
+        this.logger.warn(
+          `Workflow ${workflowId} already running, reusing existing execution`,
+        );
+        return this.client.workflow.getHandle(workflowId);
+      }
+      throw err;
+    }
+  }
+
+  buildWorkflowId(workflowType: WorkflowValue, moneyOrderId: string): string {
+    return `${UTIL_FUNCTIONS.toKebabCase(workflowType)}-${moneyOrderId}`;
   }
 }

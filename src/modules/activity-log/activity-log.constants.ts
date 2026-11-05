@@ -1,1 +1,0 @@
-export const ACTIVITY_LOG_SERVICE = Symbol('ACTIVITY_LOG_SERVICE');

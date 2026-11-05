@@ -9,23 +9,22 @@ import { AppExceptionFilter } from './common/exception/app.exception.middleware'
 import { ValidationExceptionFilter } from './common/exception/validation.exception.middleware';
 import { envValidationSchema } from './config/env.validation';
 import { typeOrmConfigAsync } from './config/orm.config';
-import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CacheModule } from './modules/cache/cache.module';
+import { DeviceConfigModule } from './modules/device-config/device-config.module';
 import { StripeIdentityModule } from './modules/external/identity/stripe-identity/stripe-identity.module';
 import { StripeModule } from './modules/external/payment/stripe/stripe.module';
 import { StripeClientModule } from './modules/external/stripe-client/stripe-client.module';
 import { HealthModule } from './modules/health/health.module';
+import { LoginLogModule } from './modules/login-log/login-log.module';
 import { MoneyOrderOrchestratorModule } from './modules/money-order-orchestrator/money-order-orchestrator.module';
 import { MoneyOrderModule } from './modules/money-order/money-order.module';
+import { PayoutModule } from './modules/payout/payout.module';
 import { ReceiverModule } from './modules/receiver/receiver.module';
 import { RegistrationModule } from './modules/registration/registration.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
 import { TemporalModule } from './modules/temporal/temporal.module';
 import { WalletModule } from './modules/wallet/wallet.module';
-import { PayoutModule } from './modules/payout/payout.module';
-import { LoginLogModule } from './modules/login-log/login-log.module';
-import { DeviceConfigModule } from './modules/device-config/device-config.module';
 
 @Module({
   imports: [
@@ -42,7 +41,6 @@ import { DeviceConfigModule } from './modules/device-config/device-config.module
     AdminModule,
     RegistrationModule,
     SystemConfigModule,
-    ActivityLogModule,
     WalletModule,
     CacheModule,
     HealthModule,
@@ -56,6 +54,7 @@ import { DeviceConfigModule } from './modules/device-config/device-config.module
     PayoutModule,
     LoginLogModule,
     DeviceConfigModule,
+    WalletModule,
   ],
   controllers: [],
   providers: [

@@ -16,16 +16,21 @@ import {
   HttpStatus,
   Inject,
   Param,
+  Patch,
   Post,
   Req,
   Res,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiTags } from '@nestjs/swagger';
-import type { Request, Response } from 'express';
+import type {
+  AppRequest as Request,
+  AppResponse as Response,
+} from '@/src/common/types/http.types';
 import { AUTH_SERVICE } from '../../auth.constant';
 import type { AuthContract } from '../../contract/auth.contract';
 import { LoginReqDTO } from './dto/login-req.dto';
+import { UpdatePasswordReqDTO } from './dto/update-password-req.dto';
 
 @ApiTags('auth')
 @Controller('/auth')
@@ -67,11 +72,11 @@ export class AuthController {
 
     if (typeof xForwardedFor === 'string')
       clientIp = xForwardedFor.split(',')[0]; // Get the first IP address
-    else clientIp = req.connection.remoteAddress ?? 'unknown'; // Fallback to remoteAddress
+    else clientIp = req.socket.remoteAddress ?? 'unknown'; // Fallback to remoteAddress
 
     // clientIp = '103.163.182.223';
     const deviceId =
-      (req.cookies.deviceId as string) || UTIL_FUNCTIONS.createV7UUID();
+      req.cookies.deviceId || UTIL_FUNCTIONS.createV7UUID();
 
     const userAgent = req.headers['user-agent'] ?? 'unknown';
 
@@ -163,6 +168,56 @@ export class AuthController {
       .build();
   }
 
+  @Patch('/password')
+  @HttpCode(HttpStatus.OK)
+  @RestEndpoint({
+    summary: 'Update password',
+    description:
+      'Update the password of the authenticated account. The new password cannot match any of the last 3 passwords used by the account.',
+    authenticated: true,
+    apiResponses: [
+      {
+        status: 400,
+        description:
+          'Bad request - Invalid current password or the new password was recently used',
+      },
+    ],
+  })
+  async updatePassword(
+    @User() user: ReqUserPayload,
+    @Body() data: UpdatePasswordReqDTO,
+  ) {
+    await this.authService.updatePassword(user.id, data);
+
+    return RestResponse.builder()
+      .setSuccess(true)
+      .setMessage('Password updated successfully')
+      .build();
+  }
+
+  @Get('/password-history')
+  @HttpCode(HttpStatus.OK)
+  @RestEndpoint({
+    summary: 'Get password change history',
+    description:
+      'Returns when the authenticated account changed its password. Password values are never returned.',
+    authenticated: true,
+  })
+  async getPasswordHistory(@User() user: ReqUserPayload) {
+    const histories = await this.authService.getPasswordHistory(user.id);
+
+    return RestResponse.builder()
+      .setSuccess(true)
+      .setMessage('Password history fetched successfully')
+      .setData(
+        histories.map((history) => ({
+          id: history.id,
+          changedAt: history.createdAt,
+        })),
+      )
+      .build();
+  }
+
   @Post('/refresh-token')
   @HttpCode(HttpStatus.OK)
   @RestEndpoint({
@@ -184,14 +239,15 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const cookies = (req.cookies ?? {}) as Record<string, string | undefined>;
-    const refreshToken = cookies.refreshToken;
+    const refreshToken = req.cookies?.refreshToken;
 
     if (!refreshToken)
       throw AppException.badRequest('Refresh token not found in cookies');
 
+    const userAgent = req.headers['user-agent'] ?? 'unknown';
+
     const { accessToken, refreshToken: newRefreshToken } =
-      await this.authService.refreshToken(refreshToken);
+      await this.authService.refreshToken(refreshToken, userAgent);
 
     // Set access token as HTTP-only cookie
     res.cookie('accessToken', accessToken, {
@@ -222,7 +278,7 @@ export class AuthController {
     @User() user: ReqUserPayload,
     @Res({ passthrough: true }) res: Response,
   ) {
-    await this.loginLogService.markLogout(user.id, user.id);
+    await this.loginLogService.markLogout(user.key, user.id, 'LOGOUT');
 
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
@@ -255,9 +311,14 @@ export class AuthController {
   ) {
     if (!loginLogId) throw AppException.badRequest('LOGIN_LOG_ID_REQUIRED');
 
-    await this.loginLogService.markLogout(loginLogId, user.id);
+    const isSelf = user.key === loginLogId;
+    const remark = isSelf
+      ? 'LOGOUT'
+      : `LOGOUT_BY_ANOTHER_SESSION:${user.key}`;
 
-    if (user.id === loginLogId) {
+    await this.loginLogService.markLogout(loginLogId, user.id, remark);
+
+    if (isSelf) {
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
     }

@@ -51,6 +51,13 @@ export class LoginLogRepo implements LoginLogRepoContract {
     };
   }
 
+  public async findById(id: string): Promise<LoginLog | null> {
+    return await this.repo
+      .createQueryBuilder('login_log')
+      .where('login_log.id = :id', { id })
+      .getOne();
+  }
+
   public async findByIdAndAuthId(
     id: string,
     authId: string,

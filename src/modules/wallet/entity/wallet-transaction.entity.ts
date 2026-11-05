@@ -26,7 +26,7 @@ export class WalletTransaction extends Base {
     precision: 18,
     scale: 2,
   })
-  balanceAfter: string; // snapshot after txn ✅
+  balanceAfter: string; // snapshot after txn
 
   // to maintain idempotency for different txn sources
   @Column({ nullable: true, unique: true })

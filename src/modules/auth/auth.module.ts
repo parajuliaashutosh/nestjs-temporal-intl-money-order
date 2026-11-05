@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoginLogModule } from '../login-log/login-log.module';
 import { AUTH_REPO, AUTH_SERVICE } from './auth.constant';
 import { Auth } from './entity/auth.entity';
+import { PasswordHistory } from './entity/password-history.entity';
 import { AuthController } from './gateway/rest/auth.controller';
 import { AuthRepo } from './repo/auth.repo';
 import { AuthService } from './service/auth.service';
@@ -15,7 +16,7 @@ import { TokenService } from './service/token/token.service';
 @Global()
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Auth]),
+    TypeOrmModule.forFeature([Auth, PasswordHistory]),
     // jwt service
     JwtModule.registerAsync({
       imports: [ConfigModule],

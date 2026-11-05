@@ -1,0 +1,105 @@
+name: money-order
+
+x-app: &app
+  image: money-order/backend:local
+  build:
+    context: .
+  env_file: .env
+  environment: &app-env
+    NODE_ENV: ${COMPOSE_NODE_ENV:-DEVELOPMENT}
+    PORT: 8080
+    DATABASE_HOST: postgres
+    DATABASE_PORT: 5432
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    REDIS_USERNAME: default
+    REDIS_PASSWORD: ${COMPOSE_REDIS_PASSWORD:?set COMPOSE_REDIS_PASSWORD in .env}
+    REDIS_DB: 0
+    TEMPORAL_ADDRESS: temporal:7233
+    TEMPORAL_NAMESPACE: money-order
+    TEMPORAL_TASK_QUEUE: money-order-task-queue
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD in .env}
+      POSTGRES_DB: ${DATABASE_NAME:-money_order_db}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "${COMPOSE_REDIS_PASSWORD:?set COMPOSE_REDIS_PASSWORD in .env}", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" --no-auth-warning ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    environment:
+      REDIS_PASSWORD: ${COMPOSE_REDIS_PASSWORD:?set COMPOSE_REDIS_PASSWORD in .env}
+    restart: unless-stopped
+
+  temporal:
+    image: temporalio/auto-setup:1.25
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_SEEDS: postgres
+      POSTGRES_USER: ${DATABASE_USERNAME:-postgres}
+      POSTGRES_PWD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD in .env}
+      DEFAULT_NAMESPACE: money-order
+    healthcheck:
+      test: ["CMD-SHELL", "temporal operator namespace describe -n money-order --address temporal:7233 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  migrate:
+    <<: *app
+    command: ["bun", "dist/migration-runner.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *app
+    command: ["bun", "dist/main.js"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
+
+  worker:
+    <<: *app
+    command: ["bun", "dist/modules/temporal/worker/worker.js"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:

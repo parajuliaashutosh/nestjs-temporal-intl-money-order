@@ -12,14 +12,16 @@ async function getActivitiesInstance() {
   return activitiesInstance;
 }
 
-export async function processPayout(moneyOrderId: string): Promise<boolean> {
+export async function processPayout(
+  moneyOrderId: string,
+): Promise<{ success: boolean; data: Record<string, any> }> {
   const activities = await getActivitiesInstance();
-  console.log('========================================');
-  console.log('🔍 ACTIVITY: processPayout');
-  console.log('   Money Order ID:', moneyOrderId);
-  console.log('========================================');
+  return await activities.startPayout(moneyOrderId);
+}
 
-  await activities.startPayout(moneyOrderId);
-
-  return;
+export async function completeMoneyOrder(
+  moneyOrderId: string,
+): Promise<boolean> {
+  const activities = await getActivitiesInstance();
+  return await activities.completeMoneyOrder(moneyOrderId);
 }

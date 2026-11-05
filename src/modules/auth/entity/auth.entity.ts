@@ -1,7 +1,7 @@
 import { EmailVerificationStatus } from '@/src/common/enum/email-verification-status.enum';
 import { PhoneVerificationStatus } from '@/src/common/enum/phone-verification-status';
 import { Role } from '@/src/common/enum/role.enum';
-import Base from 'src/common/entity/base.entity';
+import Base from '@/src/common/entity/base.entity';
 import {
   Column,
   Entity,
@@ -15,6 +15,7 @@ import { DeviceConfig } from '../../device-config/entity/device-config.entity';
 import { LoginLog } from '../../login-log/entity/login-log.entity';
 import { User } from '../../user/entity/user.entity';
 import { AuthModel } from '../model/auth.model';
+import { PasswordHistory } from './password-history.entity';
 
 @Entity('auth')
 @Index(['phone'])
@@ -65,6 +66,15 @@ export class Auth extends Base implements AuthModel {
     onDelete: 'CASCADE',
   })
   loginLogs: LoginLog[];
+
+  @OneToMany(
+    () => PasswordHistory,
+    (passwordHistory) => passwordHistory.auth,
+    {
+      onDelete: 'CASCADE',
+    },
+  )
+  passwordHistories: PasswordHistory[];
 
   @OneToMany(() => DeviceConfig, (deviceConfig) => deviceConfig.auth, {
     cascade: true,

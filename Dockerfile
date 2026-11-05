@@ -1,22 +1,21 @@
 # ---- Builder ----
-FROM node:20-slim AS builder
+FROM oven/bun:1.4-slim AS builder
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 COPY . .
-RUN npm run build
+RUN bun run build
 
 # ---- Production ----
-FROM node:20-slim AS production
+FROM oven/bun:1.4-slim AS production
 WORKDIR /app
 
 # Only copy what's needed
 COPY --from=builder /app/dist ./dist
-COPY package*.json ./
+COPY package.json bun.lock ./
 
-# Install only production deps directly in final image
-RUN npm ci --only=production --ignore-scripts && \
-    npm cache clean --force && \
+# Install only production deps
+RUN bun install --frozen-lockfile --production && \
     # Remove unnecessary files from node_modules
     find node_modules -name "*.md" -delete && \
     find node_modules -name "*.ts" -not -name "*.d.ts" -delete && \
@@ -24,7 +23,7 @@ RUN npm ci --only=production --ignore-scripts && \
     find node_modules -name "tests" -type d -exec rm -rf {} + 2>/dev/null; \
     find node_modules -name "__tests__" -type d -exec rm -rf {} + 2>/dev/null; true
 
-RUN groupadd -r appgroup && useradd -r -g appgroup appuser
-USER appuser
+# `bun` user (uid 1000) ships with the base image
+USER bun
 
-CMD ["node", "dist/main"]
+CMD ["bun", "dist/main.js"]

@@ -1,5 +1,5 @@
-import { MoneyOrderStatus } from '@/src/common/enum/money-order-status.enum';
 import { SupportedCountry } from '@/src/common/enum/supported-country.enum';
+import { Transactional } from '@/src/common/decorator/orm/transactional.decorator';
 import { AppException } from '@/src/common/exception/app.exception';
 import type { ReceiverContract } from '@/src/modules/receiver/contract/receiver.contract';
 import { RECEIVER_SERVICE } from '@/src/modules/receiver/receiver.constant';
@@ -7,15 +7,19 @@ import type { SystemConfigContract } from '@/src/modules/system-config/contract/
 import { SYSTEM_CONFIG_SERVICE } from '@/src/modules/system-config/system-config.constant';
 import type { UserContract } from '@/src/modules/user/contract/user.contract';
 import { USER_SERVICE } from '@/src/modules/user/user.constant';
-import { Wallet } from '@/src/modules/wallet/entity/wallet.entity';
+import type { WalletContract } from '@/src/modules/wallet/contract/wallet.contract';
+import { WALLET_SERVICE } from '@/src/modules/wallet/wallet.constant';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import Decimal from 'decimal.js';
-import { DataSource } from 'typeorm';
 import { MoneyOrderContract } from '../../contract/money-order.contract';
 import type { MoneyOrderRepoContract } from '../../contract/money-order.repo.contract';
 import { CreateMoneyOrderDTO } from '../../dto/create-money-order.dto';
 import { MoneyOrder } from '../../entity/money-order.entity';
 import { MONEY_ORDER_REPO } from '../../money-order.constant';
+import {
+  MoneyOrderEvent,
+  MoneyOrderStateMachine,
+} from '../../state/money-order.state-machine';
 
 @Injectable()
 export class AusMoneyOrderService implements MoneyOrderContract {
@@ -28,8 +32,8 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     private readonly receiverService: ReceiverContract,
     @Inject(SYSTEM_CONFIG_SERVICE)
     private readonly systemConfigService: SystemConfigContract,
-
-    private readonly dataSource: DataSource,
+    @Inject(WALLET_SERVICE)
+    private readonly walletService: WalletContract,
   ) {}
 
   public async createMoneyOrder(
@@ -91,17 +95,12 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     moneyOrder.user = user;
     moneyOrder.receiver = receiver;
     moneyOrder.idempotentId = data.idempotentId;
-    await this.moneyOrderRepo.save(moneyOrder);
+    Object.assign(moneyOrder, MoneyOrderStateMachine.initial());
 
-    return moneyOrder;
+    return await this.moneyOrderRepo.saveIdempotently(moneyOrder);
   }
 
   public async screenReceiver(moneyOrderId: string): Promise<boolean> {
-    Logger.log('========================================');
-    Logger.log('🔍 ACTIVITY: screenReceiver');
-    Logger.log('   Money Order ID:', moneyOrderId);
-    Logger.log('========================================');
-
     const moneyOrder = await this.moneyOrderRepo.findById(moneyOrderId);
 
     if (!moneyOrder) {
@@ -109,7 +108,9 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     }
 
     const passed = Math.random() > 0.4;
-    Logger.log(`✅ Result: ${passed ? 'PASSED' : 'FAILED'}`);
+    Logger.log(
+      `Screening for money order ${moneyOrderId} ${passed ? 'passed' : 'failed'}`,
+    );
 
     if (passed) {
       moneyOrder.metadata = {
@@ -119,7 +120,10 @@ export class AusMoneyOrderService implements MoneyOrderContract {
       await this.moneyOrderRepo.save(moneyOrder);
       return true;
     } else {
-      moneyOrder.status = MoneyOrderStatus.ON_HOLD;
+      MoneyOrderStateMachine.apply(
+        moneyOrder,
+        MoneyOrderEvent.SCREENING_FAILED,
+      );
       moneyOrder.metadata = {
         ...(moneyOrder.metadata ?? {}),
         screeningFailureReason: `Receiver failed the screening process - ${new Date().toISOString()}`,
@@ -130,10 +134,6 @@ export class AusMoneyOrderService implements MoneyOrderContract {
   }
 
   public async checkWalletBalance(moneyOrderId: string): Promise<boolean> {
-    Logger.log('========================================');
-    Logger.log('💰 ACTIVITY: checkWalletBalance');
-    Logger.log('========================================');
-
     const moneyOrder = await this.moneyOrderRepo.findById(moneyOrderId);
 
     if (!moneyOrder) {
@@ -145,14 +145,17 @@ export class AusMoneyOrderService implements MoneyOrderContract {
 
     if (walletBalance.greaterThanOrEqualTo(sendingAmount)) {
       Logger.log(
-        `✅ Sufficient wallet balance: ${walletBalance.toFixed()} cents`,
+        `Money order ${moneyOrderId}: wallet balance ${walletBalance.toFixed()} covers ${sendingAmount.toFixed()}`,
       );
       return true;
     } else {
-      Logger.log(
-        `❌ Insufficient wallet balance: ${walletBalance.toFixed()} cents`,
+      Logger.warn(
+        `Money order ${moneyOrderId}: wallet balance ${walletBalance.toFixed()} is below ${sendingAmount.toFixed()}`,
       );
-      moneyOrder.status = MoneyOrderStatus.ON_HOLD;
+      MoneyOrderStateMachine.apply(
+        moneyOrder,
+        MoneyOrderEvent.INSUFFICIENT_BALANCE,
+      );
       moneyOrder.metadata = {
         ...(moneyOrder.metadata ?? {}),
         insufficientWalletBalanceAt: `Insufficient wallet balance - ${new Date().toISOString()}`,
@@ -162,47 +165,54 @@ export class AusMoneyOrderService implements MoneyOrderContract {
     }
   }
 
+  @Transactional()
   public async transferFunds(moneyOrderId: string): Promise<boolean> {
-    Logger.log('========================================');
-    Logger.log('💸 ACTIVITY: transferFunds');
-    Logger.log('========================================');
+    const moneyOrder = await this.moneyOrderRepo.findById(moneyOrderId);
 
-    await this.dataSource.transaction(async (manager) => {
-      const moneyOrder = await manager
-        .getRepository(MoneyOrder)
-        .createQueryBuilder('moneyOrder')
-        .leftJoinAndSelect('moneyOrder.user', 'user')
-        .leftJoinAndSelect('user.wallet', 'wallet')
-        .where('moneyOrder.id = :moneyOrderId', { moneyOrderId })
-        .setLock('pessimistic_write')
-        .getOne();
+    if (!moneyOrder) {
+      throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
+    }
 
-      if (!moneyOrder) {
-        throw AppException.notFound('MONEY_ORDER_NOT_FOUND');
+    if (
+      !MoneyOrderStateMachine.can(moneyOrder, MoneyOrderEvent.FUNDS_DEBITED)
+    ) {
+      Logger.warn(
+        `Skipping transfer for ${moneyOrderId}: status is ${moneyOrder.status}`,
+      );
+      return false;
+    }
+
+    try {
+      await this.walletService.chargeForMoneyOrder({
+        walletId: moneyOrder.user.wallet.id,
+        amount: moneyOrder.sendingAmount,
+        moneyOrderId: moneyOrder.id,
+      });
+    } catch (err) {
+      if (
+        err instanceof AppException &&
+        err.message === 'INSUFFICIENT_WALLET_BALANCE'
+      ) {
+        MoneyOrderStateMachine.apply(
+          moneyOrder,
+          MoneyOrderEvent.INSUFFICIENT_BALANCE,
+        );
+        moneyOrder.metadata = {
+          ...(moneyOrder.metadata ?? {}),
+          insufficientWalletBalanceAt: `Insufficient wallet balance at transfer - ${new Date().toISOString()}`,
+        };
+        await this.moneyOrderRepo.save(moneyOrder);
+        return false;
       }
+      throw err;
+    }
 
-      const wallet = moneyOrder.user.wallet;
-
-      // Explicitly lock the wallet row
-      await manager
-        .getRepository(Wallet)
-        .createQueryBuilder('wallet')
-        .where('wallet.id = :id', { id: wallet.id })
-        .setLock('pessimistic_write')
-        .getOne();
-
-      const walletBalance = new Decimal(wallet.balance);
-      const sendingAmount = new Decimal(moneyOrder.sendingAmount);
-
-      if (!walletBalance.greaterThanOrEqualTo(sendingAmount)) {
-        throw AppException.badRequest('INSUFFICIENT_WALLET_BALANCE');
-      }
-
-      wallet.balance = walletBalance.minus(sendingAmount).toFixed();
-      moneyOrder.status = MoneyOrderStatus.COMPLETED;
-
-      await manager.save([wallet, moneyOrder]);
-    });
+    MoneyOrderStateMachine.apply(moneyOrder, MoneyOrderEvent.FUNDS_DEBITED);
+    moneyOrder.metadata = {
+      ...(moneyOrder.metadata ?? {}),
+      fundsTransferredAt: `Funds transferred - ${new Date().toISOString()}`,
+    };
+    await this.moneyOrderRepo.save(moneyOrder);
 
     return true;
   }
